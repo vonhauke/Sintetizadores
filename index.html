@@ -732,6 +732,55 @@
     return Object.assign({}, p, { level: lv });
   }
 
+  // ---------- Destravar o áudio no celular ----------
+  // iPhone e Android só liberam som depois de um toque. No iPhone, o Web Audio também
+  // fica mudo com a chave de silencioso ligada; pedir o canal de mídia resolve isso.
+  var audioUnlocked = false, silentEl = null;
+  var isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  function silentWavURI() {
+    var n = 800, b = new Uint8Array(44 + n * 2), dv = new DataView(b.buffer);
+    function s(o, t) { for (var i = 0; i < t.length; i++) b[o + i] = t.charCodeAt(i); }
+    s(0, "RIFF"); dv.setUint32(4, 36 + n * 2, true); s(8, "WAVE"); s(12, "fmt ");
+    dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 1, true);
+    dv.setUint32(24, 8000, true); dv.setUint32(28, 16000, true); dv.setUint16(32, 2, true);
+    dv.setUint16(34, 16, true); s(36, "data"); dv.setUint32(40, n * 2, true);
+    var str = "";
+    for (var i = 0; i < b.length; i++) str += String.fromCharCode(b[i]);
+    return "data:audio/wav;base64," + btoa(str);
+  }
+  function unlockAudio(c) {
+    try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch (e) {}
+    if (c.state !== "running") {
+      try { var r = c.resume(); if (r && r.catch) r.catch(function () {}); } catch (e) {}
+    }
+    if (audioUnlocked) return;
+    audioUnlocked = true;
+    try {
+      var src = c.createBufferSource();
+      src.buffer = c.createBuffer(1, 1, c.sampleRate);
+      src.connect(c.destination);
+      src.start(0);
+    } catch (e) {}
+    if (isIOS && !navigator.audioSession) {
+      try {
+        silentEl = silentEl || new Audio(silentWavURI());
+        silentEl.loop = true;
+        silentEl.setAttribute("playsinline", "");
+        var pp = silentEl.play();
+        if (pp && pp.catch) pp.catch(function () { audioUnlocked = false; });
+      } catch (e) { audioUnlocked = false; }
+    }
+  }
+  ["touchend", "click", "keydown"].forEach(function (ev) {
+    document.addEventListener(ev, function () { ensureCtx(); }, { capture: true, passive: true });
+  });
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden && ctx && ctx.state !== "running") {
+      try { var r = ctx.resume(); if (r && r.catch) r.catch(function () {}); } catch (e) {}
+    }
+  });
+
   // ---------- Áudio ao vivo ----------
   var ctx = null, master = null, lastOH = null;
   function ensureCtx() {
@@ -749,7 +798,7 @@
       master.connect(comp);
       comp.connect(ctx.destination);
     }
-    if (ctx.state === "suspended") ctx.resume();
+    unlockAudio(ctx);
     return ctx;
   }
 
