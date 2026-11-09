@@ -1,0 +1,959 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>909 completa</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #e4e6e8;
+    --panel: #f2f3f4;
+    --ink: #1d2023;
+    --muted: #596068;
+    --line: #c3c8cc;
+    --accent: #d6372b;
+    --on-accent: #ffffff;
+    --wave: #1d2023;
+    --grid: #cfd3d6;
+    --cell-a: #e4e6e8;
+    --cell-b: #d3d7da;
+    --s1: #d6372b; --s2: #e8802a; --s3: #e6b92e; --s4: #d9d4c7;
+    color-scheme: light;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #232629;
+      --panel: #2e3236;
+      --ink: #eceeef;
+      --muted: #a1a8ae;
+      --line: #454b51;
+      --accent: #ff5a45;
+      --on-accent: #1a1a1a;
+      --wave: #eceeef;
+      --grid: #41474c;
+      --cell-a: #3a3f44;
+      --cell-b: #454b51;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #232629;
+    --panel: #2e3236;
+    --ink: #eceeef;
+    --muted: #a1a8ae;
+    --line: #454b51;
+    --accent: #ff5a45;
+    --on-accent: #1a1a1a;
+    --wave: #eceeef;
+    --grid: #41474c;
+    --cell-a: #3a3f44;
+    --cell-b: #454b51;
+    color-scheme: dark;
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+    font-weight: 500;
+    font-size: 18px;
+    line-height: 1.35;
+  }
+  main { max-width: 900px; margin: 0 auto; padding: 20px 16px 40px; }
+
+  header { margin-bottom: 20px; }
+  .stripe { display: flex; gap: 4px; margin-bottom: 18px; }
+  .stripe span { flex: 1; height: 8px; border-radius: 2px; }
+  .stripe span:nth-child(1) { background: var(--s1); }
+  .stripe span:nth-child(2) { background: var(--s2); }
+  .stripe span:nth-child(3) { background: var(--s3); }
+  .stripe span:nth-child(4) { background: var(--s4); }
+  h1 { margin: 0; font-size: 44px; font-weight: 700; letter-spacing: 0.01em; line-height: 1.05; }
+  h2 { margin: 0; font-size: 26px; font-weight: 700; }
+  .sub { margin: 6px 0 0; color: var(--muted); font-size: 19px; max-width: 60ch; }
+
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+
+  /* Transporte */
+  .transport { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 20px; }
+  .pad {
+    appearance: none; border: 0; cursor: pointer;
+    background: var(--accent); color: var(--on-accent);
+    font: inherit; font-weight: 700; font-size: 28px; letter-spacing: 0.02em;
+    height: 64px; min-width: 140px; padding: 0 28px; border-radius: 10px;
+    box-shadow: 0 4px 0 rgba(0,0,0,.28);
+    transition: transform .06s ease, box-shadow .06s ease;
+  }
+  .pad:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,.28); }
+  .btn {
+    appearance: none; cursor: pointer; font: inherit; font-weight: 600; font-size: 20px;
+    color: var(--ink); background: var(--panel); border: 2px solid var(--line);
+    border-radius: 8px; padding: 8px 18px; min-height: 44px;
+  }
+  .slider-inline { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 220px; }
+  .slider-inline label { white-space: nowrap; }
+  .slider-inline output { min-width: 4ch; text-align: right; font-weight: 600; }
+
+  /* Sequenciador */
+  .seq { overflow-x: auto; padding-bottom: 6px; }
+  .grid {
+    display: grid;
+    grid-template-columns: 196px repeat(16, minmax(30px, 1fr));
+    gap: 6px 4px;
+    min-width: 780px;
+    align-items: center;
+  }
+  .name {
+    position: sticky; left: 0; z-index: 1;
+    appearance: none; cursor: pointer; text-align: left;
+    font: inherit; font-weight: 600; font-size: 19px; color: var(--ink);
+    background: var(--panel); border: 2px solid var(--line); border-radius: 6px;
+    height: 36px; padding: 0 10px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .name[aria-current="true"] { border-color: var(--accent); box-shadow: inset 5px 0 0 var(--accent); font-weight: 700; padding-left: 14px; }
+  .step {
+    appearance: none; cursor: pointer; height: 36px; padding: 0;
+    border: 2px solid var(--line); border-radius: 4px;
+    background: var(--cell-a);
+  }
+  .step.gap { margin-left: 6px; }
+  .step.on { background: var(--s1); border-color: var(--s1); }
+  .step.now { box-shadow: 0 0 0 3px var(--ink); position: relative; z-index: 1; }
+  .legend { margin: 10px 2px 0; color: var(--muted); font-size: 16px; }
+  .ms { appearance: none; cursor: pointer; font: inherit; font-weight: 700; font-size: 18px; width: 36px; height: 36px; padding: 0; color: var(--ink); background: var(--cell-a); border: 2px solid var(--line); border-radius: 6px; }
+  .ms.mute[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .ms.solo[aria-pressed="true"] { background: var(--s3); color: #1a1a1a; border-color: var(--s3); }
+  .step.dim { opacity: 0.4; }
+  .name.dim { opacity: 0.55; }
+  .label { position: sticky; left: 0; z-index: 1; display: flex; gap: 4px; background: var(--panel); }
+  .label .name { position: static; flex: 1; min-width: 0; }
+
+  /* Editor de voz */
+  .editor-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+  .editor-head p { margin: 0; color: var(--muted); font-size: 17px; max-width: 60ch; }
+  canvas { display: block; width: 100%; height: 160px; margin-bottom: 4px; }
+  .scope-cap { margin: 4px 2px 16px; color: var(--muted); font-size: 16px; }
+
+  .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px 28px; }
+  .ctl .row { display: flex; justify-content: space-between; align-items: baseline; }
+  .ctl label { font-weight: 600; font-size: 20px; }
+  .ctl output { font-weight: 600; font-size: 20px; color: var(--accent); }
+  .ctl .hint { margin: 2px 0 0; color: var(--muted); font-size: 16px; line-height: 1.25; }
+  output.editable { cursor: text; border-bottom: 1px dashed currentColor; }
+  output.editable:hover { background: var(--cell-a); }
+  .numwrap { display: inline-flex; align-items: baseline; gap: 4px; }
+  .numedit { width: 7ch; font: inherit; font-weight: 600; font-size: 20px; color: var(--ink); background: var(--bg); border: 2px solid var(--accent); border-radius: 6px; padding: 2px 6px; text-align: right; }
+  .numwrap .unit { color: var(--muted); font-size: 18px; }
+
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none; width: 100%; height: 36px;
+    background: transparent; margin: 4px 0 0; cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-runnable-track { height: 6px; background: var(--line); border-radius: 3px; }
+  input[type="range"]::-moz-range-track { height: 6px; background: var(--line); border-radius: 3px; }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 24px; height: 24px; margin-top: -9px;
+    border-radius: 50%; background: var(--ink); border: 3px solid var(--panel);
+    box-shadow: 0 0 0 1px var(--ink);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 18px; height: 18px; border-radius: 50%; background: var(--ink);
+    border: 3px solid var(--panel); box-shadow: 0 0 0 1px var(--ink);
+  }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+
+  .note { margin: 6px 2px 0; color: var(--muted); font-size: 17px; }
+  @media (prefers-reduced-motion: reduce) { .pad { transition: none; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="stripe" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+    <h1>909 completa</h1>
+    <p class="sub">Onze vozes sintetizadas no navegador e um sequenciador de 16 passos. Toque no nome de uma voz para ouvi-la e ajustar o timbre. Na máquina original, os hats, o crash e o ride eram samples; aqui são aproximações por síntese.</p>
+  </header>
+
+  <section class="panel">
+    <div class="transport">
+      <button class="pad" id="play" type="button">Tocar</button>
+      <button class="btn" id="clear" type="button">Limpar tudo</button>
+      <div class="slider-inline">
+        <label for="bpm">Andamento</label>
+        <input id="bpm" type="range" min="60" max="200" step="1" value="100">
+        <output id="bpm-out" for="bpm">100 bpm</output>
+      </div>
+      <div class="slider-inline">
+        <label for="swing">Swing</label>
+        <input id="swing" type="range" min="0" max="50" step="1" value="0">
+        <output id="swing-out" for="swing">0 %</output>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" aria-label="Sequenciador">
+    <div class="seq"><div class="grid" id="grid"></div></div>
+    <p class="legend">Cada coluna é uma semicolcheia. Os espaços entre os grupos de quatro marcam os tempos do compasso. O hat fechado corta o hat aberto, como na máquina original.</p>
+  </section>
+
+  <section class="panel" aria-label="Ajuste da voz">
+    <div class="editor-head">
+      <h2 id="ed-title">Bumbo</h2>
+      <p id="ed-desc"></p>
+    </div>
+    <canvas id="scope" role="img" aria-label="Forma de onda da voz selecionada"></canvas>
+    <p class="scope-cap" id="scope-cap"></p>
+    <div class="controls" id="controls"></div>
+  </section>
+
+  <p class="note">A barra de espaço liga e desliga o sequenciador. Com o sequenciador parado, ao soltar um controle a voz toca sozinha. Durante a música, nenhuma amostra é disparada. M silencia uma voz e S deixa tocar só as marcadas. Para digitar um valor, toque no número ao lado do nome do controle.</p>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Formatação ----------
+  function fmtHz(v) { return v + " Hz"; }
+  function fmtPct(v) { return v + " %"; }
+  function fmtDur(v) { return v >= 1000 ? (v / 1000).toLocaleString("pt-BR") + " s" : v + " ms"; }
+
+  var LEVEL = { id: "level", label: "Volume", min: 0, max: 100, step: 1, val: 70,
+    hint: "Volume desta voz na mistura. Em 70 ela fica equilibrada com as outras; a escala é mais sensível perto dos extremos.", fmt: fmtPct };
+
+  // ---------- Utilitários de síntese ----------
+  var noiseCache = new WeakMap();
+  function noiseBuffer(ctx) {
+    var b = noiseCache.get(ctx);
+    if (b) return b;
+    var len = Math.floor(ctx.sampleRate * 1);
+    b = ctx.createBuffer(1, len, ctx.sampleRate);
+    var d = b.getChannelData(0);
+    for (var i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    noiseCache.set(ctx, b);
+    return b;
+  }
+
+  // Envelope: sobe em 1 ms e cai exponencialmente; "decay" é o tempo até -60 dB.
+  function envelope(g, t, decay, peak) {
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(peak, t + 0.001);
+    g.gain.setTargetAtTime(0, t + 0.001, decay / 6.9);
+  }
+
+  function driveCurve(amount) {
+    var k = 1 + amount * 8, n = 1024, c = new Float32Array(n), norm = Math.tanh(k);
+    for (var i = 0; i < n; i++) {
+      var x = (i / (n - 1)) * 2 - 1;
+      c[i] = Math.tanh(k * x) / norm;
+    }
+    return c;
+  }
+
+  // ---------- Vozes (TR-909) ----------
+  // Bumbo: queda de pitch mais rápida e mais curta que na 808, com clique forte e saturação.
+  function kick(ctx, dest, t, p) {
+    var decay = p.decay / 1000, sweep = p.sweep / 1000;
+    var osc = ctx.createOscillator();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(p.start, t);
+    osc.frequency.setTargetAtTime(p.end, t, sweep / 3);
+    var amp = ctx.createGain();
+    envelope(amp, t, decay, 1);
+    var out = ctx.createGain();
+    out.gain.value = 0.7 * (p.level / 70);
+    if (p.drive > 0) {
+      var ws = ctx.createWaveShaper();
+      ws.curve = driveCurve(p.drive / 100);
+      ws.oversample = "2x";
+      osc.connect(ws); ws.connect(amp);
+    } else {
+      osc.connect(amp);
+    }
+    amp.connect(out);
+    if (p.click > 0) {
+      var n = ctx.createBufferSource();
+      n.buffer = noiseBuffer(ctx);
+      var hp = ctx.createBiquadFilter();
+      hp.type = "highpass"; hp.frequency.value = 2500;
+      var g = ctx.createGain();
+      g.gain.setValueAtTime((p.click / 100) * 0.8, t);
+      g.gain.setTargetAtTime(0, t, 0.003);
+      n.connect(hp); hp.connect(g); g.connect(out);
+      n.start(t); n.stop(t + 0.05);
+    }
+    out.connect(dest);
+    osc.start(t);
+    osc.stop(t + decay * 1.1 + 0.05);
+  }
+
+  // Caixa: dois osciladores triangulares (mais brilho que a senoide) e bastante ruído.
+  function snare(ctx, dest, t, p) {
+    var out = ctx.createGain();
+    out.gain.value = 0.6 * (p.level / 70);
+    out.connect(dest);
+    var bodyDecay = p.bodyDecay / 1000;
+    var bodyLevel = (p.body / 100) * 0.6;
+    [1, 330 / 180].forEach(function (ratio) {
+      var f = p.tune * ratio;
+      var osc = ctx.createOscillator();
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(f * 1.4, t);
+      osc.frequency.setTargetAtTime(f, t, 0.008);
+      var g = ctx.createGain();
+      envelope(g, t, bodyDecay, bodyLevel);
+      osc.connect(g); g.connect(out);
+      osc.start(t);
+      osc.stop(t + bodyDecay * 1.1 + 0.05);
+    });
+    var noiseDecay = p.noiseDecay / 1000;
+    var n = ctx.createBufferSource();
+    n.buffer = noiseBuffer(ctx);
+    var hp = ctx.createBiquadFilter();
+    hp.type = "highpass"; hp.frequency.value = p.noiseFreq;
+    var ng = ctx.createGain();
+    envelope(ng, t, noiseDecay, (p.snappy / 100) * 0.8);
+    n.connect(hp); hp.connect(ng); ng.connect(out);
+    n.start(t);
+    n.stop(t + Math.min(0.95, noiseDecay * 1.1 + 0.05));
+  }
+
+  // Tons: senoide com queda de pitch e um clique de ruído no ataque.
+  function tom(ctx, dest, t, p) {
+    var decay = p.decay / 1000;
+    var osc = ctx.createOscillator();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(p.tune * (1 + p.drop / 100), t);
+    osc.frequency.setTargetAtTime(p.tune, t, 0.02);
+    var amp = ctx.createGain();
+    envelope(amp, t, decay, 1);
+    var out = ctx.createGain();
+    out.gain.value = 0.8 * (p.level / 70);
+    osc.connect(amp); amp.connect(out);
+    if (p.attack > 0) {
+      var n = ctx.createBufferSource();
+      n.buffer = noiseBuffer(ctx);
+      var hp = ctx.createBiquadFilter();
+      hp.type = "highpass"; hp.frequency.value = 1500;
+      var g = ctx.createGain();
+      g.gain.setValueAtTime((p.attack / 100) * 0.5, t);
+      g.gain.setTargetAtTime(0, t, 0.003);
+      n.connect(hp); hp.connect(g); g.connect(out);
+      n.start(t); n.stop(t + 0.05);
+    }
+    out.connect(dest);
+    osc.start(t);
+    osc.stop(t + decay * 1.1 + 0.05);
+  }
+
+  // Rimshot: dois tons muito curtos e um estalo de ruído.
+  function rim(ctx, dest, t, p) {
+    var decay = p.decay / 1000;
+    var out = ctx.createGain();
+    out.gain.value = 0.7 * (p.level / 70);
+    var hpAll = ctx.createBiquadFilter();
+    hpAll.type = "highpass"; hpAll.frequency.value = 300;
+    hpAll.connect(out); out.connect(dest);
+    [[p.tune, "triangle", 0.8, 1], [p.tune * 3.5, "square", 0.25, 0.6]].forEach(function (c) {
+      var o = ctx.createOscillator();
+      o.type = c[1]; o.frequency.value = c[0];
+      var g = ctx.createGain();
+      envelope(g, t, decay * c[3], c[2]);
+      o.connect(g); g.connect(hpAll);
+      o.start(t); o.stop(t + decay * 1.1 + 0.05);
+    });
+    var n = ctx.createBufferSource();
+    n.buffer = noiseBuffer(ctx);
+    var nh = ctx.createBiquadFilter();
+    nh.type = "highpass"; nh.frequency.value = 3000;
+    var ng = ctx.createGain();
+    ng.gain.setValueAtTime(0.5, t);
+    ng.gain.setTargetAtTime(0, t, 0.003);
+    n.connect(nh); nh.connect(ng); ng.connect(hpAll);
+    n.start(t); n.stop(t + 0.05);
+  }
+
+  // Clap: rajadas curtas de ruído e uma cauda, com filtro um pouco mais estreito que na 808.
+  function clap(ctx, dest, t, p) {
+    var tail = p.tail / 1000;
+    var n = ctx.createBufferSource();
+    n.buffer = noiseBuffer(ctx);
+    var bp = ctx.createBiquadFilter();
+    bp.type = "bandpass"; bp.frequency.value = p.tone; bp.Q.value = 1.5;
+    var env = ctx.createGain();
+    for (var i = 0; i < 3; i++) {
+      var s = t + i * 0.010;
+      env.gain.setValueAtTime(1, s);
+      env.gain.setTargetAtTime(0, s, 0.003);
+    }
+    var last = t + 3 * 0.010;
+    env.gain.setValueAtTime(1, last);
+    env.gain.setTargetAtTime(0, last, tail / 6.9);
+    var out = ctx.createGain();
+    out.gain.value = 0.9 * (p.level / 70);
+    n.connect(bp); bp.connect(env); env.connect(out); out.connect(dest);
+    n.start(t);
+    n.stop(t + 0.03 + Math.min(0.9, tail * 1.1 + 0.05));
+  }
+
+  // Hats, crash e ride: na 909 original eram samples. Aqui são aproximados com seis ondas quadradas filtradas.
+  var METAL = [205.3, 304.4, 369.6, 522.7, 540, 800];
+  function metal(ctx, dest, t, ratio, decay, bright, level, k, center) {
+    var mix = ctx.createGain();
+    mix.gain.value = 1 / 6;
+    METAL.forEach(function (f) {
+      var o = ctx.createOscillator();
+      o.type = "square";
+      o.frequency.value = f * ratio;
+      o.connect(mix);
+      o.start(t);
+      o.stop(t + decay * 1.1 + 0.05);
+    });
+    var bp = ctx.createBiquadFilter();
+    bp.type = "bandpass"; bp.frequency.value = center; bp.Q.value = 0.8;
+    var hp1 = ctx.createBiquadFilter();
+    hp1.type = "highpass"; hp1.frequency.value = bright;
+    var hp2 = ctx.createBiquadFilter();
+    hp2.type = "highpass"; hp2.frequency.value = bright;
+    var env = ctx.createGain();
+    envelope(env, t, decay, 1);
+    var out = ctx.createGain();
+    out.gain.value = k * (level / 70);
+    var choke = ctx.createGain();
+    mix.connect(bp); bp.connect(hp1); hp1.connect(hp2); hp2.connect(env);
+    env.connect(out); out.connect(choke); choke.connect(dest);
+    return choke; // permite cortar o som depois (hat fechado corta o aberto)
+  }
+  function hat(ctx, dest, t, p) {
+    return metal(ctx, dest, t, p.tune / 100, p.decay / 1000, p.bright, p.level, 2.5, 11000);
+  }
+  function cymbal(ctx, dest, t, p) {
+    return metal(ctx, dest, t, p.tune / 100, p.decay / 1000, p.bright, p.level, 2.2, 9000);
+  }
+
+  // ---------- Definição das vozes ----------
+  function L() { return Object.assign({}, LEVEL); }
+  function tomParams(tune, tmin, tmax, decay) {
+    return [
+      { id: "tune", label: "Afinação", min: tmin, max: tmax, step: 1, val: tune, hint: "Nota em que o tom se estabiliza.", fmt: fmtHz },
+      { id: "decay", label: "Duração", min: 80, max: 800, step: 10, val: decay, hint: "Tempo até o volume cair ao silêncio.", fmt: fmtDur },
+      { id: "drop", label: "Queda do pitch", min: 0, max: 120, step: 1, val: 60, hint: "Quanto o pitch começa acima da nota final.", fmt: fmtPct },
+      { id: "attack", label: "Clique do ataque", min: 0, max: 100, step: 1, val: 30, hint: "Estalo curto de ruído no início, que dá mais punch.", fmt: fmtPct },
+      L()
+    ];
+  }
+  function metalParams(decay, dmin, dmax, bright, bmin, bmax, tune) {
+    return [
+      { id: "tune", label: "Afinação", min: 70, max: 150, step: 1, val: tune, hint: "Desloca as seis frequências juntas. 100% é o padrão.", fmt: fmtPct },
+      { id: "decay", label: "Duração", min: dmin, max: dmax, step: 10, val: decay, hint: "Tempo até o som sumir.", fmt: fmtDur },
+      { id: "bright", label: "Brilho", min: bmin, max: bmax, step: 100, val: bright, hint: "Corte do filtro passa-alta. Subir deixa o som mais fino.", fmt: fmtHz },
+      L()
+    ];
+  }
+
+  var VOICES = [
+    { id: "bd", name: "Bumbo", dur: 0.8, fn: kick,
+      desc: "Senoide com queda de pitch bem rápida, clique forte no ataque e saturação. É mais curto e agressivo que o da 808.",
+      params: [
+        { id: "start", label: "Pitch inicial", min: 100, max: 500, step: 1, val: 260, hint: "Frequência no instante do golpe.", fmt: fmtHz },
+        { id: "end", label: "Pitch final", min: 35, max: 110, step: 1, val: 52, hint: "Nota em que o bumbo se estabiliza.", fmt: fmtHz },
+        { id: "sweep", label: "Queda do pitch", min: 5, max: 150, step: 1, val: 25, hint: "Tempo que o pitch leva para descer. Na 909 é bem curto.", fmt: fmtDur },
+        { id: "decay", label: "Duração", min: 80, max: 1200, step: 10, val: 320, hint: "Tempo até o volume cair ao silêncio.", fmt: fmtDur },
+        { id: "click", label: "Clique do ataque", min: 0, max: 100, step: 1, val: 45, hint: "Estalo de ruído no início. É uma marca do som da 909.", fmt: fmtPct },
+        { id: "drive", label: "Saturação", min: 0, max: 100, step: 1, val: 45, hint: "Distorce a onda e acrescenta harmônicos.", fmt: fmtPct },
+        L()
+      ] },
+    { id: "sd", name: "Caixa", dur: 0.5, fn: snare,
+      desc: "Dois osciladores triangulares para o corpo e bastante ruído filtrado. É mais brilhante e com mais esteira que a da 808.",
+      params: [
+        { id: "tune", label: "Afinação do corpo", min: 120, max: 320, step: 1, val: 190, hint: "Frequência do primeiro oscilador. O segundo fica uns 83% acima.", fmt: fmtHz },
+        { id: "bodyDecay", label: "Duração do corpo", min: 30, max: 300, step: 1, val: 110, hint: "Quanto tempo o tom da caixa dura.", fmt: fmtDur },
+        { id: "body", label: "Nível do corpo", min: 0, max: 100, step: 1, val: 60, hint: "Volume dos dois osciladores.", fmt: fmtPct },
+        { id: "snappy", label: "Nível do ruído", min: 0, max: 100, step: 1, val: 80, hint: "Volume da esteira.", fmt: fmtPct },
+        { id: "noiseDecay", label: "Duração do ruído", min: 50, max: 500, step: 5, val: 220, hint: "Tempo que a esteira chia.", fmt: fmtDur },
+        { id: "noiseFreq", label: "Brilho do ruído", min: 500, max: 6000, step: 50, val: 2500, hint: "Corte do filtro passa-alta. Subir deixa o ruído mais fino.", fmt: fmtHz },
+        L()
+      ] },
+    { id: "lt", name: "Tom grave", dur: 0.8, fn: tom,
+      desc: "Senoide com queda de pitch e um clique de ruído no ataque. Mais seco e com mais punch que os tons da 808.",
+      params: tomParams(100, 60, 220, 260) },
+    { id: "mt", name: "Tom médio", dur: 0.8, fn: tom,
+      desc: "Mesmo princípio do tom grave, afinado mais alto.",
+      params: tomParams(150, 90, 320, 220) },
+    { id: "ht", name: "Tom agudo", dur: 0.8, fn: tom,
+      desc: "Mesmo princípio do tom grave, afinado ainda mais alto.",
+      params: tomParams(220, 120, 450, 180) },
+    { id: "rs", name: "Rimshot", dur: 0.3, fn: rim,
+      desc: "Dois tons muito curtos (um triangular e um quadrado, bem mais agudo) mais um estalo de ruído.",
+      params: [
+        { id: "tune", label: "Afinação", min: 300, max: 800, step: 5, val: 480, hint: "Frequência do tom principal. O outro fica 3,5 vezes mais alto.", fmt: fmtHz },
+        { id: "decay", label: "Duração", min: 10, max: 120, step: 1, val: 40, hint: "Tempo até o som sumir.", fmt: fmtDur },
+        L()
+      ] },
+    { id: "cp", name: "Clap", dur: 0.5, fn: clap,
+      desc: "Ruído filtrado em três rajadas rápidas, seguidas de uma cauda.",
+      params: [
+        { id: "tone", label: "Tom", min: 600, max: 2800, step: 10, val: 1200, hint: "Frequência central do filtro. Mais alto, mais seco e estalado.", fmt: fmtHz },
+        { id: "tail", label: "Cauda", min: 50, max: 500, step: 5, val: 220, hint: "Duração do som depois das rajadas.", fmt: fmtDur },
+        L()
+      ] },
+    { id: "ch", name: "Hat fechado", dur: 0.3, fn: hat,
+      desc: "Aproximação por síntese de um som que na 909 original era sample: seis ondas quadradas filtradas, mais finas que as da 808.",
+      params: metalParams(45, 20, 200, 8500, 3000, 12000, 100) },
+    { id: "oh", name: "Hat aberto", dur: 1.0, fn: hat,
+      desc: "Mesma síntese do hat fechado, com decaimento longo.",
+      params: metalParams(300, 100, 1000, 8500, 3000, 12000, 100) },
+    { id: "cr", name: "Crash", dur: 2.5, fn: cymbal,
+      desc: "Aproximação por síntese: a mesma base metálica, com decaimento muito longo e filtro mais grave.",
+      params: metalParams(1800, 400, 2500, 4500, 2500, 9000, 90) },
+    { id: "rd", name: "Ride", dur: 2.0, fn: cymbal,
+      desc: "Aproximação por síntese: base metálica com decaimento médio e um pouco mais aguda que o crash.",
+      params: metalParams(1200, 400, 2500, 6000, 2500, 9000, 115) }
+  ];
+
+  // ---------- Estado ----------
+  var state = {};
+  var pattern = {};
+  VOICES.forEach(function (v) {
+    state[v.id] = {};
+    v.params.forEach(function (p) { state[v.id][p.id] = p.val; });
+    pattern[v.id] = [];
+    for (var i = 0; i < 16; i++) pattern[v.id].push(false);
+  });
+  [0, 4, 8, 12].forEach(function (i) { pattern.bd[i] = true; });
+  [4, 12].forEach(function (i) { pattern.cp[i] = true; });
+  [2, 6, 10, 14].forEach(function (i) { pattern.oh[i] = true; });
+  [3, 7, 11, 15].forEach(function (i) { pattern.ch[i] = true; });
+
+  var current = VOICES[0];
+
+  // Ganho de calibração de cada voz, medido para que, no volume padrão, a mistura fique equilibrada
+  // (bumbo e caixa à frente, hats atrás). O controle de volume age a partir desse ponto.
+  var TRIM = {"bd":0.65,"sd":1.26,"lt":0.62,"mt":0.67,"ht":0.74,"rs":1.11,"cp":1.79,"ch":2.45,"oh":1.09,"cr":0.53,"rd":0.58};
+  function voiceParams(v) {
+    var p = state[v.id];
+    var lv = 70 * (TRIM[v.id] || 1) * Math.pow(p.level / 70, 2);
+    return Object.assign({}, p, { level: lv });
+  }
+
+  // ---------- Áudio ao vivo ----------
+  var ctx = null, master = null, lastOH = null;
+  function ensureCtx() {
+    if (!ctx) {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      ctx = new AC();
+      var comp = ctx.createDynamicsCompressor();
+      comp.threshold.value = -3;
+      comp.knee.value = 0;
+      comp.ratio.value = 20;
+      comp.attack.value = 0.002;
+      comp.release.value = 0.1;
+      master = ctx.createGain();
+      master.gain.value = 0.7;
+      master.connect(comp);
+      comp.connect(ctx.destination);
+    }
+    if (ctx.state === "suspended") ctx.resume();
+    return ctx;
+  }
+
+  function trigger(v, t) {
+    if (v.id === "ch" && lastOH && lastOH.t <= t) {
+      lastOH.node.gain.setTargetAtTime(0, t, 0.004);
+      lastOH = null;
+    }
+    var node = v.fn(ctx, master, t, voiceParams(v));
+    if (v.id === "oh") lastOH = { node: node, t: t };
+  }
+  function preview(v) {
+    if (playing || !audible(v)) return;
+    ensureCtx();
+    trigger(v, ctx.currentTime + 0.005);
+  }
+
+  // ---------- Sequenciador ----------
+  var bpmEl = document.getElementById("bpm");
+  var bpmOut = document.getElementById("bpm-out");
+  var swingEl = document.getElementById("swing");
+  var swingOut = document.getElementById("swing-out");
+  var playBtn = document.getElementById("play");
+  var playing = false, step = 0, nextT = 0, timer = null, queue = [], rafId = 0, shownStep = -1;
+
+  bpmEl.addEventListener("input", function () { bpmOut.textContent = bpmEl.value + " bpm"; });
+  swingEl.addEventListener("input", function () { swingOut.textContent = swingEl.value + " %"; });
+
+  function stepDur() { return 60 / Number(bpmEl.value) / 4; }
+
+  function schedule() {
+    while (nextT < ctx.currentTime + 0.12) {
+      var sw = (step % 2 === 1) ? stepDur() * Number(swingEl.value) / 100 : 0;
+      var tt = nextT + sw;
+      for (var k = 0; k < VOICES.length; k++) {
+        if (pattern[VOICES[k].id][step] && audible(VOICES[k])) trigger(VOICES[k], tt);
+      }
+      queue.push({ step: step, time: tt });
+      nextT += stepDur();
+      step = (step + 1) % 16;
+    }
+  }
+
+  function showStep(s) {
+    if (s === shownStep) return;
+    if (shownStep >= 0) cols[shownStep].forEach(function (b) { b.classList.remove("now"); });
+    if (s >= 0) cols[s].forEach(function (b) { b.classList.add("now"); });
+    shownStep = s;
+  }
+
+  function frame() {
+    if (!playing) return;
+    var now = ctx.currentTime, cur = -1;
+    while (queue.length && queue[0].time <= now) cur = queue.shift().step;
+    if (cur >= 0) showStep(cur);
+    rafId = requestAnimationFrame(frame);
+  }
+
+  function start() {
+    ensureCtx();
+    playing = true;
+    step = 0; queue = [];
+    nextT = ctx.currentTime + 0.06;
+    schedule();
+    timer = setInterval(schedule, 25);
+    playBtn.textContent = "Parar";
+    rafId = requestAnimationFrame(frame);
+  }
+  function stop() {
+    playing = false;
+    clearInterval(timer); timer = null;
+    cancelAnimationFrame(rafId);
+    queue = [];
+    showStep(-1);
+    playBtn.textContent = "Tocar";
+  }
+  function toggle() { playing ? stop() : start(); }
+
+  playBtn.addEventListener("click", toggle);
+  document.addEventListener("keydown", function (e) {
+    var tg = e.target;
+    if (e.code === "Space" && !e.repeat && tg.tagName !== "BUTTON" && tg.tagName !== "OUTPUT" && !(tg.tagName === "INPUT" && tg.type === "text")) {
+      e.preventDefault();
+      toggle();
+    }
+  });
+
+  // ---------- Grade ----------
+  var grid = document.getElementById("grid");
+  var cols = [];
+  for (var c = 0; c < 16; c++) cols.push([]);
+  var nameBtns = {}, msBtns = {}, rowSteps = {}, muted = {}, soloed = {};
+
+  function anySolo() {
+    return VOICES.some(function (v) { return soloed[v.id]; });
+  }
+  // Se alguma voz está em solo, só as em solo tocam; sem solo, tocam todas as que não estão em mute.
+  function audible(v) {
+    return anySolo() ? !!soloed[v.id] : !muted[v.id];
+  }
+  function refreshMS() {
+    VOICES.forEach(function (v) {
+      var on = audible(v);
+      msBtns[v.id].m.setAttribute("aria-pressed", muted[v.id] ? "true" : "false");
+      msBtns[v.id].s.setAttribute("aria-pressed", soloed[v.id] ? "true" : "false");
+      nameBtns[v.id].classList.toggle("dim", !on);
+      rowSteps[v.id].forEach(function (b) { b.classList.toggle("dim", !on); });
+    });
+  }
+
+  VOICES.forEach(function (v) {
+    var nb = document.createElement("button");
+    nb.type = "button";
+    nb.className = "name";
+    nb.textContent = v.name;
+    nb.addEventListener("click", function () { select(v); });
+    nameBtns[v.id] = nb;
+    rowSteps[v.id] = [];
+
+    var mb = document.createElement("button");
+    mb.type = "button";
+    mb.className = "ms mute";
+    mb.textContent = "M";
+    mb.title = "Silenciar " + v.name;
+    mb.setAttribute("aria-label", "Silenciar " + v.name);
+    mb.setAttribute("aria-pressed", "false");
+    mb.addEventListener("click", function () { muted[v.id] = !muted[v.id]; refreshMS(); });
+    var sb = document.createElement("button");
+    sb.type = "button";
+    sb.className = "ms solo";
+    sb.textContent = "S";
+    sb.title = "Tocar só " + v.name;
+    sb.setAttribute("aria-label", "Solo " + v.name);
+    sb.setAttribute("aria-pressed", "false");
+    sb.addEventListener("click", function () { soloed[v.id] = !soloed[v.id]; refreshMS(); });
+    msBtns[v.id] = { m: mb, s: sb };
+
+    var label = document.createElement("div");
+    label.className = "label";
+    label.appendChild(nb);
+    label.appendChild(mb);
+    label.appendChild(sb);
+    grid.appendChild(label);
+
+    for (var i = 0; i < 16; i++) {
+      (function (i) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "step" + (i > 0 && i % 4 === 0 ? " gap" : "") + (pattern[v.id][i] ? " on" : "");
+        b.setAttribute("data-g", String(Math.floor(i / 4)));
+        b.setAttribute("aria-pressed", pattern[v.id][i] ? "true" : "false");
+        b.setAttribute("aria-label", v.name + ", passo " + (i + 1));
+        b.addEventListener("click", function () {
+          pattern[v.id][i] = !pattern[v.id][i];
+          b.classList.toggle("on", pattern[v.id][i]);
+          b.setAttribute("aria-pressed", pattern[v.id][i] ? "true" : "false");
+          if (pattern[v.id][i] && !playing) preview(v);
+        });
+        cols[i].push(b);
+        rowSteps[v.id].push(b);
+        grid.appendChild(b);
+      })(i);
+    }
+  });
+
+  document.getElementById("clear").addEventListener("click", function () {
+    VOICES.forEach(function (v) {
+      for (var i = 0; i < 16; i++) pattern[v.id][i] = false;
+    });
+    for (var i = 0; i < 16; i++) cols[i].forEach(function (b) {
+      b.classList.remove("on");
+      b.setAttribute("aria-pressed", "false");
+    });
+  });
+
+  // ---------- Edição digitando o valor ----------
+  function parseValue(txt, unit) {
+    var s = String(txt).trim().toLowerCase().replace(",", ".");
+    var m = s.match(/^(-?\d*\.?\d+)\s*(ms|s|hz|bpm|%)?$/);
+    if (!m) return null;
+    var n = parseFloat(m[1]);
+    if (unit === "ms" && m[2] === "s") n *= 1000;
+    return n;
+  }
+  function makeEditable(out, slider, unit, onCommit) {
+    out.classList.add("editable");
+    out.tabIndex = 0;
+    out.setAttribute("role", "button");
+    out.title = "Toque para digitar o valor";
+    function open() {
+      if (out._editing) return;
+      out._editing = true;
+      var holder = document.createElement("span");
+      holder.className = "numwrap";
+      var inp = document.createElement("input");
+      inp.type = "text";
+      inp.inputMode = "decimal";
+      inp.className = "numedit";
+      inp.value = slider.value;
+      inp.setAttribute("aria-label", "Digite o valor em " + unit);
+      var u = document.createElement("span");
+      u.className = "unit";
+      u.textContent = unit;
+      holder.appendChild(inp);
+      holder.appendChild(u);
+      out.style.display = "none";
+      out.parentNode.insertBefore(holder, out.nextSibling);
+      inp.focus();
+      inp.select();
+      var done = false;
+      function close(commit, refocus) {
+        if (done) return;
+        done = true;
+        if (commit) {
+          var n = parseValue(inp.value, unit);
+          if (n !== null) {
+            slider.value = String(n);
+            slider.dispatchEvent(new Event("input", { bubbles: true }));
+            if (onCommit) onCommit();
+          }
+        }
+        holder.remove();
+        out.style.display = "";
+        out._editing = false;
+        if (refocus) out.focus();
+      }
+      inp.addEventListener("keydown", function (e) {
+        e.stopPropagation();
+        if (e.key === "Enter") { e.preventDefault(); close(true, true); }
+        else if (e.key === "Escape") { e.preventDefault(); close(false, true); }
+      });
+      inp.addEventListener("blur", function () { close(true, false); });
+    }
+    out.addEventListener("click", open);
+    out.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); open(); }
+    });
+  }
+  makeEditable(bpmOut, bpmEl, "bpm");
+  makeEditable(swingOut, swingEl, "%");
+
+  // ---------- Editor de voz ----------
+  var controls = document.getElementById("controls");
+  var edTitle = document.getElementById("ed-title");
+  var edDesc = document.getElementById("ed-desc");
+  var scopeCap = document.getElementById("scope-cap");
+
+  function buildControls(v) {
+    controls.innerHTML = "";
+    v.params.forEach(function (p) {
+      var wrap = document.createElement("div");
+      wrap.className = "ctl";
+      var row = document.createElement("div");
+      row.className = "row";
+      var label = document.createElement("label");
+      label.htmlFor = "p-" + p.id;
+      label.textContent = p.label;
+      var out = document.createElement("output");
+      out.htmlFor = "p-" + p.id;
+      out.textContent = p.fmt(state[v.id][p.id]);
+      row.appendChild(label); row.appendChild(out);
+
+      var input = document.createElement("input");
+      input.type = "range";
+      input.id = "p-" + p.id;
+      input.min = p.min; input.max = p.max; input.step = p.step;
+      input.value = state[v.id][p.id];
+      input.addEventListener("input", function () {
+        state[v.id][p.id] = Number(input.value);
+        out.textContent = p.fmt(state[v.id][p.id]);
+        scheduleScope();
+      });
+      input.addEventListener("change", function () { preview(v); });
+      makeEditable(out, input, p.fmt === fmtHz ? "Hz" : (p.fmt === fmtPct ? "%" : "ms"), function () { input.dispatchEvent(new Event("change")); });
+
+      var hint = document.createElement("p");
+      hint.className = "hint";
+      hint.textContent = p.hint;
+
+      wrap.appendChild(row); wrap.appendChild(input); wrap.appendChild(hint);
+      controls.appendChild(wrap);
+    });
+  }
+
+  function select(v) {
+    current = v;
+    VOICES.forEach(function (x) {
+      if (x === v) nameBtns[x.id].setAttribute("aria-current", "true");
+      else nameBtns[x.id].removeAttribute("aria-current");
+    });
+    edTitle.textContent = v.name;
+    edDesc.textContent = v.desc;
+    scopeCap.textContent = "Forma de onda dos primeiros " + v.dur.toLocaleString("pt-BR") + " s.";
+    buildControls(v);
+    scopeData = null;
+    renderScope();
+  }
+
+  // ---------- Forma de onda ----------
+  var canvas = document.getElementById("scope");
+  var g2d = canvas.getContext("2d");
+  var scopeData = null, renderToken = 0, rafPending = false;
+
+  function css(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
+  function drawScope() {
+    var dpr = window.devicePixelRatio || 1;
+    var w = canvas.clientWidth, h = canvas.clientHeight;
+    if (!w || !h) return;
+    if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+    }
+    g2d.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g2d.clearRect(0, 0, w, h);
+
+    var dur = current.dur;
+    var padB = 22, mid = (h - padB) / 2, amp = mid - 6;
+    var grid = css("--grid"), wave = css("--wave"), muted = css("--muted");
+    var fam = getComputedStyle(document.body).fontFamily;
+
+    g2d.lineWidth = 1;
+    g2d.strokeStyle = grid;
+    g2d.fillStyle = muted;
+    g2d.font = "500 14px " + fam;
+    g2d.textBaseline = "alphabetic";
+    var tickStep = dur <= 0.6 ? 0.1 : (dur <= 1.3 ? 0.25 : 0.5);
+    for (var s = 0; s <= dur + 1e-9; s += tickStep) {
+      var x = Math.min(w - 1, Math.round((s / dur) * w)) + 0.5;
+      g2d.beginPath(); g2d.moveTo(x, 0); g2d.lineTo(x, h - padB); g2d.stroke();
+      var rs = Math.round(s * 100) / 100;
+      var last = s + tickStep > dur + 1e-9;
+      g2d.textAlign = s === 0 ? "left" : (last ? "right" : "center");
+      g2d.fillText(rs === 0 ? "0" : rs.toLocaleString("pt-BR") + " s", s === 0 ? 2 : (last ? w - 2 : x), h - 6);
+    }
+    g2d.beginPath(); g2d.moveTo(0, mid + 0.5); g2d.lineTo(w, mid + 0.5); g2d.stroke();
+
+    if (!scopeData) return;
+    var n = scopeData.length;
+    g2d.fillStyle = wave;
+    for (var px = 0; px < w; px++) {
+      var a = Math.floor((px / w) * n);
+      var b = Math.max(a + 1, Math.floor(((px + 1) / w) * n));
+      var mn = 1, mx = -1;
+      for (var i = a; i < b && i < n; i++) {
+        var v = scopeData[i];
+        if (v < mn) mn = v;
+        if (v > mx) mx = v;
+      }
+      if (mn > mx) continue;
+      var y1 = mid - Math.max(-1, Math.min(1, mx)) * amp;
+      var y2 = mid - Math.max(-1, Math.min(1, mn)) * amp;
+      g2d.fillRect(px, y1, 1, Math.max(1, y2 - y1));
+    }
+  }
+
+  function scheduleScope() {
+    if (rafPending) return;
+    rafPending = true;
+    requestAnimationFrame(function () {
+      rafPending = false;
+      renderScope();
+    });
+  }
+
+  function renderScope() {
+    var token = ++renderToken;
+    var OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    if (!OAC) { drawScope(); return; }
+    var sr = 44100, v = current;
+    var oc = new OAC(1, Math.ceil(sr * v.dur), sr);
+    v.fn(oc, oc.destination, 0, voiceParams(v));
+    var pr = oc.startRendering();
+    if (pr && pr.then) {
+      pr.then(function (buf) {
+        if (token !== renderToken || v !== current) return;
+        scopeData = buf.getChannelData(0);
+        drawScope();
+      });
+    }
+  }
+
+  if (window.ResizeObserver) new ResizeObserver(drawScope).observe(canvas);
+  window.addEventListener("resize", drawScope);
+  if (window.matchMedia) {
+    var mq = window.matchMedia("(prefers-color-scheme: dark)");
+    if (mq.addEventListener) mq.addEventListener("change", drawScope);
+  }
+
+  select(VOICES[0]);
+})();
+</script>
+</body>
+</html>
