@@ -183,7 +183,6 @@
   <header>
     <div class="stripe" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
     <h1>Bateria eletrônica</h1>
-    <p class="sub" id="machine-desc"></p>
   </header>
 
   <section class="panel" aria-label="Máquina">
@@ -215,7 +214,6 @@
 
   <section class="panel" aria-label="Sequenciador">
     <div class="seq"><div class="grid" id="grid"></div></div>
-    <p class="legend">Cada coluna é uma semicolcheia. Clique e arraste sobre os quadrados para ligar ou apagar vários de uma vez: o primeiro quadrado define se a ação é ligar ou apagar. Os espaços entre os grupos de quatro marcam os tempos do compasso. O hat fechado corta o hat aberto, como na máquina original.</p>
   </section>
 
   <section class="panel" aria-label="Ajuste da voz">
@@ -228,7 +226,6 @@
     <div class="controls" id="controls"></div>
   </section>
 
-  <p class="note">A barra de espaço liga e desliga o sequenciador. Com o sequenciador parado, ao soltar um controle a voz toca sozinha. Durante a música, nenhuma amostra é disparada. M silencia uma voz e S deixa tocar só as marcadas. Para digitar um valor, toque no número ao lado do nome do controle. Cada máquina guarda a sua própria batida e os seus ajustes, e tudo é salvo automaticamente neste aparelho (o mute e o solo não são salvos). “Restaurar padrões” volta tudo ao início.</p>
 </main>
 
 <script>
@@ -1150,7 +1147,6 @@
   }
 
   // ---------- Troca de máquina ----------
-  var machineDesc = document.getElementById("machine-desc");
   var machineBtns = Array.prototype.slice.call(document.querySelectorAll(".mbtn"));
 
   function setMachine(id) {
@@ -1169,7 +1165,6 @@
     machineBtns.forEach(function (b) {
       b.setAttribute("aria-pressed", b.getAttribute("data-m") === id ? "true" : "false");
     });
-    machineDesc.textContent = machine.desc;
 
     buildGrid();
     var keep = null;
