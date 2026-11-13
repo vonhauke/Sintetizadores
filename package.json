@@ -6,9 +6,68 @@
   "scripts": {
     "test": "node --test tests/",
     "build:web": "node scripts/build-web.mjs",
-    "icons": "node scripts/make-icons.mjs"
+    "icons": "node scripts/make-icons.mjs",
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
   },
   "devDependencies": {
+    "electron": "^45.3.1",
+    "electron-builder": "^26.18.0",
     "sharp": "^0.35.5"
+  },
+  "main": "electron/main.js",
+  "description": "Sintetizadores e drum machines em Web Audio",
+  "author": "vonhauke",
+  "build": {
+    "appId": "com.vonhauke.sintetizadores",
+    "productName": "Sintetizadores",
+    "directories": {
+      "buildResources": "build",
+      "output": "dist"
+    },
+    "files": [
+      "package.json",
+      "electron/**",
+      "index.html",
+      "menu.css",
+      "instruments.json",
+      "manifest.webmanifest",
+      "*/index.html",
+      "fonts/**",
+      "icons/**",
+      "!node_modules/**/*",
+      "!dist-web/**",
+      "!dist/**"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "identity": null,
+      "category": "public.app-category.music",
+      "icon": "build/icon.png"
+    }
   }
 }
