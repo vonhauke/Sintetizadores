@@ -1,6 +1,6 @@
 # Sintetizadores
 
-Drum machines (808, 909, 606, 707) e sintetizadores (TB-303, SH-101, Juno-106) em Web Audio, reunidos num único aplicativo com menu. Tudo funciona offline.
+Drum machines (808, 909, 606, 707) e sintetizadores (TB-303, SH-101, Juno-106, Minimoog) em Web Audio, reunidos num único aplicativo com menu. Tudo funciona offline.
 
 ## Como usar
 

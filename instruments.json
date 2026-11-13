@@ -40,5 +40,11 @@
     "name": "Juno-106",
     "description": "Sintetizador polifônico com chorus",
     "path": "106/index.html"
+  },
+  {
+    "id": "minimoog",
+    "name": "Minimoog",
+    "description": "Sintetizador monofônico clássico, três osciladores e filtro de 24 dB",
+    "path": "minimoog/index.html"
   }
 ]
