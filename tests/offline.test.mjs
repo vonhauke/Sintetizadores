@@ -2,7 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
 
-const ids = ['101', '106', '303', '606', '808', '909', 'bumbo-808', 'caixa-808', 'bateria'];
+import { readFileSync as rf } from 'node:fs';
+const ids = JSON.parse(rf('instruments.json', 'utf8')).map(i => i.id);
 
 for (const id of ids) {
   test(`${id}: sem URLs externas e sem caminhos absolutos`, () => {
