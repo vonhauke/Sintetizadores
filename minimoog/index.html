@@ -160,6 +160,45 @@ button{touch-action:manipulation}
 .help p{margin:.4rem 0}
 kbd{font-family:var(--font-label);font-size:.9em;padding:0 .3em;border:1px solid currentColor;border-radius:3px}
 
+/* ---------- sequenciador: caixa separada, como no Juno-106 ---------- */
+.accessory{margin-top:26px;color:var(--label);border-radius:7px;padding:16px 18px 14px;border:2px solid #14151a;
+  background:linear-gradient(180deg,var(--panel-hi),var(--panel) 18%,var(--panel-lo));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.15), 0 3px 0 #111, 0 14px 16px rgba(0,0,0,.5)}
+.acc-head h2{font-family:var(--font-label);font-weight:700;font-size:1.05rem;letter-spacing:.08em;text-transform:uppercase;margin:0;line-height:1.2;display:inline-block;background:var(--orange);color:#17181a;padding:2px 10px}
+.acc-ctl{display:flex;flex-wrap:wrap;align-items:flex-start;gap:14px 28px;margin-top:12px}
+.acc-ctl .ctl-label{order:0;margin:6px 0 0;min-height:0;justify-content:flex-start;text-align:left}
+.acc-ctl .ctl .ctl-label{order:-1;margin:0 0 2px;min-height:1.6em;justify-content:center;text-align:center}
+.sbtn{font-family:var(--font-label);font-weight:700;font-size:.88rem;letter-spacing:.05em;text-transform:uppercase;color:#17181a;border:0;border-radius:3px;padding:.42rem .8rem .5rem;cursor:pointer;
+  background:linear-gradient(180deg,#fbf9ef,var(--cream) 45%,#b9b6a9);
+  box-shadow:inset 0 1px 0 #fff, inset 0 -3px 0 rgba(0,0,0,.18), 0 0 0 2px #0b0b0b, 0 4px 3px 1px rgba(0,0,0,.45)}
+.sbtn:active{transform:translateY(1px)}
+.sbtn:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
+.sbtn.big{font-size:1.05rem;min-width:96px;padding:.8rem 1.4rem .9rem;background:linear-gradient(180deg,#ffb468,var(--orange) 45%,#b34710)}
+.sbtn.big[aria-pressed="true"]{box-shadow:inset 0 1px 0 #fff, inset 0 -3px 0 rgba(0,0,0,.18), 0 0 0 2px #0b0b0b, 0 0 10px 3px rgba(229,101,27,.7)}
+.btn-row{display:flex;gap:10px}
+.slots{display:flex;gap:6px}
+.slots button{width:34px;height:28px;padding:0 0 2px;font-family:var(--font-label);font-weight:700;font-size:.95rem;color:#17181a;border:0;border-radius:2px;cursor:pointer;
+  background:linear-gradient(180deg,#fbf9ef,var(--cream) 45%,#b9b6a9);box-shadow:inset 0 1px 0 #fff, inset 0 -3px 0 rgba(0,0,0,.18), 0 0 0 2px #0b0b0b}
+.slots button[aria-checked="true"]{background:linear-gradient(180deg,#ffb468,var(--orange) 45%,#b34710)}
+.slots button:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.oct-row{display:flex;align-items:center;gap:8px}
+.oct-val{font-family:var(--font-label);font-weight:600;min-width:5.5em;text-align:center;font-variant-numeric:tabular-nums}
+.seq-scroll{overflow-x:auto;margin-top:14px;padding-bottom:6px}
+.seqgrid{display:grid;grid-template-columns:44px repeat(16,minmax(26px,1fr));gap:2px;min-width:620px;user-select:none;-webkit-user-select:none}
+.sl{font-family:var(--font-label);font-size:.78rem;color:var(--sub);display:flex;align-items:center;justify-content:flex-end;padding-right:6px;line-height:1}
+.sl.c{color:var(--label);font-weight:700}
+.sh{font-family:var(--font-label);font-size:.82rem;color:var(--sub);text-align:center;font-variant-numeric:tabular-nums}
+.sh.now{color:var(--led);font-weight:700}
+.sh.hid{text-decoration:underline dotted}
+.sc{appearance:none;border:0;border-radius:2px;height:13px;padding:0;background:#5a5d62;cursor:pointer;box-shadow:inset 0 1px 1px rgba(0,0,0,.4)}
+.sc.blk{background:#3d4044}
+.sc.beat,.sh.beat{margin-left:3px}
+.sc.on{background:var(--orange);box-shadow:0 0 6px rgba(229,101,27,.6)}
+.sc.now{background-image:linear-gradient(rgba(255,255,255,.22),rgba(255,255,255,.22))}
+.sc.off,.sh.off{opacity:.3}
+.sc:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+@media (pointer:coarse){.sbtn{min-height:44px}.slots button{width:38px;height:34px}}
+
 @media (max-width:1000px){
   .sec{flex:1 1 100%;border-right:0}
   .sec-body{flex-direction:row;flex-wrap:wrap;justify-content:center}
@@ -206,6 +245,33 @@ kbd{font-family:var(--font-label);font-size:.9em;padding:0 .3em;border:1px solid
     <div class="kb-nav"><button type="button" id="kb-left" aria-label="Rolar o teclado para os graves">&larr; Graves</button><button type="button" id="kb-right" aria-label="Rolar o teclado para os agudos">Agudos &rarr;</button></div>
   </section>
 
+  <section class="accessory" aria-label="Sequenciador">
+    <div class="acc-head"><h2>Sequenciador</h2></div>
+    <div class="acc-ctl">
+      <button type="button" class="sbtn big" id="seq-play" aria-pressed="false">Tocar</button>
+      <div class="rowc" id="seq-knobs"></div>
+      <div class="sw-wrap"><div class="slots" id="seq-len" role="radiogroup" aria-label="Número de passos"></div><div class="ctl-label">Passos</div></div>
+      <div class="sw-wrap">
+        <div class="oct-row">
+          <button type="button" class="sbtn" id="seq-tr-down" aria-label="Transpor a sequência uma oitava abaixo">Oitava −</button>
+          <span class="oct-val" id="seq-tr" aria-live="polite"></span>
+          <button type="button" class="sbtn" id="seq-tr-up" aria-label="Transpor a sequência uma oitava acima">Oitava +</button>
+        </div>
+        <div class="ctl-label">Transpor a sequência</div>
+      </div>
+      <div class="sw-wrap">
+        <div class="oct-row">
+          <button type="button" class="sbtn" id="seq-oct-down" aria-label="Mostrar na grade notas mais graves">Grade ▼</button>
+          <span class="oct-val" id="seq-range" aria-live="polite"></span>
+          <button type="button" class="sbtn" id="seq-oct-up" aria-label="Mostrar na grade notas mais agudas">Grade ▲</button>
+        </div>
+        <div class="ctl-label">Janela da grade (só visual)</div>
+      </div>
+      <div class="btn-row"><button type="button" class="sbtn" id="seq-clear">Limpar</button><button type="button" class="sbtn" id="seq-example">Exemplo</button></div>
+    </div>
+    <div class="seq-scroll"><div class="seqgrid" id="seqgrid" aria-label="Grade do sequenciador: 16 passos por 25 notas, uma nota por passo"></div></div>
+  </section>
+
 </div>
 
 <script>
@@ -218,7 +284,7 @@ const DEF = {
   r1:.6, w1:.4,  r2:.6, f2:.51, w2:.4,  r3:.4, f3:.5, w3:.6,
   v1:.7, v2:.7, v3:.5, vn:0,
   cutoff:.55, emph:.25, contour:.5, fA:0, fD:.5, fS:.3, lA:0, lD:.6, lS:.7,
-  volume:.6
+  volume:.6, seqTempo:.4, seqGate:.6
 };
 const DEF_T = {osc3k:true, oscMod:false, filtMod:false, kb1:true, kb2:true,
   on1:true, on2:true, on3:true, onN:false, mainOut:true, a440:false, power:true, glideOn:false, decayOn:true};
@@ -242,19 +308,33 @@ const secs = x => x < 1 ? Math.round(x * 1000) + ' ms' : num(x, x < 10 ? 2 : 1) 
 const signed = n => n > 0 ? '+' + n : n < 0 ? '−' + Math.abs(n) : '0';
 
 /* ---------- estado e persistência ---------- */
-const st = {v:Object.assign({}, DEF), t:Object.assign({}, DEF_T), sw:Object.assign({}, DEF_SW)};
+const st = {v:Object.assign({}, DEF), t:Object.assign({}, DEF_T), sw:Object.assign({}, DEF_SW), seq:null};
+/* sequenciador monofônico: 16 passos, cada um com uma nota (ou vazio); len = passos usados; base = janela da grade; oct = transposição */
+function exampleSteps(){ return [36,null,48,36,null,39,null,43,41,null,53,41,null,43,46,null]; }
+function cleanSeq(o){
+  const r = {len:16, base:36, oct:0, steps:exampleSteps()};
+  if (o && typeof o === 'object') {
+    if ([4,8,12,16].includes(o.len)) r.len = o.len;
+    if ([36,48,60,72].includes(o.base)) r.base = o.base;
+    if ([-2,-1,0,1,2].includes(o.oct)) r.oct = o.oct;
+    if (Array.isArray(o.steps) && o.steps.length === 16) r.steps = o.steps.map(n => Number.isInteger(n) && n >= 36 && n <= 96 ? n : null);
+  }
+  return r;
+}
 try {
   const s = JSON.parse(localStorage.getItem(STORE) || 'null');
   if (s && typeof s === 'object') {
     if (s.v) for (const k in DEF) { const x = s.v[k]; if (typeof x === 'number' && x >= 0 && x <= 1) st.v[k] = x; }
     if (s.t) for (const k in DEF_T) if (typeof s.t[k] === 'boolean') st.t[k] = s.t[k];
     if (s.sw) for (const k in DEF_SW) if (SW_OPTS[k].includes(s.sw[k])) st.sw[k] = s.sw[k];
+    if (s.seq) st.seq = cleanSeq(s.seq);
   }
 } catch (e) {}
+if (!st.seq) st.seq = cleanSeq(null);
 let saveTimer = null;
 function save(){
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => { try { localStorage.setItem(STORE, JSON.stringify({v:st.v, t:st.t, sw:st.sw})); } catch (e) {} }, 300);
+  saveTimer = setTimeout(() => { try { localStorage.setItem(STORE, JSON.stringify({v:st.v, t:st.t, sw:st.sw, seq:st.seq})); } catch (e) {} }, 300);
 }
 const idx = id => Math.round(st.v[id] * (STEPS[id] - 1));
 
@@ -753,6 +833,182 @@ const wheelsBox = $('c-wheels');
 var pitchEl = makeWheel(wheelsBox, 'Pitch', 'Roda de pitch', true, f => setBend(f * 2 - 1), () => setBend(0), d => setBend(bendVal + d * .25));
 var modEl = makeWheel(wheelsBox, 'Mod.', 'Roda de modulação', false, f => setMod(f), null, d => setMod(st.v.modWheel + d * .05));
 setBend(0); setMod(st.v.modWheel);
+
+/* ---------- sequenciador (uma nota por passo; a tecla segurada tem prioridade) ---------- */
+const SEQ_ROWS = 25;
+const seqBpm = () => Math.round(50 + st.v.seqTempo * 150);
+const seqStepDur = () => 60 / seqBpm() / 4;
+const noteName = m => NAMES[m % 12] + (Math.floor(m / 12) - 1);
+let seqPlaying = false, seqNext = 0, seqIdx = 0, seqNow = -1, seqClock = null;
+const seqQueue = [];
+
+function seqNote(note, t, off){
+  setPitch(note, t, true); envOn(t); envOff(off);
+}
+function seqStep(i, t){
+  const n = st.seq.steps[i];
+  if (n === null || stack.length) return;                 // passo vazio, ou tecla segurada: a tecla manda
+  const note = Math.max(12, Math.min(120, n + 12 * st.seq.oct));
+  seqNote(note, t, t + seqStepDur() * (0.1 + st.v.seqGate * 0.9));
+}
+function seqTick(){
+  if (!ctx || !seqPlaying) return;
+  const now = ctx.currentTime;
+  if (seqNext < now - 0.2) seqNext = now + 0.02;          // aba ficou em segundo plano
+  while (seqNext < now + 0.12) {
+    seqIdx %= st.seq.len;
+    seqStep(seqIdx, seqNext); seqQueue.push({i:seqIdx, t:seqNext});
+    seqNext += seqStepDur(); seqIdx = (seqIdx + 1) % st.seq.len;
+  }
+}
+const startSeqClock = () => { if (!seqClock) seqClock = setInterval(seqTick, 25); };
+const playBtn = $('seq-play');
+function renderPlay(){ playBtn.setAttribute('aria-pressed', seqPlaying); playBtn.textContent = seqPlaying ? 'Parar' : 'Tocar'; }
+function seqPlay(){
+  ensureAudio(); startSeqClock();
+  if (seqPlaying) return;
+  seqPlaying = true; seqIdx = 0; seqQueue.length = 0; seqNext = ctx.currentTime + 0.06;
+  seqTick(); requestAnimationFrame(seqDraw); renderPlay();
+}
+function seqStop(){
+  if (!seqPlaying) return;
+  seqPlaying = false; seqQueue.length = 0;
+  if (ctx && !stack.length) envOff(ctx.currentTime);       // corta o que já estava agendado
+  setSeqNow(-1); renderPlay();
+}
+function seqDraw(){
+  if (!seqPlaying) return;
+  const now = ctx.currentTime; let cur = null;
+  while (seqQueue.length && seqQueue[0].t <= now) cur = seqQueue.shift().i;
+  if (cur !== null) setSeqNow(cur);
+  requestAnimationFrame(seqDraw);
+}
+function seqPreview(note){
+  ensureAudio();
+  if (stack.length) return;
+  const t = ctx.currentTime + 0.01;
+  seqNote(note, t, t + 0.28);
+}
+playBtn.addEventListener('click', () => seqPlaying ? seqStop() : seqPlay());
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space' && !e.repeat && (e.target === document.body || e.target === document.documentElement)) {
+    e.preventDefault(); seqPlaying ? seqStop() : seqPlay();
+  }
+});
+
+/* grade de notas */
+const seqEl = $('seqgrid');
+const seqCells = [], seqHeads = [];
+function seqBuild(){
+  seqEl.innerHTML = ''; seqCells.length = 0; seqHeads.length = 0;
+  for (let i = 0; i < 16; i++) seqCells.push([]);
+  seqEl.append(document.createElement('div'));
+  for (let i = 0; i < 16; i++) {
+    const h = document.createElement('div'); h.className = 'sh' + (i % 4 === 0 && i ? ' beat' : ''); h.textContent = i + 1;
+    seqEl.append(h); seqHeads.push(h);
+  }
+  for (let r = 0; r < SEQ_ROWS; r++) {
+    const note = st.seq.base + SEQ_ROWS - 1 - r, pc = note % 12, blk = [1,3,6,8,10].includes(pc);
+    const l = document.createElement('div'); l.className = 'sl' + (pc === 0 ? ' c' : ''); l.textContent = noteName(note); seqEl.append(l);
+    for (let i = 0; i < 16; i++) {
+      const b = document.createElement('button'); b.type = 'button';
+      b.className = 'sc' + (blk ? ' blk' : '') + (i % 4 === 0 && i ? ' beat' : '');
+      b.dataset.step = i; b.dataset.note = note; b.setAttribute('aria-label', `Passo ${i + 1}, ${noteName(note)}`);
+      seqEl.append(b); seqCells[i].push(b);
+    }
+  }
+  seqRender();
+  const n = seqNow; seqNow = -1; if (n >= 0) setSeqNow(n);
+}
+function seqRenderStep(i){
+  const off = i >= st.seq.len, n = st.seq.steps[i], lo = st.seq.base, hi = st.seq.base + SEQ_ROWS - 1;
+  const hid = n !== null && (n < lo || n > hi);
+  seqHeads[i].classList.toggle('off', off);
+  seqHeads[i].classList.toggle('hid', hid);
+  seqHeads[i].title = hid ? 'A nota deste passo está fora da janela visível' : '';
+  for (const b of seqCells[i]) {
+    const on = n === +b.dataset.note;
+    b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); b.classList.toggle('off', off);
+  }
+}
+function seqRender(){
+  for (let i = 0; i < 16; i++) seqRenderStep(i);
+  $('seq-range').textContent = noteName(st.seq.base) + ' a ' + noteName(st.seq.base + SEQ_ROWS - 1);
+  renderTr();
+  lenEl.querySelectorAll('button').forEach(b => { const on = +b.dataset.n === st.seq.len; b.setAttribute('aria-checked', on); b.tabIndex = on ? 0 : -1; });
+}
+function renderTr(){
+  const o = st.seq.oct;
+  $('seq-tr').textContent = o === 0 ? 'Original' : (o > 0 ? '+' : '−') + Math.abs(o) + (Math.abs(o) === 1 ? ' oitava' : ' oitavas');
+}
+function setTranspose(d){
+  st.seq.oct = Math.max(-2, Math.min(2, st.seq.oct + d)); renderTr(); save();
+  if (!seqPlaying) seqPreview(48 + 12 * st.seq.oct);      // nota de teste: dá para ouvir a oitava
+}
+$('seq-tr-down').addEventListener('click', () => setTranspose(-1));
+$('seq-tr-up').addEventListener('click', () => setTranspose(1));
+function setSeqNow(i){
+  if (seqNow >= 0) { seqHeads[seqNow].classList.remove('now'); seqCells[seqNow].forEach(c => c.classList.remove('now')); }
+  seqNow = i;
+  if (i >= 0) { seqHeads[i].classList.add('now'); seqCells[i].forEach(c => c.classList.add('now')); }
+}
+
+/* passos, janela, limpar e exemplo */
+const lenEl = $('seq-len');
+for (const n of [4, 8, 12, 16]) {
+  const b = document.createElement('button'); b.type = 'button'; b.setAttribute('role', 'radio'); b.dataset.n = n; b.textContent = n;
+  b.setAttribute('aria-label', n + ' passos'); lenEl.append(b);
+}
+lenEl.addEventListener('click', e => { const b = e.target.closest('button'); if (b) { st.seq.len = +b.dataset.n; seqRender(); save(); } });
+lenEl.addEventListener('keydown', e => {
+  const d = {ArrowRight:1, ArrowDown:1, ArrowLeft:-1, ArrowUp:-1}[e.key]; if (!d) return;
+  e.preventDefault(); e.stopPropagation();
+  const o = [4, 8, 12, 16], n = o[(o.indexOf(st.seq.len) + d + 4) % 4];
+  st.seq.len = n; seqRender(); save(); lenEl.querySelector(`[data-n="${n}"]`).focus();
+});
+$('seq-oct-down').addEventListener('click', () => { st.seq.base = Math.max(36, st.seq.base - 12); seqBuild(); save(); });
+$('seq-oct-up').addEventListener('click', () => { st.seq.base = Math.min(72, st.seq.base + 12); seqBuild(); save(); });
+$('seq-clear').addEventListener('click', () => { st.seq.steps = Array(16).fill(null); seqRender(); save(); });
+$('seq-example').addEventListener('click', () => { st.seq.steps = exampleSteps(); st.seq.len = 16; st.seq.base = 36; st.seq.oct = 0; seqBuild(); save(); });
+
+/* pintar notas: clique, arrasto (mouse e caneta) e teclado. Um passo tem uma nota: acender outra troca a anterior. */
+function seqSet(b, on){
+  const i = +b.dataset.step, n = +b.dataset.note, cur = st.seq.steps[i];
+  if (on) { if (cur === n) return false; st.seq.steps[i] = n; }
+  else { if (cur !== n) return false; st.seq.steps[i] = null; }
+  seqRenderStep(i);
+  return true;
+}
+const cellAt = (x, y) => { const el = document.elementFromPoint(x, y); const b = el && el.closest ? el.closest('button.sc') : null; return b && seqEl.contains(b) ? b : null; };
+let seqDrag = null, seqSuppress = 0;
+seqEl.addEventListener('click', e => {
+  const b = e.target.closest('button.sc'); if (!b) return;
+  if (e.detail > 0 && performance.now() < seqSuppress) return; // já tratado pelo arrasto
+  const on = st.seq.steps[+b.dataset.step] !== +b.dataset.note;
+  seqSet(b, on); if (on && !seqPlaying) seqPreview(+b.dataset.note); save();
+});
+seqEl.addEventListener('pointerdown', e => {
+  if (e.pointerType === 'touch' || e.button !== 0) return; // no toque, arrastar rola a grade
+  const b = e.target.closest('button.sc'); if (!b) return;
+  const on = st.seq.steps[+b.dataset.step] !== +b.dataset.note;
+  seqDrag = {on, x:e.clientX, y:e.clientY}; seqSuppress = Infinity;
+  seqSet(b, on); if (on && !seqPlaying) seqPreview(+b.dataset.note);
+});
+window.addEventListener('pointermove', e => {
+  if (!seqDrag) return;
+  if (e.buttons === 0) { endSeqDrag(); return; }
+  const dx = e.clientX - seqDrag.x, dy = e.clientY - seqDrag.y, n = Math.max(1, Math.ceil(Math.hypot(dx, dy) / 6));
+  for (let k = 1; k <= n; k++) { const c = cellAt(seqDrag.x + dx * k / n, seqDrag.y + dy * k / n); if (c) seqSet(c, seqDrag.on); }
+  seqDrag.x = e.clientX; seqDrag.y = e.clientY;
+});
+function endSeqDrag(){ if (!seqDrag) return; seqDrag = null; seqSuppress = performance.now() + 400; save(); }
+window.addEventListener('pointerup', endSeqDrag);
+window.addEventListener('pointercancel', endSeqDrag);
+window.addEventListener('blur', endSeqDrag);
+
+makeKnob($('seq-knobs'), 'seqTempo', 'Tempo', {fmt:x => seqBpm() + ' BPM'});
+makeKnob($('seq-knobs'), 'seqGate', 'Gate', {fmt:x => Math.round((0.1 + x * 0.9) * 100) + '%'});
+seqBuild(); renderPlay();
 
 /* ---------- teclado na tela ---------- */
 const kb = $('kb');
