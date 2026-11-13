@@ -1,0 +1,1619 @@
+<!doctype html>
+<html lang="pt-BR" data-machine="808">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Bateria eletrônica: 808, 909, 606 e 707</title>
+<link rel="stylesheet" href="../fonts/fonts.css">
+<style>
+  /* Layout: um gabinete que troca de pele conforme a máquina. De cima para baixo, como nos aparelhos:
+     nome do modelo, seção da voz (knobs ou faders), transporte e a fileira de 16 teclas de passo. */
+  :root {
+    --page: #17181a; --page-ink: #e4e6e8; --page-sub: #a3a9af;
+    /* TR-808: painel preto, etiquetas creme, laranja, teclas vermelho/laranja/amarelo/branco */
+    --case: #23221f; --case-hi: #2f2e2a; --case-lo: #1a1917; --edge: #0c0c0b;
+    --ink: #ebe4cf; --sub: #b5ae9b; --accent: #f0641e; --on-accent: #1a1005; --line: #5d5b52;
+    --tag: #efe6c2; --tag-ink: #1c1b18;
+    --cap: #d9d4c7; --cap-shade: rgba(0,0,0,.5); --well: #0a0a0a;
+    --pad: #f0c93a; --pad-ink: #2a1d05;
+    --knob: radial-gradient(circle at 35% 30%, #4a4a46, #1b1b19 60%, #0b0b0a); --knob-ring: #000; --knob-mark: #f0641e; --tick: #b5ae9b;
+    --screen: #0e0f0e; --grid: #2c2f2b; --wave: #f0641e; --muted: #8f9589;
+    --led: #e3321d; --led-dim: #4a1610; --led-glow: #ff5a3c; --now: #ffffff;
+    --font: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+    --font-mark: "Michroma", "Eurostile", "Arial Black", Arial, sans-serif;
+    color-scheme: dark;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  /* TR-909: cinza-claro, impressão grafite, laranja, teclas creme */
+  :root[data-machine="909"] {
+    --case: #dcdbd4; --case-hi: #e9e8e2; --case-lo: #c9c8c1; --edge: #8e8d86;
+    --ink: #36383c; --sub: #5d6065; --accent: #f26b21; --on-accent: #ffffff; --line: #85878a;
+    --tag: #e9e8e2; --tag-ink: #36383c;
+    --cap: #ece5d0; --cap-on: #fff8e2; --cap-shade: rgba(60,50,30,.3); --well: #2b2c2e;
+    --pad: #f1ead6; --pad-ink: #36383c;
+    --knob: radial-gradient(circle at 35% 30%, #5b616b, #2a2e35 60%, #15171b); --knob-ring: #111; --knob-mark: #f26b21; --tick: #36383c;
+    --screen: #2a0d0b; --grid: #4a1c18; --wave: #ff4a36; --muted: #c98a80;
+    --now: #36383c;
+  }
+  /* TR-707: bege-acinzentado, faixas laranja, teclas grafite, faders */
+  :root[data-machine="707"] {
+    --case: #d6d3c8; --case-hi: #e3e0d6; --case-lo: #c4c1b6; --edge: #8c897f;
+    --ink: #3b3b39; --sub: #5f5e5a; --accent: #ee6a1f; --on-accent: #ffffff; --line: #84827a;
+    --tag: #e3e0d6; --tag-ink: #3b3b39;
+    --cap: #4d4d4a; --cap-on: #73736e; --cap-shade: rgba(0,0,0,.25); --well: #1d1d1c;
+    --pad: #4d4d4a; --pad-ink: #f1efe8;
+    --screen: #b7c0ad; --grid: #9aa391; --wave: #1f261d; --muted: #3d463a;
+    --now: #ee6a1f;
+  }
+  /* TR-606: prata, faixa preta com números vermelhos, teclas de alumínio */
+  :root[data-machine="606"] {
+    --case: #cdcec9; --case-hi: #e2e3df; --case-lo: #babbb6; --edge: #7f817d;
+    --ink: #141414; --sub: #4a4c49; --accent: #d92f1b; --on-accent: #ffffff; --line: #141414;
+    --tag: #121212; --tag-ink: #f1f1ee;
+    --cap: #d3d4d0; --cap-on: #fbfbf8; --cap-shade: rgba(0,0,0,.2); --well: #0c0c0c;
+    --pad: #d3d4d0; --pad-ink: #141414;
+    --knob: conic-gradient(from 25deg, #fbfbf9, #a6a8a3 11%, #ededea 24%, #8a8c87 37%, #e4e4e0 50%, #9d9f9a 63%, #f8f8f5 76%, #90928d 89%, #fbfbf9); --knob-ring: #4f514d; --knob-mark: #0c0c0c; --tick: #141414;
+    --screen: #101010; --grid: #2e2e2e; --wave: #ff4a36; --muted: #9a9a96;
+    --now: #d92f1b;
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0; color: var(--page-ink);
+    background: radial-gradient(120% 70% at 50% 0%, #33363a 0%, var(--page) 60%, #0f1011 100%) fixed var(--page);
+    font-family: var(--font); font-weight: 500; font-size: 18px; line-height: 1.35;
+    -webkit-font-smoothing: antialiased;
+  }
+  main { max-width: 1120px; margin: 0 auto; padding-block: 20px 56px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  button { touch-action: manipulation; }
+  h1 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+  /* seletor de máquina, fora do gabinete */
+  .machine { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 18px; }
+  .machine-label { font-weight: 600; font-size: 17px; margin-right: 6px; color: var(--page-sub); text-transform: uppercase; letter-spacing: .06em; }
+  .mbtn { appearance: none; cursor: pointer; font: inherit; font-weight: 700; font-size: 24px; min-width: 84px; height: 46px; padding: 0 18px; border-radius: 6px;
+    color: var(--page-ink); background: #26282b; border: 1px solid #45484d; }
+  .mbtn[aria-pressed="true"] { background: var(--page-ink); color: var(--page); border-color: var(--page-ink); }
+
+  /* ---------- gabinete ---------- */
+  .cabinet { color: var(--ink); border-radius: 9px; overflow: hidden;
+    background: linear-gradient(180deg, var(--case-hi), var(--case) 40%, var(--case-lo));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.35), inset 0 0 0 1px rgba(0,0,0,.35),
+      0 3px 0 var(--edge), 0 7px 1px #0a0a0a, 0 16px 14px rgba(0,0,0,.5), 0 44px 60px -12px rgba(0,0,0,.7); }
+  .panel { padding: 16px 20px; border-bottom: 2px solid var(--line); }
+  .panel:last-child { border-bottom: 0; }
+
+  /* nome do modelo: só texto, sem logotipo */
+  .plate { display: none; align-items: baseline; flex-wrap: wrap; gap: 4px 22px; line-height: 1.05; }
+  :root[data-machine="808"] .p808, :root[data-machine="909"] .p909, :root[data-machine="707"] .p707, :root[data-machine="606"] .p606 { display: flex; }
+  .plate b { font-weight: 400; }
+  .p808 { flex-direction: column; align-items: flex-end; gap: 6px; color: var(--accent); }
+  .p808 b { font-family: "Barlow", sans-serif; font-weight: 400; font-size: clamp(1.7rem, 4.4vw, 2.7rem); letter-spacing: .01em; align-self: stretch; text-align: right; border-bottom: 2px solid var(--accent); padding-bottom: 6px; }
+  .p808 b i { font-style: normal; font-size: .62em; margin-left: .5em; }
+  .p808 span { color: var(--sub); font-family: "Barlow", sans-serif; font-weight: 300; font-size: clamp(1rem, 2.2vw, 1.4rem); }
+  .p909 { justify-content: space-between; }
+  .p909 b { font-family: var(--font-mark); font-size: clamp(2rem, 6vw, 3.6rem); letter-spacing: .02em; }
+  .p909 span, .p707 span { font-family: var(--font-mark); font-size: clamp(.95rem, 2.4vw, 1.6rem); letter-spacing: .04em; text-transform: uppercase; }
+  .p707 { justify-content: flex-end; }
+  .p707 b { font-family: var(--font-mark); font-size: clamp(1.7rem, 4.6vw, 2.8rem); order: 2; }
+  .p606 { justify-content: space-between; }
+  .p606 b { font-family: var(--font-mark); font-size: clamp(1.5rem, 4vw, 2.4rem); order: 2; }
+  .p606 span { font-family: "Barlow", sans-serif; font-weight: 300; font-size: clamp(1.4rem, 3.4vw, 2.1rem); }
+  .p606 span small { display: block; font-size: .55em; font-weight: 400; border-top: 2px solid var(--ink); margin-top: 2px; padding-top: 2px; }
+
+  /* ---------- seção da voz ---------- */
+  .voice { display: grid; grid-template-columns: minmax(240px, 1fr) minmax(0, 2fr); gap: 18px 28px; align-items: start; }
+  .editor-head h2 { margin: 0 0 4px; font-size: 24px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; display: inline-block;
+    background: var(--tag); color: var(--tag-ink); padding: 2px 12px 3px; border-radius: 3px; }
+  .editor-head p { margin: 0 0 10px; color: var(--sub); font-size: 16px; line-height: 1.25; }
+  .screen { background: var(--screen); border-radius: 5px; padding: 8px 10px 2px;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,.6), inset 0 0 0 2px rgba(0,0,0,.45), 0 1px 0 rgba(255,255,255,.25); }
+  canvas { display: block; width: 100%; height: 130px; }
+  .scope-cap { margin: 5px 2px 0; color: var(--sub); font-size: 14px; }
+
+  .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px 24px; }
+  .ctl { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0 12px; align-content: start; }
+  .ctl .row { grid-column: 2; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .ctl label { font-weight: 600; font-size: 17px; text-transform: uppercase; letter-spacing: .05em; }
+  .ctl output { font-weight: 600; font-size: 18px; color: var(--accent); white-space: nowrap; }
+  .ctl .hint { grid-column: 2; margin: 2px 0 0; color: var(--sub); font-size: 14.5px; line-height: 1.22; }
+  .ctl .rk { grid-column: 1; grid-row: 1 / span 2; }
+  output.editable { cursor: text; border-bottom: 1px dashed currentColor; }
+  .numwrap { display: inline-flex; align-items: baseline; gap: 4px; }
+  .numedit { width: 7ch; font: inherit; font-weight: 600; font-size: 18px; color: var(--ink); background: var(--case-hi); border: 2px solid var(--accent); border-radius: 4px; padding: 1px 6px; text-align: right; }
+  .numwrap .unit { color: var(--sub); font-size: 16px; }
+
+  /* knob giratório que comanda o controle deslizante por baixo */
+  .rk { position: relative; width: 58px; height: 58px; border-radius: 50%; cursor: ns-resize; touch-action: none; flex: none; }
+  .rk svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .rk svg line { stroke: var(--tick); stroke-width: 1.4; }
+  .rk-cap { position: absolute; inset: 15%; border-radius: 50%; background: var(--knob);
+    box-shadow: 0 0 0 1.5px var(--knob-ring), 0 4px 3px rgba(0,0,0,.5), 2px 9px 9px rgba(0,0,0,.38), inset 0 1px 1px rgba(255,255,255,.3); }
+  .rk-ptr { position: absolute; inset: 15%; border-radius: 50%; }
+  .rk-ptr::before { content: ""; position: absolute; left: 50%; top: 2px; width: 3.4px; height: 42%; margin-left: -1.7px; border-radius: 1px; background: var(--knob-mark); }
+  .rk.big { width: 104px; height: 104px; }
+  .rk.big .rk-cap, .rk.big .rk-ptr { inset: 12%; }
+  input.kn { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; pointer-events: none; }
+  input.kn:focus-visible + .rk { box-shadow: 0 0 0 3px var(--accent); }
+  /* na 707 os controles são faders */
+  :root[data-machine="707"] .rk { display: none; }
+  :root[data-machine="707"] input.kn { position: static; opacity: 1; width: 100%; height: 34px; pointer-events: auto; grid-column: 1 / -1; }
+  :root[data-machine="707"] .ctl { display: block; }
+
+  input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 34px; background: transparent; margin: 2px 0 0; cursor: pointer; }
+  input[type="range"]::-webkit-slider-runnable-track { height: 8px; background: var(--well); border-radius: 2px; box-shadow: inset 0 1px 2px #000, 0 1px 0 rgba(255,255,255,.5); }
+  input[type="range"]::-moz-range-track { height: 8px; background: var(--well); border-radius: 2px; box-shadow: inset 0 1px 2px #000, 0 1px 0 rgba(255,255,255,.5); }
+  input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 30px; margin-top: -11px; border-radius: 2px; border: 0;
+    background: linear-gradient(90deg, #6b6b67 0 42%, #f3f1ea 42% 58%, #6b6b67 58%); box-shadow: 0 0 0 1px #1d1d1c, 0 3px 4px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.4); }
+  input[type="range"]::-moz-range-thumb { width: 18px; height: 30px; border-radius: 2px; border: 0;
+    background: linear-gradient(90deg, #6b6b67 0 42%, #f3f1ea 42% 58%, #6b6b67 58%); box-shadow: 0 0 0 1px #1d1d1c, 0 3px 4px rgba(0,0,0,.5); }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+
+  /* ---------- transporte ---------- */
+  .transport { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 26px; }
+  .pad, .btn { appearance: none; border: 0; cursor: pointer; font: inherit; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; border-radius: 3px;
+    background: linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,0) 45%, rgba(0,0,0,.18)), var(--pad); color: var(--pad-ink);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.6), inset 0 -5px 0 rgba(0,0,0,.18), 0 0 0 3px var(--well), 0 0 0 4px rgba(255,255,255,.25), 0 5px 4px 2px rgba(0,0,0,.4);
+    transition: transform .05s; }
+  .pad { font-size: 22px; height: 62px; min-width: 124px; padding: 0 22px 5px; }
+  .btn { font-size: 15px; min-height: 46px; padding: 6px 14px 10px; max-width: 150px; line-height: 1.05; }
+  .pad:active, .btn:active { transform: translateY(2px); }
+  .slider-inline { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .slider-inline:first-of-type { margin-left: auto; }
+  .slider-inline label { font-weight: 600; font-size: 16px; text-transform: uppercase; letter-spacing: .07em; white-space: nowrap; }
+  .slider-inline output { font-weight: 600; font-size: 16px; color: var(--accent); white-space: nowrap; }
+  :root[data-machine="707"] .slider-inline { min-width: 200px; flex: 1; }
+
+  /* ---------- fileiras de passos ---------- */
+  .seq { overflow-x: auto; padding: 4px 4px 8px; }
+  .grid { display: grid; grid-template-columns: 196px repeat(16, minmax(32px, 1fr)); gap: 9px 7px; min-width: 820px; align-items: center; -webkit-user-select: none; user-select: none; }
+  .label { position: sticky; left: 0; z-index: 2; display: flex; gap: 4px; background: var(--case); padding: 2px 6px 2px 0; }
+  .name { appearance: none; cursor: pointer; text-align: left; flex: 1; min-width: 0;
+    font: inherit; font-weight: 600; font-size: 16px; text-transform: uppercase; letter-spacing: .04em; color: var(--tag-ink);
+    background: var(--tag); border: 0; border-radius: 3px; height: 32px; padding: 0 9px;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,.35); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .name[aria-current="true"] { box-shadow: inset 0 0 0 1px rgba(0,0,0,.35), inset 6px 0 0 var(--accent), 0 0 0 2px var(--accent); padding-left: 13px; font-weight: 700; }
+  .ms { appearance: none; cursor: pointer; font: inherit; font-weight: 700; font-size: 15px; width: 30px; height: 32px; padding: 0; border: 0; border-radius: 3px;
+    color: var(--ink); background: transparent; box-shadow: inset 0 0 0 1.5px var(--line); }
+  .ms.mute[aria-pressed="true"] { background: var(--ink); color: var(--case); box-shadow: none; }
+  .ms.solo[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); box-shadow: none; }
+  .step { appearance: none; cursor: pointer; position: relative; height: 30px; margin-top: 12px; padding: 0; border: 0; border-radius: 2px;
+    background: linear-gradient(var(--cap-shade), var(--cap-shade)), var(--cap);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.45), inset 0 -4px 0 rgba(0,0,0,.2), 0 0 0 2px var(--well), 0 0 0 3px rgba(255,255,255,.18), 0 4px 3px 1px rgba(0,0,0,.35); }
+  .step::before { content: ""; position: absolute; left: 50%; top: -11px; width: 8px; height: 8px; margin-left: -4px; border-radius: 50%;
+    background: radial-gradient(circle at 38% 30%, #a8554a, var(--led-dim) 55%, #2a0906); box-shadow: 0 0 0 1.5px var(--well); }
+  .step.gap { margin-left: 8px; }
+  .step.on { background: linear-gradient(180deg, rgba(255,255,255,.3), rgba(255,255,255,0) 50%), var(--cap-on, var(--cap)); }
+  .step.on::before { background: radial-gradient(circle at 38% 30%, #fff, #ffb09c 22%, var(--led) 58%, #a81d0c);
+    box-shadow: 0 0 0 1.5px var(--well), 0 0 8px 3px var(--led-glow), 0 0 18px 5px rgba(255,70,40,.4); }
+  .step.now { outline: 2px solid var(--now); outline-offset: 3px; z-index: 1; }
+  .step.dim { opacity: .4; }
+  .name.dim { opacity: .55; }
+  :root[data-machine="808"] .step { --cap-on: initial; }
+  :root[data-machine="808"] .step[data-g="0"] { --cap: #d8391f; }
+  :root[data-machine="808"] .step[data-g="1"] { --cap: #ee7a1c; }
+  :root[data-machine="808"] .step[data-g="2"] { --cap: #f1d32f; }
+  :root[data-machine="808"] .step[data-g="3"] { --cap: #f2efe2; }
+  :root[data-machine="606"] .panel.steps { background: linear-gradient(180deg, transparent 0 10px, #101010 10px 14px, transparent 14px); padding-top: 26px; }
+
+  @media (max-width: 760px) {
+    .panel { padding: 14px 12px; }
+    .voice { grid-template-columns: minmax(0, 1fr); }
+    .slider-inline:first-of-type { margin-left: 0; }
+    .rk.big { width: 84px; height: 84px; }
+    .grid { grid-template-columns: 168px repeat(16, minmax(32px, 1fr)); }
+  }
+  @media (prefers-reduced-motion: reduce) { .pad, .btn { transition: none; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Bateria eletrônica: 808, 909, 707 e 606</h1>
+
+  <div class="machine" aria-label="Máquina">
+    <span class="machine-label">Máquina</span>
+    <button class="mbtn" type="button" data-m="909" aria-pressed="false">909</button>
+    <button class="mbtn" type="button" data-m="808" aria-pressed="true">808</button>
+    <button class="mbtn" type="button" data-m="707" aria-pressed="false">707</button>
+    <button class="mbtn" type="button" data-m="606" aria-pressed="false">606</button>
+  </div>
+
+  <div class="cabinet">
+    <div class="panel head808" aria-hidden="true">
+      <div class="plate p808"><b>Rhythm Composer <i>TR-808</i></b><span>Computer Controlled</span></div>
+      <div class="plate p909"><b>TR-909</b><span>Rhythm Composer</span></div>
+      <div class="plate p707"><span>Rhythm Composer</span><b>TR-707</b></div>
+      <div class="plate p606"><span>TR-606<small>Computer Controlled</small></span><b>Drumatix</b></div>
+    </div>
+
+    <section class="panel voice" aria-label="Ajuste da voz">
+      <div>
+        <div class="editor-head">
+          <h2 id="ed-title">Bumbo</h2>
+          <p id="ed-desc"></p>
+        </div>
+        <div class="screen"><canvas id="scope" role="img" aria-label="Forma de onda da voz selecionada"></canvas></div>
+        <p class="scope-cap" id="scope-cap"></p>
+      </div>
+      <div class="controls" id="controls"></div>
+    </section>
+
+    <section class="panel" aria-label="Transporte">
+      <div class="transport">
+        <button class="pad" id="play" type="button">Tocar</button>
+        <button class="btn" id="clear" type="button">Limpar tudo</button>
+        <button class="btn" id="reset" type="button">Restaurar padrões</button>
+        <div class="slider-inline">
+          <label for="bpm">Tempo</label>
+          <input id="bpm" type="range" min="60" max="200" step="1" value="100">
+          <output id="bpm-out" for="bpm">100 bpm</output>
+        </div>
+        <div class="slider-inline">
+          <label for="swing">Swing</label>
+          <input id="swing" type="range" min="0" max="50" step="1" value="0">
+          <output id="swing-out" for="swing">0 %</output>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel steps" aria-label="Sequenciador">
+      <div class="seq"><div class="grid" id="grid"></div></div>
+    </section>
+  </div>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Formatação ----------
+  function fmtHz(v) { return v + " Hz"; }
+  function fmtPct(v) { return v + " %"; }
+  function fmtBits(v) { return v + " bits"; }
+  function fmtDur(v) { return v >= 1000 ? (v / 1000).toLocaleString("pt-BR") + " s" : v + " ms"; }
+
+  var LEVEL = { id: "level", label: "Volume", min: 0, max: 100, step: 1, val: 70,
+    hint: "Volume desta voz na mistura. Em 70 ela fica equilibrada com as outras; a escala é mais sensível perto dos extremos.",
+    fmt: fmtPct };
+
+  // ---------- Utilitários de síntese ----------
+  var noiseCache = new WeakMap();
+  function noiseBuffer(ctx) {
+    var b = noiseCache.get(ctx);
+    if (b) return b;
+    var len = Math.floor(ctx.sampleRate * 1);
+    b = ctx.createBuffer(1, len, ctx.sampleRate);
+    var d = b.getChannelData(0);
+    for (var i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    noiseCache.set(ctx, b);
+    return b;
+  }
+
+  // Envelope: sobe em 1 ms e cai exponencialmente; "decay" é o tempo até -60 dB.
+  function envelope(g, t, decay, peak) {
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(peak, t + 0.001);
+    g.gain.setTargetAtTime(0, t + 0.001, decay / 6.9);
+  }
+
+  function driveCurve(amount) {
+    var k = 1 + amount * 8, n = 1024, c = new Float32Array(n), norm = Math.tanh(k);
+    for (var i = 0; i < n; i++) {
+      var x = (i / (n - 1)) * 2 - 1;
+      c[i] = Math.tanh(k * x) / norm;
+    }
+    return c;
+  }
+
+  // ---------- Vozes ----------
+  // Bumbo: senoide com queda de pitch, clique de ruído e saturação. "o" ajusta o clique de cada máquina.
+  function kick(ctx, dest, t, p, o) {
+    var decay = p.decay / 1000, sweep = p.sweep / 1000;
+    var osc = ctx.createOscillator();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(p.start, t);
+    osc.frequency.setTargetAtTime(p.end, t, sweep / 3);
+    var amp = ctx.createGain();
+    envelope(amp, t, decay, 1);
+    var out = ctx.createGain();
+    out.gain.value = 0.7 * (p.level / 70);
+    if (p.drive > 0) {
+      var ws = ctx.createWaveShaper();
+      ws.curve = driveCurve(p.drive / 100);
+      ws.oversample = "2x";
+      osc.connect(ws); ws.connect(amp);
+    } else {
+      osc.connect(amp);
+    }
+    amp.connect(out);
+    if (p.click > 0) {
+      var n = ctx.createBufferSource();
+      n.buffer = noiseBuffer(ctx);
+      var hp = ctx.createBiquadFilter();
+      hp.type = "highpass"; hp.frequency.value = o.clickHz;
+      var g = ctx.createGain();
+      g.gain.setValueAtTime((p.click / 100) * o.clickGain, t);
+      g.gain.setTargetAtTime(0, t, o.clickTau);
+      n.connect(hp); hp.connect(g); g.connect(out);
+      n.start(t); n.stop(t + 0.05);
+    }
+    out.connect(dest);
+    osc.start(t);
+    osc.stop(t + decay * 1.1 + 0.05);
+  }
+
+  // Caixa: dois osciladores para o corpo e ruído filtrado para a esteira.
+  function snare(ctx, dest, t, p, o) {
+    var out = ctx.createGain();
+    out.gain.value = 0.6 * (p.level / 70);
+    out.connect(dest);
+    var bodyDecay = p.bodyDecay / 1000;
+    var bodyLevel = (p.body / 100) * 0.6;
+    [1, 330 / 180].forEach(function (ratio) {
+      var f = p.tune * ratio;
+      var osc = ctx.createOscillator();
+      osc.type = o.type;
+      osc.frequency.setValueAtTime(f * o.startMul, t);
+      osc.frequency.setTargetAtTime(f, t, o.tau);
+      var g = ctx.createGain();
+      envelope(g, t, bodyDecay, bodyLevel);
+      osc.connect(g); g.connect(out);
+      osc.start(t);
+      osc.stop(t + bodyDecay * 1.1 + 0.05);
+    });
+    var noiseDecay = p.noiseDecay / 1000;
+    var n = ctx.createBufferSource();
+    n.buffer = noiseBuffer(ctx);
+    var hp = ctx.createBiquadFilter();
+    hp.type = "highpass"; hp.frequency.value = p.noiseFreq;
+    var ng = ctx.createGain();
+    envelope(ng, t, noiseDecay, (p.snappy / 100) * 0.8);
+    n.connect(hp); hp.connect(ng); ng.connect(out);
+    n.start(t);
+    n.stop(t + Math.min(0.95, noiseDecay * 1.1 + 0.05));
+  }
+
+  // Tons: senoide com queda de pitch e, quando a máquina tem, um clique de ruído no ataque.
+  function tom(ctx, dest, t, p, o) {
+    var decay = p.decay / 1000;
+    var osc = ctx.createOscillator();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(p.tune * (1 + p.drop / 100), t);
+    osc.frequency.setTargetAtTime(p.tune, t, o.tau);
+    var amp = ctx.createGain();
+    envelope(amp, t, decay, 1);
+    var out = ctx.createGain();
+    out.gain.value = 0.8 * (p.level / 70);
+    osc.connect(amp); amp.connect(out);
+    if (p.attack > 0) {
+      var n = ctx.createBufferSource();
+      n.buffer = noiseBuffer(ctx);
+      var hp = ctx.createBiquadFilter();
+      hp.type = "highpass"; hp.frequency.value = 1500;
+      var g = ctx.createGain();
+      g.gain.setValueAtTime((p.attack / 100) * 0.5, t);
+      g.gain.setTargetAtTime(0, t, 0.003);
+      n.connect(hp); hp.connect(g); g.connect(out);
+      n.start(t); n.stop(t + 0.05);
+    }
+    out.connect(dest);
+    osc.start(t);
+    osc.stop(t + decay * 1.1 + 0.05);
+  }
+
+  // Rimshot (909): dois tons muito curtos e um estalo de ruído.
+  function rim(ctx, dest, t, p) {
+    var decay = p.decay / 1000;
+    var out = ctx.createGain();
+    out.gain.value = 0.7 * (p.level / 70);
+    var hpAll = ctx.createBiquadFilter();
+    hpAll.type = "highpass"; hpAll.frequency.value = 300;
+    hpAll.connect(out); out.connect(dest);
+    [[p.tune, "triangle", 0.8, 1], [p.tune * 3.5, "square", 0.25, 0.6]].forEach(function (c) {
+      var o = ctx.createOscillator();
+      o.type = c[1]; o.frequency.value = c[0];
+      var g = ctx.createGain();
+      envelope(g, t, decay * c[3], c[2]);
+      o.connect(g); g.connect(hpAll);
+      o.start(t); o.stop(t + decay * 1.1 + 0.05);
+    });
+    var n = ctx.createBufferSource();
+    n.buffer = noiseBuffer(ctx);
+    var nh = ctx.createBiquadFilter();
+    nh.type = "highpass"; nh.frequency.value = 3000;
+    var ng = ctx.createGain();
+    ng.gain.setValueAtTime(0.5, t);
+    ng.gain.setTargetAtTime(0, t, 0.003);
+    n.connect(nh); nh.connect(ng); ng.connect(hpAll);
+    n.start(t); n.stop(t + 0.05);
+  }
+
+  // Clap: três rajadas curtas de ruído e uma cauda, filtradas em torno de 1 kHz.
+  function clap(ctx, dest, t, p, o) {
+    var tail = p.tail / 1000;
+    var n = ctx.createBufferSource();
+    n.buffer = noiseBuffer(ctx);
+    var bp = ctx.createBiquadFilter();
+    bp.type = "bandpass"; bp.frequency.value = p.tone; bp.Q.value = o.q;
+    var env = ctx.createGain();
+    for (var i = 0; i < 3; i++) {
+      var s = t + i * o.gap;
+      env.gain.setValueAtTime(1, s);
+      env.gain.setTargetAtTime(0, s, 0.003);
+    }
+    var last = t + 3 * o.gap;
+    env.gain.setValueAtTime(1, last);
+    env.gain.setTargetAtTime(0, last, tail / 6.9);
+    var out = ctx.createGain();
+    out.gain.value = 0.9 * (p.level / 70);
+    n.connect(bp); bp.connect(env); env.connect(out); out.connect(dest);
+    n.start(t);
+    n.stop(t + 3 * o.gap + Math.min(0.9, tail * 1.1 + 0.05));
+  }
+
+  // Cowbell (808): duas ondas quadradas filtradas, com envelope de duas fases.
+  function cowbell(ctx, dest, t, p) {
+    var decay = p.decay / 1000;
+    var mix = ctx.createGain();
+    mix.gain.value = 0.5;
+    [p.tune, p.tune * (800 / 540)].forEach(function (f) {
+      var o = ctx.createOscillator();
+      o.type = "square"; o.frequency.value = f;
+      o.connect(mix);
+      o.start(t); o.stop(t + decay * 1.1 + 0.1);
+    });
+    var bp = ctx.createBiquadFilter();
+    bp.type = "bandpass"; bp.frequency.value = 2640; bp.Q.value = 0.8;
+    var env = ctx.createGain();
+    env.gain.setValueAtTime(0, t);
+    env.gain.linearRampToValueAtTime(1, t + 0.001);
+    env.gain.setTargetAtTime(0.25, t + 0.001, 0.012);
+    env.gain.setTargetAtTime(0, t + 0.05, decay / 6.9);
+    var out = ctx.createGain();
+    out.gain.value = 0.9 * (p.level / 70);
+    mix.connect(bp); bp.connect(env); env.connect(out); out.connect(dest);
+  }
+
+  // Hats e pratos: seis ondas quadradas em frequências inarmônicas, filtradas para ficar só o brilho.
+  var METAL = [205.3, 304.4, 369.6, 522.7, 540, 800];
+  function metal(ctx, dest, t, ratio, decay, bright, level, k, center) {
+    var mix = ctx.createGain();
+    mix.gain.value = 1 / 6;
+    METAL.forEach(function (f) {
+      var o = ctx.createOscillator();
+      o.type = "square";
+      o.frequency.value = f * ratio;
+      o.connect(mix);
+      o.start(t);
+      o.stop(t + decay * 1.1 + 0.05);
+    });
+    var bp = ctx.createBiquadFilter();
+    bp.type = "bandpass"; bp.frequency.value = center; bp.Q.value = 0.8;
+    var hp1 = ctx.createBiquadFilter();
+    hp1.type = "highpass"; hp1.frequency.value = bright;
+    var hp2 = ctx.createBiquadFilter();
+    hp2.type = "highpass"; hp2.frequency.value = bright;
+    var env = ctx.createGain();
+    envelope(env, t, decay, 1);
+    var out = ctx.createGain();
+    out.gain.value = k * (level / 70);
+    var choke = ctx.createGain();
+    mix.connect(bp); bp.connect(hp1); hp1.connect(hp2); hp2.connect(env);
+    env.connect(out); out.connect(choke); choke.connect(dest);
+    return choke; // permite cortar o som depois (hat fechado corta o aberto)
+  }
+  function hat(ctx, dest, t, p, center) {
+    return metal(ctx, dest, t, p.tune / 100, p.decay / 1000, p.bright, p.level, 2.5, center);
+  }
+  function cymbal(ctx, dest, t, p, center) {
+    return metal(ctx, dest, t, p.tune / 100, p.decay / 1000, p.bright, p.level, 2.2, center);
+  }
+
+  // Liga uma voz às opções de uma máquina.
+  function bind(f, o) {
+    return function (ctx, dest, t, p) { return f(ctx, dest, t, p, o); };
+  }
+
+  // ---------- Parâmetros reutilizáveis ----------
+  function L() { return Object.assign({}, LEVEL); }
+  function tomP(tune, tmin, tmax, decay, dmin, dmax, drop, dropMax, attack) {
+    var list = [
+      { id: "tune", label: "Afinação", min: tmin, max: tmax, step: 1, val: tune, hint: "Nota em que o tom se estabiliza.", fmt: fmtHz },
+      { id: "decay", label: "Duração", min: dmin, max: dmax, step: 10, val: decay, hint: "Tempo até o volume cair ao silêncio.", fmt: fmtDur },
+      { id: "drop", label: "Queda do pitch", min: 0, max: dropMax, step: 1, val: drop, hint: "Quanto o pitch começa acima da nota final.", fmt: fmtPct }
+    ];
+    if (attack !== null) {
+      list.push({ id: "attack", label: "Clique do ataque", min: 0, max: 100, step: 1, val: attack, hint: "Estalo curto de ruído no início, que dá mais punch.", fmt: fmtPct });
+    }
+    list.push(L());
+    return list;
+  }
+  function metalP(decay, dmin, dmax, bright, bmin, bmax, tune) {
+    return [
+      { id: "tune", label: "Afinação", min: 70, max: 150, step: 1, val: tune, hint: "Desloca as seis frequências juntas. 100% é o padrão.", fmt: fmtPct },
+      { id: "decay", label: "Duração", min: dmin, max: dmax, step: dmax <= 300 ? 1 : 10, val: decay, hint: "Tempo até o som sumir.", fmt: fmtDur },
+      { id: "bright", label: "Brilho", min: bmin, max: bmax, step: 100, val: bright, hint: "Corte do filtro passa-alta. Subir deixa o som mais fino.", fmt: fmtHz },
+      L()
+    ];
+  }
+
+
+  // ---------- Recursos da 707 ----------
+  // Resolução digital: a 707 reproduz amostras de 8 bits (6 bits nos pratos). Aqui o sinal é quantizado em 2^bits níveis.
+  var crushCurves = {};
+  function crushCurve(bits) {
+    if (!crushCurves[bits]) {
+      var n = 16384, half = Math.pow(2, bits - 1), c = new Float32Array(n);
+      for (var i = 0; i < n; i++) {
+        var x = (i / (n - 1)) * 2 - 1;
+        c[i] = Math.max(-1, Math.min(1, Math.round(x * half) / half));
+      }
+      crushCurves[bits] = c;
+    }
+    return crushCurves[bits];
+  }
+  function withCrush(f, o) {
+    return function (ctx, dest, t, p) {
+      var d = dest;
+      if (p.bits < 16) {
+        var ws = ctx.createWaveShaper();
+        ws.curve = crushCurve(p.bits);
+        ws.connect(dest);
+        d = ws;
+      }
+      return f(ctx, d, t, p, o);
+    };
+  }
+  function addBits(list, bits) {
+    var out = list.slice(0, list.length - 1);
+    out.push({ id: "bits", label: "Resolução", min: 4, max: 16, step: 1, val: bits,
+      hint: "Profundidade em bits: mais baixa deixa o som mais granulado, como nas amostras digitais antigas. Em 16 o efeito some.", fmt: fmtBits });
+    out.push(list[list.length - 1]);
+    return out;
+  }
+
+  // Tamborim: ruído filtrado em duas pancadas rápidas (a segunda mais forte).
+  function tamb(ctx, dest, t, p) {
+    var decay = p.decay / 1000;
+    var n = ctx.createBufferSource();
+    n.buffer = noiseBuffer(ctx);
+    var bp = ctx.createBiquadFilter();
+    bp.type = "bandpass"; bp.frequency.value = p.tone; bp.Q.value = 0.9;
+    var env = ctx.createGain();
+    env.gain.setValueAtTime(0, t);
+    env.gain.linearRampToValueAtTime(0.8, t + 0.001);
+    env.gain.setTargetAtTime(0.2, t + 0.001, 0.006);
+    env.gain.setValueAtTime(1, t + 0.022);
+    env.gain.setTargetAtTime(0, t + 0.022, decay / 6.9);
+    var out = ctx.createGain();
+    out.gain.value = 0.9 * (p.level / 70);
+    n.connect(bp); bp.connect(env); env.connect(out); out.connect(dest);
+    n.start(t);
+    n.stop(t + 0.022 + Math.min(0.9, decay * 1.1 + 0.05));
+  }
+
+  function kickP(start, end, sweep, decay, click, drive, dmax) {
+    return addBits([
+      { id: "start", label: "Pitch inicial", min: 100, max: 500, step: 1, val: start, hint: "Frequência no instante do golpe.", fmt: fmtHz },
+      { id: "end", label: "Pitch final", min: 35, max: 120, step: 1, val: end, hint: "Nota em que o bumbo se estabiliza.", fmt: fmtHz },
+      { id: "sweep", label: "Queda do pitch", min: 5, max: 200, step: 1, val: sweep, hint: "Tempo que o pitch leva para descer.", fmt: fmtDur },
+      { id: "decay", label: "Duração", min: 80, max: dmax, step: 10, val: decay, hint: "Tempo até o volume cair ao silêncio.", fmt: fmtDur },
+      { id: "click", label: "Clique do ataque", min: 0, max: 100, step: 1, val: click, hint: "Estalo curto de ruído no início.", fmt: fmtPct },
+      { id: "drive", label: "Saturação", min: 0, max: 100, step: 1, val: drive, hint: "Distorce a onda e acrescenta harmônicos.", fmt: fmtPct },
+      L()
+    ], 8);
+  }
+  function snareP(tune, bodyDecay, body, snappy, noiseDecay, noiseFreq) {
+    return addBits([
+      { id: "tune", label: "Afinação do corpo", min: 120, max: 320, step: 1, val: tune, hint: "Frequência do primeiro oscilador. O segundo fica uns 83% acima.", fmt: fmtHz },
+      { id: "bodyDecay", label: "Duração do corpo", min: 30, max: 300, step: 1, val: bodyDecay, hint: "Quanto tempo o tom da caixa dura.", fmt: fmtDur },
+      { id: "body", label: "Nível do corpo", min: 0, max: 100, step: 1, val: body, hint: "Volume dos dois osciladores.", fmt: fmtPct },
+      { id: "snappy", label: "Nível do ruído", min: 0, max: 100, step: 1, val: snappy, hint: "Volume da esteira.", fmt: fmtPct },
+      { id: "noiseDecay", label: "Duração do ruído", min: 50, max: 500, step: 5, val: noiseDecay, hint: "Tempo que a esteira chia.", fmt: fmtDur },
+      { id: "noiseFreq", label: "Brilho do ruído", min: 500, max: 6000, step: 50, val: noiseFreq, hint: "Corte do filtro passa-alta. Subir deixa o ruído mais fino.", fmt: fmtHz },
+      L()
+    ], 8);
+  }
+
+  // ---------- Máquinas ----------
+  var MACHINES = {};
+
+  // --- TR-808 ---
+  var K808 = { clickHz: 1500, clickGain: 0.7, clickTau: 0.004 };
+  var S808 = { type: "sine", startMul: 1.25, tau: 0.005 };
+  var T808 = { tau: 0.025 };
+  var C808 = { q: 1.2, gap: 0.011 };
+  MACHINES["808"] = {
+    desc: "Dez vozes: bumbo longo e grave, caixa, três tons, clap, hats, cowbell e prato. Tudo é síntese no navegador, sem samples.",
+    master: 0.7,
+    trim: { "bd": 0.54, "sd": 1.47, "lt": 0.53, "mt": 0.59, "ht": 0.67, "cp": 1.89, "ch": 1.9, "oh": 0.83, "cb": 0.87, "cy": 0.62 },
+    defaults: { bd: [0, 6, 10], sd: [4, 12], ch: [0, 2, 4, 6, 8, 10, 12], oh: [14] },
+    voices: [
+      { id: "bd", name: "Bumbo", dur: 1.2, fn: bind(kick, K808),
+        desc: "Oscilador senoidal com queda rápida de pitch e decaimento longo.",
+        params: [
+          { id: "start", label: "Pitch inicial", min: 60, max: 400, step: 1, val: 150, hint: "Frequência no instante do golpe.", fmt: fmtHz },
+          { id: "end", label: "Pitch final", min: 30, max: 100, step: 1, val: 48, hint: "Nota em que o bumbo se estabiliza.", fmt: fmtHz },
+          { id: "sweep", label: "Queda do pitch", min: 10, max: 300, step: 1, val: 60, hint: "Tempo que o pitch leva para descer. É o “boom”.", fmt: fmtDur },
+          { id: "decay", label: "Duração", min: 100, max: 2000, step: 10, val: 550, hint: "Tempo até o volume cair ao silêncio.", fmt: fmtDur },
+          { id: "click", label: "Clique do ataque", min: 0, max: 100, step: 1, val: 20, hint: "Estalo curto de ruído no início.", fmt: fmtPct },
+          { id: "drive", label: "Saturação", min: 0, max: 100, step: 1, val: 15, hint: "Distorce a onda e acrescenta harmônicos.", fmt: fmtPct },
+          L()
+        ] },
+      { id: "sd", name: "Caixa", dur: 0.5, fn: bind(snare, S808),
+        desc: "Dois osciladores senoidais para o corpo e ruído branco filtrado para a esteira.",
+        params: [
+          { id: "tune", label: "Afinação do corpo", min: 120, max: 300, step: 1, val: 180, hint: "Frequência do primeiro oscilador. O segundo fica uns 83% acima.", fmt: fmtHz },
+          { id: "bodyDecay", label: "Duração do corpo", min: 30, max: 300, step: 1, val: 90, hint: "Quanto tempo o tom da caixa dura.", fmt: fmtDur },
+          { id: "body", label: "Nível do corpo", min: 0, max: 100, step: 1, val: 70, hint: "Volume dos dois osciladores.", fmt: fmtPct },
+          { id: "snappy", label: "Nível do ruído", min: 0, max: 100, step: 1, val: 60, hint: "Volume da esteira (o “snappy” da 808).", fmt: fmtPct },
+          { id: "noiseDecay", label: "Duração do ruído", min: 50, max: 500, step: 5, val: 200, hint: "Tempo que a esteira chia.", fmt: fmtDur },
+          { id: "noiseFreq", label: "Brilho do ruído", min: 500, max: 6000, step: 50, val: 1800, hint: "Corte do filtro passa-alta. Subir deixa o ruído mais fino.", fmt: fmtHz },
+          L()
+        ] },
+      { id: "lt", name: "Tom grave", dur: 0.8, fn: bind(tom, T808),
+        desc: "Oscilador senoidal com uma queda curta de pitch, como um bumbo mais agudo e mais curto.",
+        params: tomP(90, 60, 200, 350, 100, 800, 40, 100, null) },
+      { id: "mt", name: "Tom médio", dur: 0.8, fn: bind(tom, T808),
+        desc: "Mesmo princípio do tom grave, afinado mais alto.",
+        params: tomP(130, 90, 300, 280, 100, 800, 40, 100, null) },
+      { id: "ht", name: "Tom agudo", dur: 0.8, fn: bind(tom, T808),
+        desc: "Mesmo princípio do tom grave, afinado ainda mais alto.",
+        params: tomP(190, 120, 400, 220, 100, 800, 40, 100, null) },
+      { id: "cp", name: "Clap", dur: 0.5, fn: bind(clap, C808),
+        desc: "Ruído filtrado em três rajadas rápidas, seguidas de uma cauda. É o que imita várias palmas quase juntas.",
+        params: [
+          { id: "tone", label: "Tom", min: 600, max: 2500, step: 10, val: 1100, hint: "Frequência central do filtro. Mais alto, mais seco e estalado.", fmt: fmtHz },
+          { id: "tail", label: "Cauda", min: 50, max: 500, step: 5, val: 180, hint: "Duração do som depois das três rajadas.", fmt: fmtDur },
+          L()
+        ] },
+      { id: "ch", name: "Hat fechado", dur: 0.3, fn: bind(hat, 10000),
+        desc: "Seis ondas quadradas inarmônicas, filtradas para ficar só o brilho, com decaimento curto.",
+        params: metalP(50, 20, 200, 7000, 3000, 10000, 100) },
+      { id: "oh", name: "Hat aberto", dur: 1.2, fn: bind(hat, 10000),
+        desc: "Mesma síntese do hat fechado, com decaimento longo.",
+        params: metalP(350, 100, 1000, 7000, 3000, 10000, 100) },
+      { id: "cb", name: "Cowbell", dur: 0.8, fn: cowbell,
+        desc: "Duas ondas quadradas (540 Hz e 800 Hz) passadas por um filtro. O envelope cai rápido e deixa uma cauda baixa.",
+        params: [
+          { id: "tune", label: "Afinação", min: 400, max: 800, step: 1, val: 540, hint: "Frequência da primeira onda. A segunda fica na mesma proporção.", fmt: fmtHz },
+          { id: "decay", label: "Duração", min: 100, max: 800, step: 10, val: 350, hint: "Tempo até o som sumir.", fmt: fmtDur },
+          L()
+        ] },
+      { id: "cy", name: "Prato", dur: 2.5, fn: bind(cymbal, 10000),
+        desc: "Mesma base metálica dos hats, com decaimento muito longo e filtro mais grave.",
+        params: metalP(1200, 400, 2500, 5000, 3000, 9000, 100) }
+    ]
+  };
+
+  // --- TR-909 ---
+  var K909 = { clickHz: 2500, clickGain: 0.8, clickTau: 0.003 };
+  var S909 = { type: "triangle", startMul: 1.4, tau: 0.008 };
+  var T909 = { tau: 0.02 };
+  var C909 = { q: 1.5, gap: 0.010 };
+  MACHINES["909"] = {
+    desc: "Onze vozes. O bumbo é mais curto e agressivo, e há rimshot, crash e ride. Na máquina original, os hats, o crash e o ride eram samples; aqui são aproximações por síntese.",
+    master: 0.7,
+    trim: { "bd": 0.65, "sd": 1.26, "lt": 0.62, "mt": 0.67, "ht": 0.74, "rs": 1.11, "cp": 1.79, "ch": 2.45, "oh": 1.09, "cr": 0.53, "rd": 0.58 },
+    defaults: { bd: [0, 4, 8, 12], cp: [4, 12], oh: [2, 6, 10, 14], ch: [3, 7, 11, 15] },
+    voices: [
+      { id: "bd", name: "Bumbo", dur: 0.8, fn: bind(kick, K909),
+        desc: "Senoide com queda de pitch bem rápida, clique forte no ataque e saturação. É mais curto e agressivo que o da 808.",
+        params: [
+          { id: "start", label: "Pitch inicial", min: 100, max: 500, step: 1, val: 260, hint: "Frequência no instante do golpe.", fmt: fmtHz },
+          { id: "end", label: "Pitch final", min: 35, max: 110, step: 1, val: 52, hint: "Nota em que o bumbo se estabiliza.", fmt: fmtHz },
+          { id: "sweep", label: "Queda do pitch", min: 5, max: 150, step: 1, val: 25, hint: "Tempo que o pitch leva para descer. Na 909 é bem curto.", fmt: fmtDur },
+          { id: "decay", label: "Duração", min: 80, max: 1200, step: 10, val: 320, hint: "Tempo até o volume cair ao silêncio.", fmt: fmtDur },
+          { id: "click", label: "Clique do ataque", min: 0, max: 100, step: 1, val: 45, hint: "Estalo de ruído no início. É uma marca do som da 909.", fmt: fmtPct },
+          { id: "drive", label: "Saturação", min: 0, max: 100, step: 1, val: 45, hint: "Distorce a onda e acrescenta harmônicos.", fmt: fmtPct },
+          L()
+        ] },
+      { id: "sd", name: "Caixa", dur: 0.5, fn: bind(snare, S909),
+        desc: "Dois osciladores triangulares para o corpo e bastante ruído filtrado. É mais brilhante e com mais esteira que a da 808.",
+        params: [
+          { id: "tune", label: "Afinação do corpo", min: 120, max: 320, step: 1, val: 190, hint: "Frequência do primeiro oscilador. O segundo fica uns 83% acima.", fmt: fmtHz },
+          { id: "bodyDecay", label: "Duração do corpo", min: 30, max: 300, step: 1, val: 110, hint: "Quanto tempo o tom da caixa dura.", fmt: fmtDur },
+          { id: "body", label: "Nível do corpo", min: 0, max: 100, step: 1, val: 60, hint: "Volume dos dois osciladores.", fmt: fmtPct },
+          { id: "snappy", label: "Nível do ruído", min: 0, max: 100, step: 1, val: 80, hint: "Volume da esteira.", fmt: fmtPct },
+          { id: "noiseDecay", label: "Duração do ruído", min: 50, max: 500, step: 5, val: 220, hint: "Tempo que a esteira chia.", fmt: fmtDur },
+          { id: "noiseFreq", label: "Brilho do ruído", min: 500, max: 6000, step: 50, val: 2500, hint: "Corte do filtro passa-alta. Subir deixa o ruído mais fino.", fmt: fmtHz },
+          L()
+        ] },
+      { id: "lt", name: "Tom grave", dur: 0.8, fn: bind(tom, T909),
+        desc: "Senoide com queda de pitch e um clique de ruído no ataque. Mais seco e com mais punch que os tons da 808.",
+        params: tomP(100, 60, 220, 260, 80, 800, 60, 120, 30) },
+      { id: "mt", name: "Tom médio", dur: 0.8, fn: bind(tom, T909),
+        desc: "Mesmo princípio do tom grave, afinado mais alto.",
+        params: tomP(150, 90, 320, 220, 80, 800, 60, 120, 30) },
+      { id: "ht", name: "Tom agudo", dur: 0.8, fn: bind(tom, T909),
+        desc: "Mesmo princípio do tom grave, afinado ainda mais alto.",
+        params: tomP(220, 120, 450, 180, 80, 800, 60, 120, 30) },
+      { id: "rs", name: "Rimshot", dur: 0.3, fn: rim,
+        desc: "Dois tons muito curtos (um triangular e um quadrado, bem mais agudo) mais um estalo de ruído.",
+        params: [
+          { id: "tune", label: "Afinação", min: 300, max: 800, step: 5, val: 480, hint: "Frequência do tom principal. O outro fica 3,5 vezes mais alto.", fmt: fmtHz },
+          { id: "decay", label: "Duração", min: 10, max: 120, step: 1, val: 40, hint: "Tempo até o som sumir.", fmt: fmtDur },
+          L()
+        ] },
+      { id: "cp", name: "Clap", dur: 0.5, fn: bind(clap, C909),
+        desc: "Ruído filtrado em três rajadas rápidas, seguidas de uma cauda.",
+        params: [
+          { id: "tone", label: "Tom", min: 600, max: 2800, step: 10, val: 1200, hint: "Frequência central do filtro. Mais alto, mais seco e estalado.", fmt: fmtHz },
+          { id: "tail", label: "Cauda", min: 50, max: 500, step: 5, val: 220, hint: "Duração do som depois das rajadas.", fmt: fmtDur },
+          L()
+        ] },
+      { id: "ch", name: "Hat fechado", dur: 0.3, fn: bind(hat, 11000),
+        desc: "Aproximação por síntese de um som que na 909 original era sample: seis ondas quadradas filtradas, mais finas que as da 808.",
+        params: metalP(45, 20, 200, 8500, 3000, 12000, 100) },
+      { id: "oh", name: "Hat aberto", dur: 1.0, fn: bind(hat, 11000),
+        desc: "Mesma síntese do hat fechado, com decaimento longo.",
+        params: metalP(300, 100, 1000, 8500, 3000, 12000, 100) },
+      { id: "cr", name: "Crash", dur: 2.5, fn: bind(cymbal, 9000),
+        desc: "Aproximação por síntese: a mesma base metálica, com decaimento muito longo e filtro mais grave.",
+        params: metalP(1800, 400, 2500, 4500, 2500, 9000, 90) },
+      { id: "rd", name: "Ride", dur: 2.0, fn: bind(cymbal, 9000),
+        desc: "Aproximação por síntese: base metálica com decaimento médio e um pouco mais aguda que o crash.",
+        params: metalP(1200, 400, 2500, 6000, 2500, 9000, 115) }
+    ]
+  };
+
+  // --- TR-606 ---
+  var K606 = { clickHz: 2000, clickGain: 0.7, clickTau: 0.003 };
+  var S606 = { type: "sine", startMul: 1.25, tau: 0.005 };
+  var T606 = { tau: 0.02 };
+  MACHINES["606"] = {
+    desc: "Sete vozes, todas mais agudas e secas que as da 808. A 606 original não tinha clap, rimshot nem cowbell.",
+    master: 0.6,
+    trim: { "bd": 0.95, "sd": 1.31, "lt": 0.74, "ht": 0.84, "ch": 2.36, "oh": 1.03, "cy": 0.63 },
+    defaults: { bd: [0, 6, 10], sd: [4, 12], ch: [0, 2, 4, 6, 8, 10, 12], oh: [14] },
+    voices: [
+      { id: "bd", name: "Bumbo", dur: 0.5, fn: bind(kick, K606),
+        desc: "Senoide com queda de pitch rápida. É mais agudo, curto e seco que o da 808, com pouco clique e quase sem saturação.",
+        params: [
+          { id: "start", label: "Pitch inicial", min: 100, max: 400, step: 1, val: 180, hint: "Frequência no instante do golpe.", fmt: fmtHz },
+          { id: "end", label: "Pitch final", min: 40, max: 120, step: 1, val: 65, hint: "Nota em que o bumbo se estabiliza.", fmt: fmtHz },
+          { id: "sweep", label: "Queda do pitch", min: 5, max: 150, step: 1, val: 35, hint: "Tempo que o pitch leva para descer.", fmt: fmtDur },
+          { id: "decay", label: "Duração", min: 80, max: 800, step: 10, val: 200, hint: "Tempo até o volume cair ao silêncio.", fmt: fmtDur },
+          { id: "click", label: "Clique do ataque", min: 0, max: 100, step: 1, val: 25, hint: "Estalo curto de ruído no início.", fmt: fmtPct },
+          { id: "drive", label: "Saturação", min: 0, max: 100, step: 1, val: 10, hint: "Distorce a onda e acrescenta harmônicos.", fmt: fmtPct },
+          L()
+        ] },
+      { id: "sd", name: "Caixa", dur: 0.4, fn: bind(snare, S606),
+        desc: "Dois osciladores senoidais para o corpo e ruído filtrado. É mais curta e com a esteira mais brilhante que a da 808.",
+        params: [
+          { id: "tune", label: "Afinação do corpo", min: 150, max: 350, step: 1, val: 230, hint: "Frequência do primeiro oscilador. O segundo fica uns 83% acima.", fmt: fmtHz },
+          { id: "bodyDecay", label: "Duração do corpo", min: 20, max: 250, step: 1, val: 70, hint: "Quanto tempo o tom da caixa dura.", fmt: fmtDur },
+          { id: "body", label: "Nível do corpo", min: 0, max: 100, step: 1, val: 55, hint: "Volume dos dois osciladores.", fmt: fmtPct },
+          { id: "snappy", label: "Nível do ruído", min: 0, max: 100, step: 1, val: 75, hint: "Volume da esteira.", fmt: fmtPct },
+          { id: "noiseDecay", label: "Duração do ruído", min: 50, max: 400, step: 5, val: 150, hint: "Tempo que a esteira chia.", fmt: fmtDur },
+          { id: "noiseFreq", label: "Brilho do ruído", min: 500, max: 7000, step: 50, val: 3000, hint: "Corte do filtro passa-alta. Subir deixa o ruído mais fino.", fmt: fmtHz },
+          L()
+        ] },
+      { id: "lt", name: "Tom grave", dur: 0.6, fn: bind(tom, T606),
+        desc: "Senoide com queda de pitch. Os tons da 606 são curtos e mais agudos que os da 808.",
+        params: tomP(140, 80, 250, 180, 60, 600, 50, 120, 10) },
+      { id: "ht", name: "Tom agudo", dur: 0.6, fn: bind(tom, T606),
+        desc: "Mesmo princípio do tom grave, afinado mais alto.",
+        params: tomP(230, 120, 400, 140, 60, 600, 50, 120, 10) },
+      { id: "ch", name: "Hat fechado", dur: 0.3, fn: bind(hat, 10000),
+        desc: "Seis ondas quadradas filtradas, com decaimento muito curto. Os hats da 606 são mais finos e secos que os da 808.",
+        params: metalP(35, 15, 150, 8000, 3000, 12000, 110) },
+      { id: "oh", name: "Hat aberto", dur: 0.8, fn: bind(hat, 10000),
+        desc: "Mesma síntese do hat fechado, com decaimento mais longo.",
+        params: metalP(250, 80, 800, 8000, 3000, 12000, 110) },
+      { id: "cy", name: "Prato", dur: 2.0, fn: bind(cymbal, 9000),
+        desc: "Mesma base metálica dos hats, com decaimento longo e filtro mais grave.",
+        params: metalP(1000, 300, 2500, 5500, 2500, 9000, 100) }
+    ]
+  };
+
+  // --- TR-707 ---
+  var K707 = { clickHz: 2500, clickGain: 0.5, clickTau: 0.003 };
+  var S707 = { type: "triangle", startMul: 1.3, tau: 0.006 };
+  var T707 = { tau: 0.02 };
+  var C707 = { q: 1.3, gap: 0.012 };
+  MACHINES["707"] = {
+    desc: "Quinze vozes, com dois bumbos e duas caixas. Na máquina original, todos os sons eram amostras digitais de 8 bits (6 bits nos pratos). Aqui são aproximações por síntese, sem usar nenhuma amostra da Roland, e o controle Resolução imita o aspecto granulado desse som.",
+    master: 0.6,
+    trim: {"bd":0.72,"b2":0.61,"sd":1.41,"s2":1.41,"lt":0.56,"mt":0.62,"ht":0.69,"rs":1.11,"cb":0.87,"cp":1.67,"tb":0.68,"ch":2.37,"oh":1.03,"cr":0.53,"rd":0.61},
+    defaults: { bd: [0, 6, 8, 14], sd: [4, 12], cp: [12], tb: [2, 10], ch: [0, 2, 4, 6, 8, 10, 12], oh: [14] },
+    voices: [
+      { id: "bd", name: "Bumbo 1", dur: 0.6, fn: withCrush(kick, K707),
+        desc: "Senoide com queda de pitch rápida e um pouco de clique. O primeiro dos dois bumbos da 707: mais curto e firme.",
+        params: kickP(200, 58, 22, 300, 30, 20, 1200) },
+      { id: "b2", name: "Bumbo 2", dur: 0.8, fn: withCrush(kick, K707),
+        desc: "O segundo bumbo da 707: mais grave e mais longo, com menos clique.",
+        params: kickP(150, 48, 35, 450, 15, 10, 1200) },
+      { id: "sd", name: "Caixa 1", dur: 0.5, fn: withCrush(snare, S707),
+        desc: "Dois osciladores triangulares para o corpo e ruído filtrado. A primeira das duas caixas: mais redonda e macia.",
+        params: snareP(175, 100, 75, 50, 160, 1800) },
+      { id: "s2", name: "Caixa 2", dur: 0.5, fn: withCrush(snare, S707),
+        desc: "A segunda caixa: mais grave e com mais esteira.",
+        params: snareP(150, 130, 70, 60, 200, 1500) },
+      { id: "lt", name: "Tom grave", dur: 0.8, fn: withCrush(tom, T707),
+        desc: "Senoide com queda de pitch e um leve clique no ataque.",
+        params: addBits(tomP(100, 60, 220, 320, 80, 800, 45, 120, 20), 8) },
+      { id: "mt", name: "Tom médio", dur: 0.8, fn: withCrush(tom, T707),
+        desc: "Mesmo princípio do tom grave, afinado mais alto.",
+        params: addBits(tomP(150, 90, 320, 260, 80, 800, 45, 120, 20), 8) },
+      { id: "ht", name: "Tom agudo", dur: 0.8, fn: withCrush(tom, T707),
+        desc: "Mesmo princípio do tom grave, afinado ainda mais alto.",
+        params: addBits(tomP(215, 120, 450, 210, 80, 800, 45, 120, 20), 8) },
+      { id: "rs", name: "Rimshot", dur: 0.3, fn: withCrush(rim),
+        desc: "Dois tons muito curtos (um triangular e um quadrado, bem mais agudo) mais um estalo de ruído.",
+        params: addBits([
+          { id: "tune", label: "Afinação", min: 300, max: 800, step: 5, val: 500, hint: "Frequência do tom principal. O outro fica 3,5 vezes mais alto.", fmt: fmtHz },
+          { id: "decay", label: "Duração", min: 10, max: 120, step: 1, val: 35, hint: "Tempo até o som sumir.", fmt: fmtDur },
+          L()
+        ], 8) },
+      { id: "cb", name: "Cowbell", dur: 0.8, fn: withCrush(cowbell),
+        desc: "Duas ondas quadradas filtradas, com um envelope que cai rápido e deixa uma cauda baixa.",
+        params: addBits([
+          { id: "tune", label: "Afinação", min: 400, max: 800, step: 1, val: 560, hint: "Frequência da primeira onda. A segunda fica na mesma proporção.", fmt: fmtHz },
+          { id: "decay", label: "Duração", min: 100, max: 800, step: 10, val: 280, hint: "Tempo até o som sumir.", fmt: fmtDur },
+          L()
+        ], 8) },
+      { id: "cp", name: "Clap", dur: 0.5, fn: withCrush(clap, C707),
+        desc: "Ruído filtrado em três rajadas rápidas, seguidas de uma cauda.",
+        params: addBits([
+          { id: "tone", label: "Tom", min: 600, max: 2800, step: 10, val: 1300, hint: "Frequência central do filtro. Mais alto, mais seco e estalado.", fmt: fmtHz },
+          { id: "tail", label: "Cauda", min: 50, max: 500, step: 5, val: 190, hint: "Duração do som depois das rajadas.", fmt: fmtDur },
+          L()
+        ], 8) },
+      { id: "tb", name: "Tamborim", dur: 0.5, fn: withCrush(tamb),
+        desc: "Ruído filtrado em agudos, em duas pancadas rápidas. A segunda é mais forte.",
+        params: addBits([
+          { id: "tone", label: "Tom", min: 3000, max: 12000, step: 100, val: 7000, hint: "Frequência central do filtro. Mais alto, mais brilhante.", fmt: fmtHz },
+          { id: "decay", label: "Duração", min: 40, max: 400, step: 5, val: 140, hint: "Tempo até o som sumir.", fmt: fmtDur },
+          L()
+        ], 8) },
+      { id: "ch", name: "Hat fechado", dur: 0.3, fn: withCrush(hat, 10000),
+        desc: "Aproximação por síntese de um sample: seis ondas quadradas filtradas, com decaimento curto.",
+        params: addBits(metalP(40, 20, 200, 8000, 3000, 12000, 100), 8) },
+      { id: "oh", name: "Hat aberto", dur: 1.2, fn: withCrush(hat, 10000),
+        desc: "Mesma síntese do hat fechado, com decaimento longo. O hat fechado corta o aberto.",
+        params: addBits(metalP(280, 100, 1000, 8000, 3000, 12000, 100), 8) },
+      { id: "cr", name: "Crash", dur: 2.5, fn: withCrush(cymbal, 9000),
+        desc: "Aproximação por síntese: base metálica com decaimento muito longo. Na 707 os pratos eram de 6 bits, mais granulados que o resto.",
+        params: addBits(metalP(1700, 400, 2500, 4800, 2500, 9000, 95), 6) },
+      { id: "rd", name: "Ride", dur: 2.0, fn: withCrush(cymbal, 9000),
+        desc: "Aproximação por síntese: base metálica com decaimento médio e um pouco mais aguda que o crash. Também em 6 bits.",
+        params: addBits(metalP(1100, 400, 2500, 6200, 2500, 9000, 110), 6) }
+    ]
+  };
+
+  // ---------- Estado por máquina ----------
+  var MACHINE_IDS = ["808", "909", "606", "707"];
+  var store = {};
+  MACHINE_IDS.forEach(function (mid) {
+    var m = MACHINES[mid];
+    var st = { state: {}, pattern: {}, muted: {}, soloed: {} };
+    m.voices.forEach(function (v) {
+      st.state[v.id] = {};
+      v.params.forEach(function (p) { st.state[v.id][p.id] = p.val; });
+      st.pattern[v.id] = [];
+      for (var i = 0; i < 16; i++) st.pattern[v.id].push(false);
+    });
+    Object.keys(m.defaults).forEach(function (vid) {
+      m.defaults[vid].forEach(function (i) { st.pattern[vid][i] = true; });
+    });
+    store[mid] = st;
+  });
+
+  var machineId = "808";
+  var machine = MACHINES["808"];
+  var VOICES = machine.voices;
+  var state = store["808"].state;
+  var pattern = store["808"].pattern;
+  var muted = store["808"].muted;
+  var soloed = store["808"].soloed;
+  var current = VOICES[0];
+
+  // Ganho de calibração de cada voz (em machine.trim), medido para que, no volume padrão, a mistura
+  // fique equilibrada (bumbo e caixa à frente, hats atrás). O controle de volume age a partir desse ponto.
+  function voiceParams(v) {
+    var p = state[v.id];
+    var lv = 70 * (machine.trim[v.id] || 1) * Math.pow(p.level / 70, 2);
+    return Object.assign({}, p, { level: lv });
+  }
+
+  // ---------- Destravar o áudio no celular ----------
+  // iPhone e Android só liberam som depois de um toque. No iPhone, o Web Audio também
+  // fica mudo com a chave de silencioso ligada; pedir o canal de mídia resolve isso.
+  var audioUnlocked = false, silentEl = null;
+  var isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  function silentWavURI() {
+    var n = 800, b = new Uint8Array(44 + n * 2), dv = new DataView(b.buffer);
+    function s(o, t) { for (var i = 0; i < t.length; i++) b[o + i] = t.charCodeAt(i); }
+    s(0, "RIFF"); dv.setUint32(4, 36 + n * 2, true); s(8, "WAVE"); s(12, "fmt ");
+    dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 1, true);
+    dv.setUint32(24, 8000, true); dv.setUint32(28, 16000, true); dv.setUint16(32, 2, true);
+    dv.setUint16(34, 16, true); s(36, "data"); dv.setUint32(40, n * 2, true);
+    var str = "";
+    for (var i = 0; i < b.length; i++) str += String.fromCharCode(b[i]);
+    return "data:audio/wav;base64," + btoa(str);
+  }
+  function unlockAudio(c) {
+    try { if (navigator.audioSession) navigator.audioSession.type = "playback"; } catch (e) {}
+    if (c.state !== "running") {
+      try { var r = c.resume(); if (r && r.catch) r.catch(function () {}); } catch (e) {}
+    }
+    if (audioUnlocked) return;
+    audioUnlocked = true;
+    try {
+      var src = c.createBufferSource();
+      src.buffer = c.createBuffer(1, 1, c.sampleRate);
+      src.connect(c.destination);
+      src.start(0);
+    } catch (e) {}
+    if (isIOS && !navigator.audioSession) {
+      try {
+        silentEl = silentEl || new Audio(silentWavURI());
+        silentEl.loop = true;
+        silentEl.setAttribute("playsinline", "");
+        var pp = silentEl.play();
+        if (pp && pp.catch) pp.catch(function () { audioUnlocked = false; });
+      } catch (e) { audioUnlocked = false; }
+    }
+  }
+  ["touchend", "click", "keydown"].forEach(function (ev) {
+    document.addEventListener(ev, function () { ensureCtx(); }, { capture: true, passive: true });
+  });
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden && ctx && ctx.state !== "running") {
+      try { var r = ctx.resume(); if (r && r.catch) r.catch(function () {}); } catch (e) {}
+    }
+  });
+
+  // ---------- Áudio ao vivo ----------
+  var ctx = null, master = null, lastOH = null;
+  function ensureCtx() {
+    if (!ctx) {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      ctx = new AC();
+      var comp = ctx.createDynamicsCompressor();
+      comp.threshold.value = -3;
+      comp.knee.value = 0;
+      comp.ratio.value = 20;
+      comp.attack.value = 0.002;
+      comp.release.value = 0.1;
+      master = ctx.createGain();
+      master.gain.value = machine.master;
+      master.connect(comp);
+      comp.connect(ctx.destination);
+    }
+    unlockAudio(ctx);
+    return ctx;
+  }
+
+  function trigger(v, t) {
+    if (v.id === "ch" && lastOH && lastOH.t <= t) {
+      lastOH.node.gain.setTargetAtTime(0, t, 0.004);
+      lastOH = null;
+    }
+    var node = v.fn(ctx, master, t, voiceParams(v));
+    if (v.id === "oh") lastOH = { node: node, t: t };
+  }
+  function preview(v) {
+    if (playing || !audible(v)) return;
+    ensureCtx();
+    trigger(v, ctx.currentTime + 0.005);
+  }
+
+  // ---------- Sequenciador ----------
+  var bpmEl = document.getElementById("bpm");
+  var bpmOut = document.getElementById("bpm-out");
+  var swingEl = document.getElementById("swing");
+  var swingOut = document.getElementById("swing-out");
+  var playBtn = document.getElementById("play");
+  var playing = false, step = 0, nextT = 0, timer = null, queue = [], rafId = 0, shownStep = -1;
+
+  bpmEl.addEventListener("input", function () { bpmOut.textContent = bpmEl.value + " bpm"; saveSoon(); });
+  swingEl.addEventListener("input", function () { swingOut.textContent = swingEl.value + " %"; saveSoon(); });
+
+  function stepDur() { return 60 / Number(bpmEl.value) / 4; }
+
+  function schedule() {
+    while (nextT < ctx.currentTime + 0.12) {
+      var sw = (step % 2 === 1) ? stepDur() * Number(swingEl.value) / 100 : 0;
+      var tt = nextT + sw;
+      for (var k = 0; k < VOICES.length; k++) {
+        if (pattern[VOICES[k].id][step] && audible(VOICES[k])) trigger(VOICES[k], tt);
+      }
+      queue.push({ step: step, time: tt });
+      nextT += stepDur();
+      step = (step + 1) % 16;
+    }
+  }
+
+  function showStep(s) {
+    if (s === shownStep) return;
+    if (shownStep >= 0) cols[shownStep].forEach(function (b) { b.classList.remove("now"); });
+    if (s >= 0) cols[s].forEach(function (b) { b.classList.add("now"); });
+    shownStep = s;
+  }
+
+  function frame() {
+    if (!playing) return;
+    var now = ctx.currentTime, cur = -1;
+    while (queue.length && queue[0].time <= now) cur = queue.shift().step;
+    if (cur >= 0) showStep(cur);
+    rafId = requestAnimationFrame(frame);
+  }
+
+  function start() {
+    ensureCtx();
+    playing = true;
+    step = 0; queue = [];
+    nextT = ctx.currentTime + 0.06;
+    schedule();
+    timer = setInterval(schedule, 25);
+    playBtn.textContent = "Parar";
+    rafId = requestAnimationFrame(frame);
+  }
+  function stop() {
+    playing = false;
+    clearInterval(timer); timer = null;
+    cancelAnimationFrame(rafId);
+    queue = [];
+    showStep(-1);
+    playBtn.textContent = "Tocar";
+  }
+  function toggle() { playing ? stop() : start(); }
+
+  playBtn.addEventListener("click", toggle);
+  document.addEventListener("keydown", function (e) {
+    var tg = e.target;
+    if (e.code === "Space" && !e.repeat && tg.tagName !== "BUTTON" && tg.tagName !== "OUTPUT" && !(tg.tagName === "INPUT" && tg.type === "text")) {
+      e.preventDefault();
+      toggle();
+    }
+  });
+
+  // ---------- Grade ----------
+  var grid = document.getElementById("grid");
+  var cols = [];
+  var nameBtns = {}, msBtns = {}, rowSteps = {};
+
+  // Arrastar com o mouse ou o trackpad: o primeiro quadrado define se a ação liga ou apaga,
+  // e os quadrados por onde o ponteiro passa recebem o mesmo estado. No toque, continua valendo o toque simples.
+  var drag = null, swallowClick = false;
+  function stepAt(x, y) {
+    var el = document.elementFromPoint(x, y);
+    return el && el.closest ? el.closest(".step") : null;
+  }
+  document.addEventListener("pointermove", function (e) {
+    if (!drag) return;
+    if (e.buttons === 0) { drag = null; return; }
+    var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    var n = Math.max(1, Math.ceil(Math.sqrt(dx * dx + dy * dy) / 6));
+    for (var k = 1; k <= n; k++) {
+      var el = stepAt(drag.x + dx * k / n, drag.y + dy * k / n);
+      if (el && el._set) el._set(drag.value);
+    }
+    drag.x = e.clientX;
+    drag.y = e.clientY;
+  });
+  function endDrag() {
+    drag = null;
+    setTimeout(function () { swallowClick = false; }, 0);
+  }
+  document.addEventListener("pointerup", endDrag);
+  document.addEventListener("pointercancel", endDrag);
+
+  function anySolo() {
+    return VOICES.some(function (v) { return soloed[v.id]; });
+  }
+  // Se alguma voz está em solo, só as em solo tocam; sem solo, tocam todas as que não estão em mute.
+  function audible(v) {
+    return anySolo() ? !!soloed[v.id] : !muted[v.id];
+  }
+  function refreshMS() {
+    VOICES.forEach(function (v) {
+      var on = audible(v);
+      msBtns[v.id].m.setAttribute("aria-pressed", muted[v.id] ? "true" : "false");
+      msBtns[v.id].s.setAttribute("aria-pressed", soloed[v.id] ? "true" : "false");
+      nameBtns[v.id].classList.toggle("dim", !on);
+      rowSteps[v.id].forEach(function (b) { b.classList.toggle("dim", !on); });
+    });
+  }
+
+  function buildGrid() {
+    grid.innerHTML = "";
+    cols = [];
+    for (var c = 0; c < 16; c++) cols.push([]);
+    nameBtns = {}; msBtns = {}; rowSteps = {};
+    shownStep = -1;
+
+    VOICES.forEach(function (v) {
+      var nb = document.createElement("button");
+      nb.type = "button";
+      nb.className = "name";
+      nb.textContent = v.name;
+      nb.addEventListener("click", function () { select(v); });
+      nameBtns[v.id] = nb;
+      rowSteps[v.id] = [];
+
+      var mb = document.createElement("button");
+      mb.type = "button";
+      mb.className = "ms mute";
+      mb.textContent = "M";
+      mb.title = "Silenciar " + v.name;
+      mb.setAttribute("aria-label", "Silenciar " + v.name);
+      mb.setAttribute("aria-pressed", "false");
+      mb.addEventListener("click", function () { muted[v.id] = !muted[v.id]; refreshMS(); });
+      var sb = document.createElement("button");
+      sb.type = "button";
+      sb.className = "ms solo";
+      sb.textContent = "S";
+      sb.title = "Tocar só " + v.name;
+      sb.setAttribute("aria-label", "Solo " + v.name);
+      sb.setAttribute("aria-pressed", "false");
+      sb.addEventListener("click", function () { soloed[v.id] = !soloed[v.id]; refreshMS(); });
+      msBtns[v.id] = { m: mb, s: sb };
+
+      var label = document.createElement("div");
+      label.className = "label";
+      label.appendChild(nb);
+      label.appendChild(mb);
+      label.appendChild(sb);
+      grid.appendChild(label);
+
+      var rowPat = pattern[v.id];
+      for (var i = 0; i < 16; i++) {
+        (function (i) {
+          var b = document.createElement("button");
+          b.type = "button";
+          b.className = "step" + (i > 0 && i % 4 === 0 ? " gap" : "") + (rowPat[i] ? " on" : "");
+          b.setAttribute("data-g", String(Math.floor(i / 4)));
+          b.setAttribute("aria-pressed", rowPat[i] ? "true" : "false");
+          b.setAttribute("aria-label", v.name + ", passo " + (i + 1));
+          b._set = function (val) {
+            if (rowPat[i] === val) return;
+            rowPat[i] = val;
+            b.classList.toggle("on", val);
+            b.setAttribute("aria-pressed", val ? "true" : "false");
+            saveSoon();
+          };
+          b.addEventListener("pointerdown", function (e) {
+            if (e.button !== 0 || e.pointerType === "touch") return;
+            e.preventDefault();
+            var val = !rowPat[i];
+            b._set(val);
+            if (val && !playing) preview(v);
+            drag = { value: val, x: e.clientX, y: e.clientY };
+            swallowClick = true;
+          });
+          b.addEventListener("click", function () {
+            if (swallowClick) { swallowClick = false; return; }
+            b._set(!rowPat[i]);
+            if (rowPat[i] && !playing) preview(v);
+          });
+          cols[i].push(b);
+          rowSteps[v.id].push(b);
+          grid.appendChild(b);
+        })(i);
+      }
+    });
+    refreshMS();
+  }
+
+  document.getElementById("clear").addEventListener("click", function () {
+    VOICES.forEach(function (v) {
+      for (var i = 0; i < 16; i++) pattern[v.id][i] = false;
+    });
+    for (var i = 0; i < 16; i++) cols[i].forEach(function (b) {
+      b.classList.remove("on");
+      b.setAttribute("aria-pressed", "false");
+    });
+    saveSoon();
+  });
+
+  // ---------- Edição digitando o valor ----------
+  function parseValue(txt, unit) {
+    var s = String(txt).trim().toLowerCase().replace(",", ".");
+    var m = s.match(/^(-?\d*\.?\d+)\s*(ms|s|hz|bpm|bits|%)?$/);
+    if (!m) return null;
+    var n = parseFloat(m[1]);
+    if (unit === "ms" && m[2] === "s") n *= 1000;
+    return n;
+  }
+  function makeEditable(out, slider, unit, onCommit) {
+    out.classList.add("editable");
+    out.tabIndex = 0;
+    out.setAttribute("role", "button");
+    out.title = "Toque para digitar o valor";
+    function open() {
+      if (out._editing) return;
+      out._editing = true;
+      var holder = document.createElement("span");
+      holder.className = "numwrap";
+      var inp = document.createElement("input");
+      inp.type = "text";
+      inp.inputMode = "decimal";
+      inp.className = "numedit";
+      inp.value = slider.value;
+      inp.setAttribute("aria-label", "Digite o valor em " + unit);
+      var u = document.createElement("span");
+      u.className = "unit";
+      u.textContent = unit;
+      holder.appendChild(inp);
+      holder.appendChild(u);
+      out.style.display = "none";
+      out.parentNode.insertBefore(holder, out.nextSibling);
+      inp.focus();
+      inp.select();
+      var done = false;
+      function close(commit, refocus) {
+        if (done) return;
+        done = true;
+        if (commit) {
+          var n = parseValue(inp.value, unit);
+          if (n !== null) {
+            slider.value = String(n);
+            slider.dispatchEvent(new Event("input", { bubbles: true }));
+            if (onCommit) onCommit();
+          }
+        }
+        holder.remove();
+        out.style.display = "";
+        out._editing = false;
+        if (refocus) out.focus();
+      }
+      inp.addEventListener("keydown", function (e) {
+        e.stopPropagation();
+        if (e.key === "Enter") { e.preventDefault(); close(true, true); }
+        else if (e.key === "Escape") { e.preventDefault(); close(false, true); }
+      });
+      inp.addEventListener("blur", function () { close(true, false); });
+    }
+    out.addEventListener("click", open);
+    out.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); open(); }
+    });
+  }
+  makeEditable(bpmOut, bpmEl, "bpm");
+  makeEditable(swingOut, swingEl, "%");
+
+  // ---------- Editor de voz ----------
+  var controls = document.getElementById("controls");
+  var edTitle = document.getElementById("ed-title");
+  var edDesc = document.getElementById("ed-desc");
+  var scopeCap = document.getElementById("scope-cap");
+
+  function buildControls(v) {
+    controls.innerHTML = "";
+    v.params.forEach(function (p) {
+      var wrap = document.createElement("div");
+      wrap.className = "ctl";
+      var row = document.createElement("div");
+      row.className = "row";
+      var label = document.createElement("label");
+      label.htmlFor = "p-" + p.id;
+      label.textContent = p.label;
+      var out = document.createElement("output");
+      out.htmlFor = "p-" + p.id;
+      out.textContent = p.fmt(state[v.id][p.id]);
+      row.appendChild(label); row.appendChild(out);
+
+      var input = document.createElement("input");
+      input.type = "range";
+      input.id = "p-" + p.id;
+      input.min = p.min; input.max = p.max; input.step = p.step;
+      input.value = state[v.id][p.id];
+      input.addEventListener("input", function () {
+        state[v.id][p.id] = Number(input.value);
+        out.textContent = p.fmt(state[v.id][p.id]);
+        scheduleScope();
+        saveSoon();
+      });
+      input.addEventListener("change", function () { preview(v); });
+      makeEditable(out, input, p.fmt === fmtHz ? "Hz" : (p.fmt === fmtPct ? "%" : (p.fmt === fmtBits ? "bits" : "ms")), function () { input.dispatchEvent(new Event("change")); });
+
+      var hint = document.createElement("p");
+      hint.className = "hint";
+      hint.textContent = p.hint;
+
+      wrap.appendChild(row); wrap.appendChild(input); wrap.appendChild(hint);
+      controls.appendChild(wrap);
+    });
+  }
+
+  function select(v) {
+    current = v;
+    VOICES.forEach(function (x) {
+      if (x === v) nameBtns[x.id].setAttribute("aria-current", "true");
+      else nameBtns[x.id].removeAttribute("aria-current");
+    });
+    edTitle.textContent = v.name;
+    edDesc.textContent = v.desc;
+    scopeCap.textContent = "Forma de onda dos primeiros " + v.dur.toLocaleString("pt-BR") + " s.";
+    buildControls(v);
+    scopeData = null;
+    renderScope();
+  }
+
+  // ---------- Troca de máquina ----------
+  var machineBtns = Array.prototype.slice.call(document.querySelectorAll(".mbtn"));
+
+  function setMachine(id) {
+    var st = store[id];
+    var previous = current;
+    machineId = id;
+    document.documentElement.setAttribute("data-machine", id);
+    machine = MACHINES[id];
+    VOICES = machine.voices;
+    state = st.state;
+    pattern = st.pattern;
+    muted = st.muted;
+    soloed = st.soloed;
+    lastOH = null;
+    if (master) master.gain.value = machine.master;
+
+    machineBtns.forEach(function (b) {
+      b.setAttribute("aria-pressed", b.getAttribute("data-m") === id ? "true" : "false");
+    });
+
+    buildGrid();
+    var keep = null;
+    VOICES.forEach(function (v) { if (previous && v.id === previous.id) keep = v; });
+    select(keep || VOICES[0]);
+    saveSoon();
+  }
+  machineBtns.forEach(function (b) {
+    b.addEventListener("click", function () {
+      var id = b.getAttribute("data-m");
+      if (id !== machineId) setMachine(id);
+    });
+  });
+
+  // ---------- Forma de onda ----------
+  var canvas = document.getElementById("scope");
+  var g2d = canvas.getContext("2d");
+  var scopeData = null, renderToken = 0, rafPending = false;
+
+  function css(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
+  function drawScope() {
+    var dpr = window.devicePixelRatio || 1;
+    var w = canvas.clientWidth, h = canvas.clientHeight;
+    if (!w || !h) return;
+    if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+    }
+    g2d.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g2d.clearRect(0, 0, w, h);
+
+    var dur = current.dur;
+    var padB = 22, mid = (h - padB) / 2, amp = mid - 6;
+    var gridCol = css("--grid"), wave = css("--wave"), muted2 = css("--muted");
+    var fam = getComputedStyle(document.body).fontFamily;
+
+    g2d.lineWidth = 1;
+    g2d.strokeStyle = gridCol;
+    g2d.fillStyle = muted2;
+    g2d.font = "500 14px " + fam;
+    g2d.textBaseline = "alphabetic";
+    var tickStep = dur <= 0.6 ? 0.1 : (dur <= 1.3 ? 0.25 : 0.5);
+    for (var s = 0; s <= dur + 1e-9; s += tickStep) {
+      var x = Math.min(w - 1, Math.round((s / dur) * w)) + 0.5;
+      g2d.beginPath(); g2d.moveTo(x, 0); g2d.lineTo(x, h - padB); g2d.stroke();
+      var rs = Math.round(s * 100) / 100;
+      var last = s + tickStep > dur + 1e-9;
+      g2d.textAlign = s === 0 ? "left" : (last ? "right" : "center");
+      g2d.fillText(rs === 0 ? "0" : rs.toLocaleString("pt-BR") + " s", s === 0 ? 2 : (last ? w - 2 : x), h - 6);
+    }
+    g2d.beginPath(); g2d.moveTo(0, mid + 0.5); g2d.lineTo(w, mid + 0.5); g2d.stroke();
+
+    if (!scopeData) return;
+    var n = scopeData.length;
+    g2d.fillStyle = wave;
+    for (var px = 0; px < w; px++) {
+      var a = Math.floor((px / w) * n);
+      var b = Math.max(a + 1, Math.floor(((px + 1) / w) * n));
+      var mn = 1, mx = -1;
+      for (var i = a; i < b && i < n; i++) {
+        var v = scopeData[i];
+        if (v < mn) mn = v;
+        if (v > mx) mx = v;
+      }
+      if (mn > mx) continue;
+      var y1 = mid - Math.max(-1, Math.min(1, mx)) * amp;
+      var y2 = mid - Math.max(-1, Math.min(1, mn)) * amp;
+      g2d.fillRect(px, y1, 1, Math.max(1, y2 - y1));
+    }
+  }
+
+  function scheduleScope() {
+    if (rafPending) return;
+    rafPending = true;
+    requestAnimationFrame(function () {
+      rafPending = false;
+      renderScope();
+    });
+  }
+
+  function renderScope() {
+    var token = ++renderToken;
+    var OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    if (!OAC) { drawScope(); return; }
+    var sr = 44100, v = current;
+    var oc = new OAC(1, Math.ceil(sr * v.dur), sr);
+    v.fn(oc, oc.destination, 0, voiceParams(v));
+    var pr = oc.startRendering();
+    if (pr && pr.then) {
+      pr.then(function (buf) {
+        if (token !== renderToken || v !== current) return;
+        scopeData = buf.getChannelData(0);
+        drawScope();
+      });
+    }
+  }
+
+  if (window.ResizeObserver) new ResizeObserver(drawScope).observe(canvas);
+  window.addEventListener("resize", drawScope);
+  if (window.matchMedia) {
+    var mq = window.matchMedia("(prefers-color-scheme: dark)");
+    if (mq.addEventListener) mq.addEventListener("change", drawScope);
+  }
+
+  // ---------- Salvamento automático ----------
+  // Guarda a última configuração neste aparelho: máquina, batida e ajustes de cada máquina, andamento e swing.
+  var STORAGE_KEY = "bateria-808-909-606:v1";
+  var saveTimer = null, resetting = false;
+  function saveSoon() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveNow, 250);
+  }
+  function saveNow() {
+    if (resetting) return;
+    try {
+      var data = { v: 1, machine: machineId, bpm: Number(bpmEl.value), swing: Number(swingEl.value), machines: {} };
+      MACHINE_IDS.forEach(function (mid) {
+        data.machines[mid] = { state: store[mid].state, pattern: store[mid].pattern };
+      });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (e) { /* sem armazenamento disponível: segue sem salvar */ }
+  }
+  function clampNum(x, lo, hi) { return Math.min(hi, Math.max(lo, x)); }
+  // Lê o que foi salvo e valida cada valor; o que estiver fora do esperado é ignorado ou corrigido.
+  function loadSaved() {
+    var data = null;
+    try { data = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"); } catch (e) { return "808"; }
+    if (!data || data.v !== 1 || typeof data.machines !== "object" || !data.machines) return "808";
+    MACHINE_IDS.forEach(function (mid) {
+      var saved = data.machines[mid];
+      if (!saved || typeof saved !== "object") return;
+      MACHINES[mid].voices.forEach(function (v) {
+        var sv = saved.state && saved.state[v.id];
+        if (sv && typeof sv === "object") {
+          v.params.forEach(function (p) {
+            var x = sv[p.id];
+            if (typeof x === "number" && isFinite(x)) store[mid].state[v.id][p.id] = clampNum(x, p.min, p.max);
+          });
+        }
+        var sp = saved.pattern && saved.pattern[v.id];
+        if (Array.isArray(sp) && sp.length === 16) {
+          for (var i = 0; i < 16; i++) store[mid].pattern[v.id][i] = sp[i] === true;
+        }
+      });
+    });
+    if (typeof data.bpm === "number" && isFinite(data.bpm)) {
+      bpmEl.value = String(clampNum(Math.round(data.bpm), 60, 200));
+      bpmOut.textContent = bpmEl.value + " bpm";
+    }
+    if (typeof data.swing === "number" && isFinite(data.swing)) {
+      swingEl.value = String(clampNum(Math.round(data.swing), 0, 50));
+      swingOut.textContent = swingEl.value + " %";
+    }
+    return MACHINE_IDS.indexOf(data.machine) >= 0 ? data.machine : "808";
+  }
+  window.addEventListener("pagehide", saveNow);
+
+  // “Restaurar padrões” pede uma segunda confirmação antes de apagar o que foi salvo.
+  var resetBtn = document.getElementById("reset"), resetTimer = null;
+  function disarmReset() {
+    resetBtn._armed = false;
+    resetBtn.textContent = "Restaurar padrões";
+  }
+  resetBtn.addEventListener("click", function () {
+    if (!resetBtn._armed) {
+      resetBtn._armed = true;
+      resetBtn.textContent = "Clique de novo para confirmar";
+      resetTimer = setTimeout(disarmReset, 3500);
+      return;
+    }
+    clearTimeout(resetTimer);
+    disarmReset();
+    resetting = true;
+    clearTimeout(saveTimer);
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* ignora */ }
+    location.reload();
+  });
+
+  setMachine(loadSaved());
+})();
+</script>
+<script>
+// Knobs giratórios: cada um comanda o controle deslizante original, que continua valendo para teclado e leitores de tela.
+(function () {
+  "use strict";
+  var desc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
+  function knobify(inp, big) {
+    if (inp.classList.contains("kn")) return;
+    inp.classList.add("kn");
+    var k = document.createElement("span");
+    k.className = "rk" + (big ? " big" : "");
+    k.setAttribute("aria-hidden", "true");
+    var n = big ? 21 : 11, t = "";
+    for (var i = 0; i < n; i++) {
+      var a = (-135 + 270 / (n - 1) * i) * Math.PI / 180, s = Math.sin(a), c = Math.cos(a);
+      t += '<line x1="' + (32 + s * 28).toFixed(2) + '" y1="' + (32 - c * 28).toFixed(2) + '" x2="' + (32 + s * 31.5).toFixed(2) + '" y2="' + (32 - c * 31.5).toFixed(2) + '"/>';
+    }
+    k.innerHTML = '<svg viewBox="0 0 64 64">' + t + '</svg><span class="rk-cap"></span><span class="rk-ptr"></span>';
+    var ptr = k.lastChild;
+    inp.insertAdjacentElement("afterend", k);
+    var min = Number(inp.min), max = Number(inp.max), step = Number(inp.step) || 1;
+    function render() {
+      var f = (Number(desc.get.call(inp)) - min) / (max - min || 1);
+      ptr.style.transform = "rotate(" + (-135 + 270 * f).toFixed(1) + "deg)";
+    }
+    Object.defineProperty(inp, "value", {
+      configurable: true,
+      get: function () { return desc.get.call(inp); },
+      set: function (v) { desc.set.call(inp, v); render(); }
+    });
+    inp.addEventListener("input", render);
+    function set(v) {
+      v = Math.min(max, Math.max(min, Math.round(v / step) * step));
+      if (v === Number(inp.value)) return;
+      inp.value = v;
+      inp.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    var active = null, sv = 0, sy = 0, moved = false;
+    k.addEventListener("pointerdown", function (e) {
+      if (e.button !== 0) return;
+      k.setPointerCapture(e.pointerId); active = e.pointerId; sv = Number(inp.value); sy = e.clientY; moved = false;
+      e.preventDefault();
+    });
+    k.addEventListener("pointermove", function (e) {
+      if (e.pointerId !== active) return;
+      moved = true;
+      set(sv + (sy - e.clientY) / (e.shiftKey ? 700 : 170) * (max - min));
+    });
+    function end(e) {
+      if (e.pointerId !== active) return;
+      active = null;
+      if (moved) inp.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    k.addEventListener("pointerup", end);
+    k.addEventListener("pointercancel", end);
+    var wheelTimer = null;
+    k.addEventListener("wheel", function (e) {
+      e.preventDefault();
+      set(Number(inp.value) - Math.sign(e.deltaY) * Math.max(step, (max - min) / 50));
+      clearTimeout(wheelTimer);
+      wheelTimer = setTimeout(function () { inp.dispatchEvent(new Event("change", { bubbles: true })); }, 250);
+    }, { passive: false });
+    render();
+  }
+  knobify(document.getElementById("bpm"), true);
+  knobify(document.getElementById("swing"), false);
+  var controls = document.getElementById("controls");
+  function scan() {
+    Array.prototype.forEach.call(controls.querySelectorAll('input[type="range"]'), function (i) { knobify(i, false); });
+  }
+  new MutationObserver(scan).observe(controls, { childList: true });
+  scan();
+})();
+</script>
+</body>
+</html>
