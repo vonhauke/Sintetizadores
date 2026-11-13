@@ -6,109 +6,184 @@
 <title>Clone do SH-101</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Saira+Semi+Condensed:wght@500;600;700&family=Saira:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Saira+Semi+Condensed:wght@500;600;700&family=Saira:wght@400;500&family=Michroma&display=swap" rel="stylesheet">
 <style>
 :root{
-  --page:#cdd4da; --ink:#18212a; --muted:#3a4855;
-  --body:#2e4153; --body-hi:#35495d; --plate:#24364a; --plate-line:#3e5368;
-  --label:#e7ecf0; --sub:#9db0c2; --track:#101920; --tick:#3d5165;
-  --cap:#e3e7ea; --cap-shade:#b4bec7; --cap-line:#24364a;
-  --knob:#1a242e; --knob-edge:#0c1218; --mark:#eef1f3;
-  --led:#ff4b3a; --led-off:#3f3036; --focus:#ffcf4a;
-  --key-w:#f2f2ee; --key-w-down:#c3cfd9; --key-b:#1b2127; --key-b-down:#4b5e72; --key-edge:#97a3ae;
-  --btn:#1c2a38; --btn-line:#4a6075;
+  --page:#1b1d20; --ink:#e4e6e8; --muted:#a3a9af;
+  --body-hi:#74756e; --body:#64655e; --body-lo:#565750; --strip:#5b5c55;
+  --line:#2a2b27; --line-hi:rgba(255,255,255,.2);
+  --label:#f3f3ec; --sub:#d2d2c8;
+  --orange:#ff8a1c; --green:#6fdc4c;
+  --led:#ff3a22; --led-glow:#ff5236; --focus:#ffcf4a;
+  --key-hi:#f1f1ec; --key:#cfcfc8; --key-lo:#9d9d96;
+  --grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.25'/%3E%3C/svg%3E");
   --font-label:"Saira Semi Condensed","Arial Narrow",Arial,sans-serif;
   --font-body:"Saira","Helvetica Neue",Arial,sans-serif;
-  color-scheme:light;
+  --font-mark:"Michroma","Eurostile","Arial Black",Arial,sans-serif;
+  color-scheme:dark;
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px);
   padding-bottom:env(safe-area-inset-bottom,0px);
 }
-@media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]){--page:#141b22;--ink:#e3e8ec;--muted:#a6b4c1;color-scheme:dark}
-}
-:root[data-theme="dark"]{--page:#141b22;--ink:#e3e8ec;--muted:#a6b4c1;color-scheme:dark}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *,*::before,*::after{box-sizing:inherit}
-body{margin:0;background:var(--page);color:var(--ink);font-family:var(--font-body);line-height:1.5;-webkit-font-smoothing:antialiased}
-.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 48px}
-header h1{font-family:var(--font-label);font-weight:700;font-size:clamp(2.8rem,8vw,4.8rem);line-height:.88;margin:0;letter-spacing:-.01em}
-header p{margin:.7rem 0 1.5rem;max-width:64ch;color:var(--muted)}
+body{margin:0;min-height:100vh;color:var(--ink);font-family:var(--font-body);line-height:1.5;-webkit-font-smoothing:antialiased;
+  background:radial-gradient(120% 80% at 50% 0%,#34383d 0%,var(--page) 60%,#111214 100%) fixed var(--page)}
+.wrap{max-width:1330px;margin:0 auto;padding:28px 20px 64px}
+.sr,.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+header p{margin:0 0 1.6rem;max-width:64ch;color:var(--muted)}
 
-.machine{background:var(--body);color:var(--label);border-radius:12px;overflow:hidden;box-shadow:0 24px 48px -24px rgba(0,0,0,.65)}
-.top{display:flex;flex-wrap:wrap;align-items:flex-start;gap:14px 26px;padding:16px 18px 14px;background:var(--body-hi);border-bottom:1px solid var(--plate-line)}
+/* ---------- gabinete ---------- */
+.machine{
+  position:relative;border-radius:12px;padding:8px 8px 10px;color:var(--label);
+  background:linear-gradient(180deg,#8b8c85,#62635c 30%,#4d4e48);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.45), inset 0 0 0 1px rgba(255,255,255,.12), inset 0 -2px 2px rgba(0,0,0,.35),
+    0 2px 0 #4a4b45, 0 6px 0 #3a3b36, 0 9px 0 #262723, 0 10px 1px #0c0c0b,
+    0 14px 10px rgba(0,0,0,.55), 0 34px 40px -6px rgba(0,0,0,.6), 0 70px 90px -20px rgba(0,0,0,.65);
+}
+.face{border-radius:6px;overflow:hidden;
+  background:var(--grain),linear-gradient(180deg,var(--body-hi),var(--body) 40%,var(--body-lo));
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.45), inset 0 2px 3px rgba(0,0,0,.3), 0 1px 0 rgba(255,255,255,.25)}
+
+/* fileira de conectores (decorativa) */
+.jackrow{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;padding:10px 18px 8px;border-bottom:1px solid var(--line);box-shadow:0 1px 0 var(--line-hi);
+  font-family:var(--font-label);font-weight:600;font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;line-height:1.1;white-space:nowrap}
+.jacks{display:flex;gap:18px}
+.jacks span{display:flex;flex-direction:column;align-items:center;gap:5px}
+.jacks span::before{content:"";width:17px;height:17px;border-radius:50%;
+  background:radial-gradient(circle,#000 34%,#3b3b3b 38%,#151515 58%,#6d6d68 62%,#2a2a28 100%);
+  box-shadow:0 1px 0 rgba(255,255,255,.3), inset 0 1px 2px #000}
+
+/* ---------- seções do painel ---------- */
+.secs{display:flex;flex-wrap:wrap;border-bottom:1px solid var(--line);box-shadow:0 1px 0 var(--line-hi)}
+.sec{flex:1 1 auto;padding:0 8px 12px;border-right:1px solid var(--line);box-shadow:1px 0 0 var(--line-hi)}
+.sec:last-child{border-right:0;box-shadow:none}
+.sec h2{font-family:var(--font-label);font-weight:700;font-size:1.02rem;letter-spacing:.07em;text-transform:uppercase;text-align:center;color:var(--label);
+  margin:0 -8px 12px;padding:7px 8px 6px;line-height:1.1;border-bottom:1px solid var(--line);box-shadow:0 1px 0 var(--line-hi);background:rgba(0,0,0,.1);text-shadow:0 1px 1px rgba(0,0,0,.5)}
+.row{display:flex;gap:4px;align-items:flex-start;justify-content:center}
 .cluster{display:flex;align-items:flex-start;gap:10px}
-.cluster-title{font-family:var(--font-label);font-weight:600;font-size:.85rem;color:var(--sub);margin:0 0 6px}
-.secs{display:flex;flex-wrap:wrap;gap:10px;padding:14px 18px}
-.sec{background:var(--plate);border:1px solid var(--plate-line);border-radius:8px;padding:9px 12px 12px}
-.sec h2{font-family:var(--font-label);font-weight:600;font-size:1rem;color:var(--sub);margin:0 0 8px;line-height:1.2}
-.row{display:flex;gap:6px;align-items:flex-start}
+.cluster-title{font-family:var(--font-label);font-weight:700;font-size:.78rem;letter-spacing:.07em;text-transform:uppercase;color:var(--label);margin:0 0 8px;padding-bottom:3px;border-bottom:1px solid var(--label)}
 
-.ctl{display:flex;flex-direction:column;align-items:center;width:46px}
-.ctl.wide{width:70px}
-.ctl-label{font-family:var(--font-label);font-weight:600;font-size:.88rem;line-height:1.1;margin-top:5px;text-align:center;white-space:nowrap}
-.ctl-val{font-family:var(--font-label);font-weight:500;font-size:.75rem;color:var(--sub);font-variant-numeric:tabular-nums;min-height:1.15em;white-space:nowrap}
+.ctl{display:flex;flex-direction:column;align-items:center;width:38px}
+.ctl.wide{width:74px}
+.ctl-label{font-family:var(--font-label);font-weight:600;font-size:.72rem;letter-spacing:.03em;text-transform:uppercase;line-height:1.1;margin-top:6px;text-align:center;white-space:nowrap;text-shadow:0 1px 1px rgba(0,0,0,.5)}
+.ctl-val{font-family:var(--font-label);font-weight:500;font-size:.74rem;color:var(--sub);font-variant-numeric:tabular-nums;min-height:1.15em;white-space:nowrap}
 
-.fader{position:relative;width:30px;height:120px;cursor:ns-resize;touch-action:none;outline:none}
-.fader .scale{position:absolute;left:3px;right:3px;top:7px;bottom:7px;background:linear-gradient(var(--tick) 1px,transparent 1px) 0 0/100% 10%;border-bottom:1px solid var(--tick)}
-.fader .track{position:absolute;left:50%;top:4px;bottom:4px;width:6px;margin-left:-3px;background:var(--track);border-radius:3px}
-.fader .cap{position:absolute;left:0;width:30px;height:14px;bottom:calc(var(--v) * (100% - 14px));background:linear-gradient(var(--cap),var(--cap-shade));border-radius:3px;box-shadow:0 2px 3px rgba(0,0,0,.45)}
-.fader .cap::after{content:"";position:absolute;left:3px;right:3px;top:6px;height:2px;background:var(--cap-line)}
+/* fader em fenda rebaixada */
+.fader{position:relative;width:34px;height:134px;cursor:ns-resize;touch-action:none;outline:none;--cap-line:var(--orange)}
+#s-mix .fader,#s-mod .fader{--cap-line:var(--green)}
+.fader .scale{position:absolute;left:1px;right:1px;top:11px;bottom:11px;border-bottom:1px solid rgba(255,255,255,.8);
+  background:linear-gradient(rgba(255,255,255,.8) 1px,transparent 1px) 0 0/100% 10%}
+.fader .track{position:absolute;left:50%;top:2px;bottom:2px;width:16px;margin-left:-8px;border-radius:3px;
+  background:linear-gradient(90deg,#1b1b1b 0 4px,#000 4px 12px,#1b1b1b 12px);
+  box-shadow:inset 0 2px 4px #000, 0 0 0 1px #0a0a0a, 1px 1px 0 1px rgba(255,255,255,.22)}
+.fader .cap{position:absolute;left:4px;width:26px;height:22px;bottom:calc(var(--v) * (100% - 22px));border-radius:2px;
+  background:linear-gradient(180deg,#5a5a5a,#2a2a2a 30%,#141414 70%,#050505);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4), inset 0 -2px 0 rgba(0,0,0,.6), 0 0 0 1px #000, 0 5px 4px rgba(0,0,0,.6), 3px 9px 8px rgba(0,0,0,.4)}
+.fader .cap::after{content:"";position:absolute;left:2px;right:2px;top:9px;height:3px;border-radius:1px;background:var(--cap-line);box-shadow:0 1px 0 rgba(0,0,0,.6), 0 -1px 0 rgba(255,255,255,.25)}
 .fader:focus-visible .cap{outline:3px solid var(--focus);outline-offset:1px}
 
-.knob{width:56px;height:56px;cursor:ns-resize;touch-action:none;border-radius:50%;outline:none}
-.knob svg{width:100%;height:100%;display:block;overflow:visible}
-.k-ticks line{stroke:var(--sub);stroke-width:1.6;stroke-linecap:round}
-.k-skirt{fill:var(--knob-edge)}
-.k-cap{fill:var(--knob)}
-.k-mark{stroke:var(--mark);stroke-width:3;stroke-linecap:round}
+/* knob preto com ponteiro laranja */
+.knob{width:62px;height:62px;cursor:ns-resize;touch-action:none;border-radius:50%;outline:none}
+.knob svg{width:100%;height:100%;display:block;overflow:visible;filter:drop-shadow(0 4px 3px rgba(0,0,0,.55)) drop-shadow(3px 8px 6px rgba(0,0,0,.3))}
+.k-ticks line{stroke:var(--label);stroke-width:1.5}
+.k-skirt{fill:url(#k101-skirt);stroke:#000;stroke-width:1}
+.k-cap{fill:url(#k101-cap);stroke:rgba(255,255,255,.14);stroke-width:.7}
+.k-mark{stroke:var(--orange);stroke-width:3.2;stroke-linecap:butt}
 .knob:focus-visible{box-shadow:0 0 0 3px var(--focus)}
 
-.sw{display:flex;flex-direction:column;gap:1px}
-.sw button{display:flex;align-items:center;gap:6px;background:transparent;border:0;color:var(--sub);font-family:var(--font-label);font-weight:500;font-size:.84rem;padding:2px 5px 2px 2px;cursor:pointer;border-radius:3px;white-space:nowrap;line-height:1.25}
-.sw button::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--led-off);flex:none}
+/* chave deslizante vertical */
+.sw{display:flex;flex-direction:column}
+.sw button{display:flex;align-items:center;gap:7px;background:transparent;border:0;color:var(--sub);font-family:var(--font-label);font-weight:600;font-size:.76rem;letter-spacing:.04em;text-transform:uppercase;padding:0 4px 0 0;min-height:24px;cursor:pointer;white-space:nowrap;line-height:1.2}
+.sw button::before{content:"";flex:none;width:16px;align-self:stretch;background:linear-gradient(90deg,#161616,#000 35%,#000 65%,#161616);box-shadow:inset 0 0 3px #000, 1px 0 0 rgba(255,255,255,.22)}
+.sw button:first-child::before{border-radius:3px 3px 0 0}
+.sw button:last-child::before{border-radius:0 0 3px 3px}
 .sw button[aria-checked="true"]{color:var(--label)}
-.sw button[aria-checked="true"]::before{background:var(--led);box-shadow:0 0 6px var(--led)}
+.sw button[aria-checked="true"]::before{
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.55) 0 1px,rgba(255,255,255,.35) 1px 2px,transparent 2px 4px) center/60% 100% no-repeat,linear-gradient(180deg,#8d8d87,#55554f 50%,#2f2f2b);
+  box-shadow:inset 0 0 0 2px #050505, 1px 0 0 rgba(255,255,255,.22)}
 .sw button svg{width:20px;height:12px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round}
-.sw button:focus-visible{outline:2px solid var(--focus)}
+.sw button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
 .sw-wrap{display:flex;flex-direction:column;align-items:flex-start}
-.sw-wrap .ctl-label{margin-top:4px;text-align:left}
+.sw-wrap .ctl-label{margin-top:6px;text-align:left}
 
-.pbtn{display:flex;align-items:center;gap:7px;font-family:var(--font-label);font-weight:600;font-size:.92rem;background:var(--btn);color:var(--label);border:1px solid var(--btn-line);border-radius:5px;padding:.32rem .7rem .32rem .55rem;cursor:pointer;line-height:1.2;white-space:nowrap}
-.pbtn::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--led-off);flex:none}
-.pbtn[aria-pressed="true"]::before{background:var(--led);box-shadow:0 0 6px var(--led)}
+/* chaves horizontais do bloco esquerdo */
+#c-porta .sw,#c-transpose .sw{flex-direction:row}
+#c-porta .sw button,#c-transpose .sw button{flex-direction:column-reverse;gap:4px;padding:0;min-width:30px;min-height:0}
+#c-porta .sw button::before,#c-transpose .sw button::before{width:100%;height:16px;align-self:auto;background:linear-gradient(180deg,#000,#1c1c1c);box-shadow:inset 0 2px 3px #000, 0 1px 0 rgba(255,255,255,.22)}
+#c-porta .sw button:first-child::before,#c-transpose .sw button:first-child::before{border-radius:3px 0 0 3px}
+#c-porta .sw button:last-child::before,#c-transpose .sw button:last-child::before{border-radius:0 3px 3px 0}
+#c-porta .sw button[aria-checked="true"]::before,#c-transpose .sw button[aria-checked="true"]::before{
+  background:repeating-linear-gradient(90deg,rgba(0,0,0,.55) 0 1px,rgba(255,255,255,.35) 1px 2px,transparent 2px 4px) center/100% 60% no-repeat,linear-gradient(180deg,#8d8d87,#55554f 50%,#2f2f2b);
+  box-shadow:inset 0 0 0 2px #050505, 0 1px 0 rgba(255,255,255,.22)}
+
+/* ---------- faixa de botões ---------- */
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px 30px;padding:14px 18px 16px;background:linear-gradient(180deg,rgba(0,0,0,.14),rgba(0,0,0,.05));border-bottom:1px solid var(--line);box-shadow:0 1px 0 var(--line-hi)}
+.pbtn,#c-arp .sw button{
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px;min-width:54px;min-height:44px;
+  font-family:var(--font-label);font-weight:700;font-size:.76rem;letter-spacing:.05em;text-transform:uppercase;line-height:1.1;white-space:nowrap;color:#1a1a18;
+  border:0;border-radius:2px;padding:6px 8px 8px;cursor:pointer;text-shadow:0 1px 0 rgba(255,255,255,.5);
+  background:linear-gradient(90deg,rgba(0,0,0,.14),transparent 8%,transparent 92%,rgba(0,0,0,.18)),linear-gradient(180deg,var(--key-hi),var(--key) 45%,var(--key-lo));
+  box-shadow:inset 0 1px 0 #fff, inset 0 -4px 0 rgba(0,0,0,.22), 0 0 0 2px #0b0b0a, 0 0 0 3px rgba(255,255,255,.2), 0 5px 4px 1px rgba(0,0,0,.5)}
+.pbtn:active:not(:disabled),#c-arp .sw button:active{transform:translateY(2px);box-shadow:inset 0 1px 0 #fff, inset 0 -1px 0 rgba(0,0,0,.22), 0 0 0 2px #0b0b0a, 0 0 0 3px rgba(255,255,255,.2), 0 1px 2px 1px rgba(0,0,0,.5)}
+.pbtn::before,#c-arp .sw button::before{content:"";flex:none;align-self:center;width:9px;height:9px;border-radius:50%;
+  background:radial-gradient(circle at 38% 30%,#a85248,#5e1810 55%,#2c0906);box-shadow:0 0 0 1.5px #0d0d0d, inset 0 1px 1px rgba(255,255,255,.3)}
+.pbtn[aria-pressed="true"]::before,#c-arp .sw button[aria-checked="true"]::before{
+  background:radial-gradient(circle at 38% 30%,#fff,#ffc0b0 24%,var(--led) 60%,#a81d0c);
+  box-shadow:0 0 0 1.5px #0d0d0d, 0 0 10px 3px var(--led-glow), 0 0 22px 7px rgba(255,70,40,.5)}
 .pbtn.plain::before{display:none}
-.pbtn:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
-.pbtn:disabled{opacity:.45;cursor:default}
-.btn-col{display:flex;flex-direction:column;gap:5px}
-.seqinfo{font-family:var(--font-label);font-size:.85rem;color:var(--sub);min-height:1.3em;margin-top:6px}
-.clock{width:8px;height:8px;border-radius:50%;background:var(--led-off);display:inline-block;margin-left:6px;vertical-align:middle}
-.clock.on{background:var(--led);box-shadow:0 0 6px var(--led)}
+.pbtn:focus-visible{outline:2px solid var(--focus);outline-offset:4px}
+.pbtn:disabled{opacity:.5;cursor:default}
+#c-arp .sw{flex-direction:row;gap:12px}
+#c-arp .sw button:first-child::before,#c-arp .sw button:last-child::before{border-radius:50%}
+.btn-col{display:flex;flex-direction:row;gap:12px}
+.top .cluster{gap:12px}
+.seqinfo{font-family:var(--font-label);font-size:.82rem;color:var(--sub);min-height:1.3em;margin-top:8px}
+.clock{width:9px;height:9px;border-radius:50%;display:inline-block;margin-left:6px;vertical-align:middle;
+  background:radial-gradient(circle at 38% 30%,#a85248,#5e1810 55%,#2c0906);box-shadow:0 0 0 1.5px #0d0d0d}
+.clock.on{background:radial-gradient(circle at 38% 30%,#fff,#ffc0b0 24%,var(--led) 60%,#a81d0c);box-shadow:0 0 0 1.5px #0d0d0d, 0 0 8px 2px var(--led-glow)}
+.mark{margin-left:auto;align-self:center;font-family:var(--font-mark);font-size:clamp(2rem,5.4vw,3.4rem);line-height:1;letter-spacing:.02em;white-space:nowrap;
+  color:transparent;background:radial-gradient(circle,#f3f3ec 52%,transparent 60%) 0 0/5px 5px;-webkit-background-clip:text;background-clip:text;filter:drop-shadow(0 1px 1px rgba(0,0,0,.6))}
 
-.bottom{display:flex;align-items:flex-end;gap:18px;padding:4px 18px 18px}
+/* ---------- bloco esquerdo e teclado ---------- */
+.bottom{display:flex;align-items:stretch}
+.left{flex:none;width:272px;display:flex;flex-wrap:wrap;align-content:flex-start;gap:14px 12px;padding:14px 14px 16px}
 .bend{display:flex;flex-direction:column;gap:8px;flex:none}
-.bend .row{gap:4px}
-.bender{position:relative;width:150px;height:34px;border-radius:17px;background:var(--track);touch-action:none;cursor:ew-resize;outline:none}
-.bender .lever{position:absolute;top:3px;left:calc(50% - 14px + var(--b) * (50% - 17px));width:28px;height:28px;border-radius:50%;background:linear-gradient(var(--cap),var(--cap-shade));transition:left .14s ease-out}
+.bend .row{gap:4px;justify-content:flex-start}
+.bender{position:relative;width:150px;height:34px;border-radius:5px;background:linear-gradient(180deg,#000,#1d1d1d);box-shadow:inset 0 3px 5px #000, 0 1px 0 rgba(255,255,255,.25);touch-action:none;cursor:ew-resize;outline:none}
+.bender .lever{position:absolute;top:3px;left:calc(50% - 14px + var(--b) * (50% - 17px));width:28px;height:28px;border-radius:3px;
+  background:repeating-linear-gradient(90deg,rgba(0,0,0,.5) 0 1px,rgba(255,255,255,.3) 1px 2px,transparent 2px 5px) center/60% 100% no-repeat,linear-gradient(180deg,#8d8d87,#55554f 50%,#2f2f2b);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4), 0 0 0 1px #000, 0 3px 4px rgba(0,0,0,.6);transition:left .14s ease-out}
 .bender.drag .lever{transition:none}
 .bender:focus-visible{box-shadow:0 0 0 3px var(--focus)}
-.kb-wrap{flex:1;min-width:0;overflow-x:auto}
-.kb{position:relative;display:flex;height:150px;min-width:620px;user-select:none;-webkit-user-select:none;touch-action:none;border-top:4px solid var(--knob-edge)}
+.kb-wrap{flex:1;min-width:0;overflow-x:auto;display:flex;background:#0a0a0a;box-shadow:inset 3px 0 5px rgba(0,0,0,.8);padding:0 0 9px}
+.kb{position:relative;display:flex;flex:1;min-height:200px;min-width:640px;user-select:none;-webkit-user-select:none;touch-action:none}
+.kb::before{content:"";position:absolute;left:0;right:0;top:0;height:16px;z-index:3;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.7),transparent)}
 .key{cursor:pointer}
-.key.w{flex:1;background:var(--key-w);border:1px solid var(--key-edge);border-top:0;border-radius:0 0 5px 5px;margin-right:-1px}
-.key.b{position:absolute;top:0;height:62%;background:var(--key-b);border-radius:0 0 4px 4px;z-index:2;box-shadow:0 2px 3px rgba(0,0,0,.4)}
-.key.w.down{background:var(--key-w-down)}
-.key.b.down{background:var(--key-b-down)}
+.key.w{flex:1;border:0;border-right:1px solid #7f7f79;border-radius:0 0 4px 4px;
+  background:linear-gradient(180deg,#cfcfc9,#f6f6f2 9%,#fcfcf9 82%,#dcdcd6 100%);
+  box-shadow:inset 1px 0 0 #fff, inset -1px 0 0 rgba(0,0,0,.08), inset 0 -10px 6px -6px rgba(0,0,0,.22), 0 5px 0 #a9a9a2, 0 8px 4px rgba(0,0,0,.6)}
+.key.b{position:absolute;top:0;height:62%;z-index:2;border-radius:0 0 3px 3px;
+  background:linear-gradient(90deg,#000 0 7%,rgba(255,255,255,.14) 9%,transparent 14%,transparent 88%,#000 93%),linear-gradient(180deg,#2c2c2c,#161616 80%,#3a3a3a 82%,#0a0a0a 100%);
+  box-shadow:0 4px 4px rgba(0,0,0,.65), 4px 8px 7px rgba(0,0,0,.35), inset 0 1px 0 #555}
+.key.w.down{background:linear-gradient(180deg,#b9b9b3,#dededa 12%,#e6e6e1 85%,#cfcfc9);box-shadow:inset 1px 0 0 #eee, inset 0 8px 9px -3px rgba(0,0,0,.35), 0 2px 0 #a9a9a2, 0 4px 3px rgba(0,0,0,.6)}
+.key.b.down{background:linear-gradient(90deg,#000 0 7%,transparent 14%,transparent 88%,#000 93%),linear-gradient(180deg,#1a1a1a,#0e0e0e 88%,#2a2a2a 90%,#060606 100%);box-shadow:0 1px 2px rgba(0,0,0,.7), inset 0 1px 0 #333}
 
-.help{max-width:72ch;margin-top:1.3rem;color:var(--muted);font-size:.95rem}
+.help{max-width:72ch;margin-top:3.2rem;color:var(--muted);font-size:.95rem}
 .help p{margin:.4rem 0}
 kbd{font-family:var(--font-label);font-size:.9em;padding:0 .3em;border:1px solid currentColor;border-radius:3px}
-.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
-@media (max-width:700px){
-  .top,.secs{padding-left:12px;padding-right:12px}
-  .bottom{flex-wrap:wrap;padding:4px 12px 16px}
+@media (max-width:900px){
+  .jackrow{display:none}
+  .bottom{flex-wrap:wrap}
+  .left{width:100%}
   .kb-wrap{flex-basis:100%}
+}
+@media (max-width:700px){
+  .wrap{padding:20px 10px 56px}
+  .top{padding-left:12px;padding-right:12px}
+  .mark{margin:0 auto}
 }
 @media (prefers-reduced-motion:reduce){.bender .lever{transition:none}}
 </style>
@@ -116,19 +191,33 @@ kbd{font-family:var(--font-label);font-size:.9em;padding:0 .3em;border:1px solid
 <body>
 <div class="wrap">
   <header>
-    <h1>SH-101</h1>
+    <h1 class="sr-only">SH-101</h1>
     <p>Clone em Web Audio do sintetizador monofônico: um oscilador com pulso, dente de serra, sub-oscilador e ruído, filtro ressonante, LFO, envelope ADSR, arpejador e sequenciador. Todo o som é gerado em tempo real, sem amostras.</p>
   </header>
 
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+    <radialGradient id="k101-skirt" cx="38%" cy="28%" r="85%"><stop offset="0" stop-color="#555"/><stop offset=".5" stop-color="#1c1c1c"/><stop offset="1" stop-color="#000"/></radialGradient>
+    <radialGradient id="k101-cap" cx="36%" cy="26%" r="90%"><stop offset="0" stop-color="#6a6a6a"/><stop offset=".45" stop-color="#262626"/><stop offset="1" stop-color="#0a0a0a"/></radialGradient>
+  </defs></svg>
   <section class="machine" aria-label="Sintetizador">
+   <div class="face">
+    <div class="jackrow" aria-hidden="true">
+      <span>Modulation grip</span>
+      <div class="jacks"><span>DC in</span><span>Ext clk in</span><span>Hold</span><span>CV in</span><span>Gate in</span><span>CV out</span><span>Gate out</span><span>Phones</span><span>Output</span></div>
+    </div>
+
+    <div class="secs">
+      <section class="sec" aria-label="Tune"><h2>Tune</h2><div class="row" id="c-tune"></div></section>
+      <section class="sec" aria-label="Modulator"><h2>Modulator</h2><div class="row" id="s-mod"></div></section>
+      <section class="sec" aria-label="VCO"><h2>VCO</h2><div class="row" id="s-vco"></div></section>
+      <section class="sec" aria-label="Source mixer"><h2>Source mixer</h2><div class="row" id="s-mix"></div></section>
+      <section class="sec" aria-label="VCF"><h2>VCF</h2><div class="row" id="s-vcf"></div></section>
+      <section class="sec" aria-label="VCA"><h2>VCA</h2><div class="row" id="s-vca"></div></section>
+      <section class="sec" aria-label="Env"><h2>Env</h2><div class="row" id="s-env"></div></section>
+    </div>
+
     <div class="top">
-      <div class="cluster" id="c-out"></div>
-      <div class="cluster" id="c-porta"></div>
-      <div class="cluster" id="c-transpose"></div>
-      <div>
-        <p class="cluster-title">Arpeggio</p>
-        <div class="cluster" id="c-arp"></div>
-      </div>
+      <div class="cluster" id="c-tempo"></div>
       <div>
         <p class="cluster-title">Sequencer</p>
         <div class="cluster">
@@ -143,28 +232,30 @@ kbd{font-family:var(--font-label);font-size:.9em;padding:0 .3em;border:1px solid
         </div>
         <div class="seqinfo" id="seqinfo" aria-live="polite"></div>
       </div>
-      <div class="cluster" id="c-tempo"></div>
-    </div>
-
-    <div class="secs">
-      <section class="sec" aria-label="Modulator"><h2>Modulator</h2><div class="row" id="s-mod"></div></section>
-      <section class="sec" aria-label="VCO"><h2>VCO</h2><div class="row" id="s-vco"></div></section>
-      <section class="sec" aria-label="Source mixer"><h2>Source mixer</h2><div class="row" id="s-mix"></div></section>
-      <section class="sec" aria-label="VCF"><h2>VCF</h2><div class="row" id="s-vcf"></div></section>
-      <section class="sec" aria-label="VCA"><h2>VCA</h2><div class="row" id="s-vca"></div></section>
-      <section class="sec" aria-label="Env"><h2>Env</h2><div class="row" id="s-env"></div></section>
+      <div>
+        <p class="cluster-title">Arpeggio</p>
+        <div class="cluster" id="c-arp"></div>
+        <div class="seqinfo"></div>
+      </div>
+      <div class="mark" aria-hidden="true">SH-101</div>
     </div>
 
     <div class="bottom">
-      <div class="bend">
-        <div class="row" id="s-bend"></div>
-        <div class="bender" id="bender" role="slider" tabindex="0" aria-label="Bender" aria-valuemin="-100" aria-valuemax="100" aria-valuenow="0" style="--b:0"><div class="lever"></div></div>
-        <div class="ctl-label" style="text-align:left">Bender</div>
+      <div class="left">
+        <div class="cluster" id="c-out"></div>
+        <div class="cluster" id="c-porta"></div>
+        <div class="bend">
+          <div class="row" id="s-bend"></div>
+          <div class="bender" id="bender" role="slider" tabindex="0" aria-label="Bender" aria-valuemin="-100" aria-valuemax="100" aria-valuenow="0" style="--b:0"><div class="lever"></div></div>
+          <div class="ctl-label" style="text-align:left">Bender</div>
+        </div>
+        <div class="cluster" id="c-transpose"></div>
       </div>
       <div class="kb-wrap">
         <div class="kb" id="kb" role="group" aria-label="Teclado de 32 teclas"></div>
       </div>
     </div>
+   </div>
   </section>
 
   <div class="help">
@@ -615,7 +706,7 @@ function makeSw(parent, id, caption){
 /* ---------- montagem do painel ---------- */
 const $ = id => document.getElementById(id);
 makeCtl($('c-out'), 'knob', 'volume', 'Volume', pct, true);
-makeCtl($('c-out'), 'knob', 'tune', 'Tune', v => signed(Math.round((v - .5) * 200)) + ' cents', true);
+makeCtl($('c-tune'), 'knob', 'tune', 'Tune', v => signed(Math.round((v - .5) * 200)) + ' cents', true);
 makeCtl($('c-porta'), 'knob', 'porta', 'Portamento', v => v === 0 ? '0 ms' : secs(v * v * 1.5), true);
 makeSw($('c-porta'), 'porta');
 makeSw($('c-transpose'), 'transpose', 'Transpose');
