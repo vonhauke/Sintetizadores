@@ -1,231 +1,269 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-machine="808">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Bateria eletrônica: 808, 909 e 606</title>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Bateria eletrônica: 808, 909, 606 e 707</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@300;400&family=Michroma&display=swap" rel="stylesheet">
 <style>
+  /* Layout: um gabinete que troca de pele conforme a máquina. De cima para baixo, como nos aparelhos:
+     nome do modelo, seção da voz (knobs ou faders), transporte e a fileira de 16 teclas de passo. */
   :root {
-    --bg: #e4e6e8;
-    --panel: #f2f3f4;
-    --ink: #1d2023;
-    --muted: #596068;
-    --line: #c3c8cc;
-    --accent: #d6372b;
-    --on-accent: #ffffff;
-    --wave: #1d2023;
-    --grid: #cfd3d6;
-    --cell-a: #e4e6e8;
-    --cell-b: #d3d7da;
-    --s1: #d6372b; --s2: #e8802a; --s3: #e6b92e; --s4: #d9d4c7;
-    color-scheme: light;
+    --page: #17181a; --page-ink: #e4e6e8; --page-sub: #a3a9af;
+    /* TR-808: painel preto, etiquetas creme, laranja, teclas vermelho/laranja/amarelo/branco */
+    --case: #23221f; --case-hi: #2f2e2a; --case-lo: #1a1917; --edge: #0c0c0b;
+    --ink: #ebe4cf; --sub: #b5ae9b; --accent: #f0641e; --on-accent: #1a1005; --line: #5d5b52;
+    --tag: #efe6c2; --tag-ink: #1c1b18;
+    --cap: #d9d4c7; --cap-shade: rgba(0,0,0,.5); --well: #0a0a0a;
+    --pad: #f0c93a; --pad-ink: #2a1d05;
+    --knob: radial-gradient(circle at 35% 30%, #4a4a46, #1b1b19 60%, #0b0b0a); --knob-ring: #000; --knob-mark: #f0641e; --tick: #b5ae9b;
+    --screen: #0e0f0e; --grid: #2c2f2b; --wave: #f0641e; --muted: #8f9589;
+    --led: #e3321d; --led-dim: #4a1610; --led-glow: #ff5a3c; --now: #ffffff;
+    --font: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+    --font-mark: "Michroma", "Eurostile", "Arial Black", Arial, sans-serif;
+    color-scheme: dark;
     box-sizing: border-box;
     padding-top: env(safe-area-inset-top, 0px);
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --bg: #232629;
-      --panel: #2e3236;
-      --ink: #eceeef;
-      --muted: #a1a8ae;
-      --line: #454b51;
-      --accent: #ff5a45;
-      --on-accent: #1a1a1a;
-      --wave: #eceeef;
-      --grid: #41474c;
-      --cell-a: #3a3f44;
-      --cell-b: #454b51;
-      color-scheme: dark;
-    }
+  /* TR-909: cinza-claro, impressão grafite, laranja, teclas creme */
+  :root[data-machine="909"] {
+    --case: #dcdbd4; --case-hi: #e9e8e2; --case-lo: #c9c8c1; --edge: #8e8d86;
+    --ink: #36383c; --sub: #5d6065; --accent: #f26b21; --on-accent: #ffffff; --line: #85878a;
+    --tag: #e9e8e2; --tag-ink: #36383c;
+    --cap: #ece5d0; --cap-on: #fff8e2; --cap-shade: rgba(60,50,30,.3); --well: #2b2c2e;
+    --pad: #f1ead6; --pad-ink: #36383c;
+    --knob: radial-gradient(circle at 35% 30%, #5b616b, #2a2e35 60%, #15171b); --knob-ring: #111; --knob-mark: #f26b21; --tick: #36383c;
+    --screen: #2a0d0b; --grid: #4a1c18; --wave: #ff4a36; --muted: #c98a80;
+    --now: #36383c;
   }
-  :root[data-theme="dark"] {
-    --bg: #232629;
-    --panel: #2e3236;
-    --ink: #eceeef;
-    --muted: #a1a8ae;
-    --line: #454b51;
-    --accent: #ff5a45;
-    --on-accent: #1a1a1a;
-    --wave: #eceeef;
-    --grid: #41474c;
-    --cell-a: #3a3f44;
-    --cell-b: #454b51;
-    color-scheme: dark;
+  /* TR-707: bege-acinzentado, faixas laranja, teclas grafite, faders */
+  :root[data-machine="707"] {
+    --case: #d6d3c8; --case-hi: #e3e0d6; --case-lo: #c4c1b6; --edge: #8c897f;
+    --ink: #3b3b39; --sub: #5f5e5a; --accent: #ee6a1f; --on-accent: #ffffff; --line: #84827a;
+    --tag: #e3e0d6; --tag-ink: #3b3b39;
+    --cap: #4d4d4a; --cap-on: #73736e; --cap-shade: rgba(0,0,0,.25); --well: #1d1d1c;
+    --pad: #4d4d4a; --pad-ink: #f1efe8;
+    --screen: #b7c0ad; --grid: #9aa391; --wave: #1f261d; --muted: #3d463a;
+    --now: #ee6a1f;
+  }
+  /* TR-606: prata, faixa preta com números vermelhos, teclas de alumínio */
+  :root[data-machine="606"] {
+    --case: #cdcec9; --case-hi: #e2e3df; --case-lo: #babbb6; --edge: #7f817d;
+    --ink: #141414; --sub: #4a4c49; --accent: #d92f1b; --on-accent: #ffffff; --line: #141414;
+    --tag: #121212; --tag-ink: #f1f1ee;
+    --cap: #d3d4d0; --cap-on: #fbfbf8; --cap-shade: rgba(0,0,0,.2); --well: #0c0c0c;
+    --pad: #d3d4d0; --pad-ink: #141414;
+    --knob: conic-gradient(from 25deg, #fbfbf9, #a6a8a3 11%, #ededea 24%, #8a8c87 37%, #e4e4e0 50%, #9d9f9a 63%, #f8f8f5 76%, #90928d 89%, #fbfbf9); --knob-ring: #4f514d; --knob-mark: #0c0c0c; --tick: #141414;
+    --screen: #101010; --grid: #2e2e2e; --wave: #ff4a36; --muted: #9a9a96;
+    --now: #d92f1b;
   }
   html { scroll-padding-top: env(safe-area-inset-top, 0px); }
   *, *::before, *::after { box-sizing: border-box; }
   body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--ink);
-    font-family: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
-    font-weight: 500;
-    font-size: 18px;
-    line-height: 1.35;
+    margin: 0; color: var(--page-ink);
+    background: radial-gradient(120% 70% at 50% 0%, #33363a 0%, var(--page) 60%, #0f1011 100%) fixed var(--page);
+    font-family: var(--font); font-weight: 500; font-size: 18px; line-height: 1.35;
+    -webkit-font-smoothing: antialiased;
   }
-  main { max-width: 900px; margin: 0 auto; padding: 20px 16px 40px; }
+  main { max-width: 1120px; margin: 0 auto; padding-block: 20px 56px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  button { touch-action: manipulation; }
+  h1 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
-  header { margin-bottom: 20px; }
-  .stripe { display: flex; gap: 4px; margin-bottom: 18px; }
-  .stripe span { flex: 1; height: 8px; border-radius: 2px; }
-  .stripe span:nth-child(1) { background: var(--s1); }
-  .stripe span:nth-child(2) { background: var(--s2); }
-  .stripe span:nth-child(3) { background: var(--s3); }
-  .stripe span:nth-child(4) { background: var(--s4); }
-  h1 { margin: 0; font-size: 44px; font-weight: 700; letter-spacing: 0.01em; line-height: 1.05; }
-  h2 { margin: 0; font-size: 26px; font-weight: 700; }
-  .sub { margin: 6px 0 0; color: var(--muted); font-size: 19px; max-width: 60ch; }
+  /* seletor de máquina, fora do gabinete */
+  .machine { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 18px; }
+  .machine-label { font-weight: 600; font-size: 17px; margin-right: 6px; color: var(--page-sub); text-transform: uppercase; letter-spacing: .06em; }
+  .mbtn { appearance: none; cursor: pointer; font: inherit; font-weight: 700; font-size: 24px; min-width: 84px; height: 46px; padding: 0 18px; border-radius: 6px;
+    color: var(--page-ink); background: #26282b; border: 1px solid #45484d; }
+  .mbtn[aria-pressed="true"] { background: var(--page-ink); color: var(--page); border-color: var(--page-ink); }
 
-  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+  /* ---------- gabinete ---------- */
+  .cabinet { color: var(--ink); border-radius: 9px; overflow: hidden;
+    background: linear-gradient(180deg, var(--case-hi), var(--case) 40%, var(--case-lo));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.35), inset 0 0 0 1px rgba(0,0,0,.35),
+      0 3px 0 var(--edge), 0 7px 1px #0a0a0a, 0 16px 14px rgba(0,0,0,.5), 0 44px 60px -12px rgba(0,0,0,.7); }
+  .panel { padding: 16px 20px; border-bottom: 2px solid var(--line); }
+  .panel:last-child { border-bottom: 0; }
 
-  /* Transporte */
-  .transport { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 20px; }
-  .pad {
-    appearance: none; border: 0; cursor: pointer;
-    background: var(--accent); color: var(--on-accent);
-    font: inherit; font-weight: 700; font-size: 28px; letter-spacing: 0.02em;
-    height: 64px; min-width: 140px; padding: 0 28px; border-radius: 10px;
-    box-shadow: 0 4px 0 rgba(0,0,0,.28);
-    transition: transform .06s ease, box-shadow .06s ease;
-  }
-  .pad:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,.28); }
-  .btn {
-    appearance: none; cursor: pointer; font: inherit; font-weight: 600; font-size: 20px;
-    color: var(--ink); background: var(--panel); border: 2px solid var(--line);
-    border-radius: 8px; padding: 8px 18px; min-height: 44px;
-  }
-  .slider-inline { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 220px; }
-  .slider-inline label { white-space: nowrap; }
-  .slider-inline output { min-width: 4ch; text-align: right; font-weight: 600; white-space: nowrap; }
+  /* nome do modelo: só texto, sem logotipo */
+  .plate { display: none; align-items: baseline; flex-wrap: wrap; gap: 4px 22px; line-height: 1.05; }
+  :root[data-machine="808"] .p808, :root[data-machine="909"] .p909, :root[data-machine="707"] .p707, :root[data-machine="606"] .p606 { display: flex; }
+  .plate b { font-weight: 400; }
+  .p808 { flex-direction: column; align-items: flex-end; gap: 6px; color: var(--accent); }
+  .p808 b { font-family: "Barlow", sans-serif; font-weight: 400; font-size: clamp(1.7rem, 4.4vw, 2.7rem); letter-spacing: .01em; align-self: stretch; text-align: right; border-bottom: 2px solid var(--accent); padding-bottom: 6px; }
+  .p808 b i { font-style: normal; font-size: .62em; margin-left: .5em; }
+  .p808 span { color: var(--sub); font-family: "Barlow", sans-serif; font-weight: 300; font-size: clamp(1rem, 2.2vw, 1.4rem); }
+  .p909 { justify-content: space-between; }
+  .p909 b { font-family: var(--font-mark); font-size: clamp(2rem, 6vw, 3.6rem); letter-spacing: .02em; }
+  .p909 span, .p707 span { font-family: var(--font-mark); font-size: clamp(.95rem, 2.4vw, 1.6rem); letter-spacing: .04em; text-transform: uppercase; }
+  .p707 { justify-content: flex-end; }
+  .p707 b { font-family: var(--font-mark); font-size: clamp(1.7rem, 4.6vw, 2.8rem); order: 2; }
+  .p606 { justify-content: space-between; }
+  .p606 b { font-family: var(--font-mark); font-size: clamp(1.5rem, 4vw, 2.4rem); order: 2; }
+  .p606 span { font-family: "Barlow", sans-serif; font-weight: 300; font-size: clamp(1.4rem, 3.4vw, 2.1rem); }
+  .p606 span small { display: block; font-size: .55em; font-weight: 400; border-top: 2px solid var(--ink); margin-top: 2px; padding-top: 2px; }
 
-  /* Sequenciador */
-  .seq { overflow-x: auto; padding-bottom: 6px; }
-  .grid {
-    display: grid;
-    grid-template-columns: 196px repeat(16, minmax(30px, 1fr));
-    gap: 6px 4px;
-    min-width: 780px;
-    align-items: center;
-  }
-  .name {
-    position: sticky; left: 0; z-index: 1;
-    appearance: none; cursor: pointer; text-align: left;
-    font: inherit; font-weight: 600; font-size: 19px; color: var(--ink);
-    background: var(--panel); border: 2px solid var(--line); border-radius: 6px;
-    height: 36px; padding: 0 10px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  .name[aria-current="true"] { border-color: var(--accent); box-shadow: inset 5px 0 0 var(--accent); font-weight: 700; padding-left: 14px; }
-  .step {
-    appearance: none; cursor: pointer; height: 36px; padding: 0;
-    border: 2px solid var(--line); border-radius: 4px;
-    background: var(--cell-a);
-  }
-  .step.gap { margin-left: 6px; }
-  .step.on { background: var(--s1); border-color: var(--s1); }
-  .step.now { box-shadow: 0 0 0 3px var(--ink); position: relative; z-index: 1; }
-  .legend { margin: 10px 2px 0; color: var(--muted); font-size: 16px; }
-  .ms { appearance: none; cursor: pointer; font: inherit; font-weight: 700; font-size: 18px; width: 36px; height: 36px; padding: 0; color: var(--ink); background: var(--cell-a); border: 2px solid var(--line); border-radius: 6px; }
-  .ms.mute[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-  .ms.solo[aria-pressed="true"] { background: var(--s3); color: #1a1a1a; border-color: var(--s3); }
-  .step.dim { opacity: 0.4; }
-  .name.dim { opacity: 0.55; }
-  .label { position: sticky; left: 0; z-index: 1; display: flex; gap: 4px; background: var(--panel); }
-  .label .name { position: static; flex: 1; min-width: 0; }
-  .grid { -webkit-user-select: none; user-select: none; }
+  /* ---------- seção da voz ---------- */
+  .voice { display: grid; grid-template-columns: minmax(240px, 1fr) minmax(0, 2fr); gap: 18px 28px; align-items: start; }
+  .editor-head h2 { margin: 0 0 4px; font-size: 24px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; display: inline-block;
+    background: var(--tag); color: var(--tag-ink); padding: 2px 12px 3px; border-radius: 3px; }
+  .editor-head p { margin: 0 0 10px; color: var(--sub); font-size: 16px; line-height: 1.25; }
+  .screen { background: var(--screen); border-radius: 5px; padding: 8px 10px 2px;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,.6), inset 0 0 0 2px rgba(0,0,0,.45), 0 1px 0 rgba(255,255,255,.25); }
+  canvas { display: block; width: 100%; height: 130px; }
+  .scope-cap { margin: 5px 2px 0; color: var(--sub); font-size: 14px; }
 
-  /* Editor de voz */
-  .editor-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
-  .editor-head p { margin: 0; color: var(--muted); font-size: 17px; max-width: 60ch; }
-  canvas { display: block; width: 100%; height: 160px; margin-bottom: 4px; }
-  .scope-cap { margin: 4px 2px 16px; color: var(--muted); font-size: 16px; }
-
-  .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px 28px; }
-  .ctl .row { display: flex; justify-content: space-between; align-items: baseline; }
-  .ctl label { font-weight: 600; font-size: 20px; }
-  .ctl output { font-weight: 600; font-size: 20px; color: var(--accent); }
-  .ctl .hint { margin: 2px 0 0; color: var(--muted); font-size: 16px; line-height: 1.25; }
+  .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px 24px; }
+  .ctl { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0 12px; align-content: start; }
+  .ctl .row { grid-column: 2; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .ctl label { font-weight: 600; font-size: 17px; text-transform: uppercase; letter-spacing: .05em; }
+  .ctl output { font-weight: 600; font-size: 18px; color: var(--accent); white-space: nowrap; }
+  .ctl .hint { grid-column: 2; margin: 2px 0 0; color: var(--sub); font-size: 14.5px; line-height: 1.22; }
+  .ctl .rk { grid-column: 1; grid-row: 1 / span 2; }
   output.editable { cursor: text; border-bottom: 1px dashed currentColor; }
-  output.editable:hover { background: var(--cell-a); }
   .numwrap { display: inline-flex; align-items: baseline; gap: 4px; }
-  .numedit { width: 7ch; font: inherit; font-weight: 600; font-size: 20px; color: var(--ink); background: var(--bg); border: 2px solid var(--accent); border-radius: 6px; padding: 2px 6px; text-align: right; }
-  .numwrap .unit { color: var(--muted); font-size: 18px; }
+  .numedit { width: 7ch; font: inherit; font-weight: 600; font-size: 18px; color: var(--ink); background: var(--case-hi); border: 2px solid var(--accent); border-radius: 4px; padding: 1px 6px; text-align: right; }
+  .numwrap .unit { color: var(--sub); font-size: 16px; }
 
-  input[type="range"] {
-    -webkit-appearance: none; appearance: none; width: 100%; height: 36px;
-    background: transparent; margin: 4px 0 0; cursor: pointer;
-  }
-  input[type="range"]::-webkit-slider-runnable-track { height: 6px; background: var(--line); border-radius: 3px; }
-  input[type="range"]::-moz-range-track { height: 6px; background: var(--line); border-radius: 3px; }
-  input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none; width: 24px; height: 24px; margin-top: -9px;
-    border-radius: 50%; background: var(--ink); border: 3px solid var(--panel);
-    box-shadow: 0 0 0 1px var(--ink);
-  }
-  input[type="range"]::-moz-range-thumb {
-    width: 18px; height: 18px; border-radius: 50%; background: var(--ink);
-    border: 3px solid var(--panel); box-shadow: 0 0 0 1px var(--ink);
-  }
+  /* knob giratório que comanda o controle deslizante por baixo */
+  .rk { position: relative; width: 58px; height: 58px; border-radius: 50%; cursor: ns-resize; touch-action: none; flex: none; }
+  .rk svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .rk svg line { stroke: var(--tick); stroke-width: 1.4; }
+  .rk-cap { position: absolute; inset: 15%; border-radius: 50%; background: var(--knob);
+    box-shadow: 0 0 0 1.5px var(--knob-ring), 0 4px 3px rgba(0,0,0,.5), 2px 9px 9px rgba(0,0,0,.38), inset 0 1px 1px rgba(255,255,255,.3); }
+  .rk-ptr { position: absolute; inset: 15%; border-radius: 50%; }
+  .rk-ptr::before { content: ""; position: absolute; left: 50%; top: 2px; width: 3.4px; height: 42%; margin-left: -1.7px; border-radius: 1px; background: var(--knob-mark); }
+  .rk.big { width: 104px; height: 104px; }
+  .rk.big .rk-cap, .rk.big .rk-ptr { inset: 12%; }
+  input.kn { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; pointer-events: none; }
+  input.kn:focus-visible + .rk { box-shadow: 0 0 0 3px var(--accent); }
+  /* na 707 os controles são faders */
+  :root[data-machine="707"] .rk { display: none; }
+  :root[data-machine="707"] input.kn { position: static; opacity: 1; width: 100%; height: 34px; pointer-events: auto; grid-column: 1 / -1; }
+  :root[data-machine="707"] .ctl { display: block; }
+
+  input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 34px; background: transparent; margin: 2px 0 0; cursor: pointer; }
+  input[type="range"]::-webkit-slider-runnable-track { height: 8px; background: var(--well); border-radius: 2px; box-shadow: inset 0 1px 2px #000, 0 1px 0 rgba(255,255,255,.5); }
+  input[type="range"]::-moz-range-track { height: 8px; background: var(--well); border-radius: 2px; box-shadow: inset 0 1px 2px #000, 0 1px 0 rgba(255,255,255,.5); }
+  input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 30px; margin-top: -11px; border-radius: 2px; border: 0;
+    background: linear-gradient(90deg, #6b6b67 0 42%, #f3f1ea 42% 58%, #6b6b67 58%); box-shadow: 0 0 0 1px #1d1d1c, 0 3px 4px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.4); }
+  input[type="range"]::-moz-range-thumb { width: 18px; height: 30px; border-radius: 2px; border: 0;
+    background: linear-gradient(90deg, #6b6b67 0 42%, #f3f1ea 42% 58%, #6b6b67 58%); box-shadow: 0 0 0 1px #1d1d1c, 0 3px 4px rgba(0,0,0,.5); }
   :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 
-  .note { margin: 6px 2px 0; color: var(--muted); font-size: 17px; }
-  @media (prefers-reduced-motion: reduce) { .pad { transition: none; } }
-  .machine { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-  .machine-label { font-weight: 600; font-size: 20px; margin-right: 6px; }
-  .mbtn { appearance: none; cursor: pointer; font: inherit; font-weight: 700; font-size: 28px; min-width: 96px; height: 52px; padding: 0 20px; border-radius: 8px; color: var(--ink); background: var(--panel); border: 2px solid var(--line); }
-  .mbtn[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  /* ---------- transporte ---------- */
+  .transport { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 26px; }
+  .pad, .btn { appearance: none; border: 0; cursor: pointer; font: inherit; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; border-radius: 3px;
+    background: linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,0) 45%, rgba(0,0,0,.18)), var(--pad); color: var(--pad-ink);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.6), inset 0 -5px 0 rgba(0,0,0,.18), 0 0 0 3px var(--well), 0 0 0 4px rgba(255,255,255,.25), 0 5px 4px 2px rgba(0,0,0,.4);
+    transition: transform .05s; }
+  .pad { font-size: 22px; height: 62px; min-width: 124px; padding: 0 22px 5px; }
+  .btn { font-size: 15px; min-height: 46px; padding: 6px 14px 10px; max-width: 150px; line-height: 1.05; }
+  .pad:active, .btn:active { transform: translateY(2px); }
+  .slider-inline { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .slider-inline:first-of-type { margin-left: auto; }
+  .slider-inline label { font-weight: 600; font-size: 16px; text-transform: uppercase; letter-spacing: .07em; white-space: nowrap; }
+  .slider-inline output { font-weight: 600; font-size: 16px; color: var(--accent); white-space: nowrap; }
+  :root[data-machine="707"] .slider-inline { min-width: 200px; flex: 1; }
+
+  /* ---------- fileiras de passos ---------- */
+  .seq { overflow-x: auto; padding: 4px 4px 8px; }
+  .grid { display: grid; grid-template-columns: 196px repeat(16, minmax(32px, 1fr)); gap: 9px 7px; min-width: 820px; align-items: center; -webkit-user-select: none; user-select: none; }
+  .label { position: sticky; left: 0; z-index: 2; display: flex; gap: 4px; background: var(--case); padding: 2px 6px 2px 0; }
+  .name { appearance: none; cursor: pointer; text-align: left; flex: 1; min-width: 0;
+    font: inherit; font-weight: 600; font-size: 16px; text-transform: uppercase; letter-spacing: .04em; color: var(--tag-ink);
+    background: var(--tag); border: 0; border-radius: 3px; height: 32px; padding: 0 9px;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,.35); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .name[aria-current="true"] { box-shadow: inset 0 0 0 1px rgba(0,0,0,.35), inset 6px 0 0 var(--accent), 0 0 0 2px var(--accent); padding-left: 13px; font-weight: 700; }
+  .ms { appearance: none; cursor: pointer; font: inherit; font-weight: 700; font-size: 15px; width: 30px; height: 32px; padding: 0; border: 0; border-radius: 3px;
+    color: var(--ink); background: transparent; box-shadow: inset 0 0 0 1.5px var(--line); }
+  .ms.mute[aria-pressed="true"] { background: var(--ink); color: var(--case); box-shadow: none; }
+  .ms.solo[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); box-shadow: none; }
+  .step { appearance: none; cursor: pointer; position: relative; height: 30px; margin-top: 12px; padding: 0; border: 0; border-radius: 2px;
+    background: linear-gradient(var(--cap-shade), var(--cap-shade)), var(--cap);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.45), inset 0 -4px 0 rgba(0,0,0,.2), 0 0 0 2px var(--well), 0 0 0 3px rgba(255,255,255,.18), 0 4px 3px 1px rgba(0,0,0,.35); }
+  .step::before { content: ""; position: absolute; left: 50%; top: -11px; width: 8px; height: 8px; margin-left: -4px; border-radius: 50%;
+    background: radial-gradient(circle at 38% 30%, #a8554a, var(--led-dim) 55%, #2a0906); box-shadow: 0 0 0 1.5px var(--well); }
+  .step.gap { margin-left: 8px; }
+  .step.on { background: linear-gradient(180deg, rgba(255,255,255,.3), rgba(255,255,255,0) 50%), var(--cap-on, var(--cap)); }
+  .step.on::before { background: radial-gradient(circle at 38% 30%, #fff, #ffb09c 22%, var(--led) 58%, #a81d0c);
+    box-shadow: 0 0 0 1.5px var(--well), 0 0 8px 3px var(--led-glow), 0 0 18px 5px rgba(255,70,40,.4); }
+  .step.now { outline: 2px solid var(--now); outline-offset: 3px; z-index: 1; }
+  .step.dim { opacity: .4; }
+  .name.dim { opacity: .55; }
+  :root[data-machine="808"] .step { --cap-on: initial; }
+  :root[data-machine="808"] .step[data-g="0"] { --cap: #d8391f; }
+  :root[data-machine="808"] .step[data-g="1"] { --cap: #ee7a1c; }
+  :root[data-machine="808"] .step[data-g="2"] { --cap: #f1d32f; }
+  :root[data-machine="808"] .step[data-g="3"] { --cap: #f2efe2; }
+  :root[data-machine="606"] .panel.steps { background: linear-gradient(180deg, transparent 0 10px, #101010 10px 14px, transparent 14px); padding-top: 26px; }
+
+  @media (max-width: 760px) {
+    .panel { padding: 14px 12px; }
+    .voice { grid-template-columns: minmax(0, 1fr); }
+    .slider-inline:first-of-type { margin-left: 0; }
+    .rk.big { width: 84px; height: 84px; }
+    .grid { grid-template-columns: 168px repeat(16, minmax(32px, 1fr)); }
+  }
+  @media (prefers-reduced-motion: reduce) { .pad, .btn { transition: none; } }
 </style>
 </head>
 <body>
 <main>
-  <header>
-    <div class="stripe" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
-    <h1>Bateria eletrônica</h1>
-  </header>
+  <h1>Bateria eletrônica: 808, 909, 707 e 606</h1>
 
-  <section class="panel" aria-label="Máquina">
-    <div class="machine">
-      <span class="machine-label">Máquina</span>
-      <button class="mbtn" type="button" data-m="808" aria-pressed="true">808</button>
-      <button class="mbtn" type="button" data-m="909" aria-pressed="false">909</button>
-      <button class="mbtn" type="button" data-m="606" aria-pressed="false">606</button>
+  <div class="machine" aria-label="Máquina">
+    <span class="machine-label">Máquina</span>
+    <button class="mbtn" type="button" data-m="909" aria-pressed="false">909</button>
+    <button class="mbtn" type="button" data-m="808" aria-pressed="true">808</button>
+    <button class="mbtn" type="button" data-m="707" aria-pressed="false">707</button>
+    <button class="mbtn" type="button" data-m="606" aria-pressed="false">606</button>
+  </div>
+
+  <div class="cabinet">
+    <div class="panel head808" aria-hidden="true">
+      <div class="plate p808"><b>Rhythm Composer <i>TR-808</i></b><span>Computer Controlled</span></div>
+      <div class="plate p909"><b>TR-909</b><span>Rhythm Composer</span></div>
+      <div class="plate p707"><span>Rhythm Composer</span><b>TR-707</b></div>
+      <div class="plate p606"><span>TR-606<small>Computer Controlled</small></span><b>Drumatix</b></div>
     </div>
-  </section>
 
-  <section class="panel">
-    <div class="transport">
-      <button class="pad" id="play" type="button">Tocar</button>
-      <button class="btn" id="clear" type="button">Limpar tudo</button>
-      <button class="btn" id="reset" type="button">Restaurar padrões</button>
-      <div class="slider-inline">
-        <label for="bpm">Andamento</label>
-        <input id="bpm" type="range" min="60" max="200" step="1" value="100">
-        <output id="bpm-out" for="bpm">100 bpm</output>
+    <section class="panel voice" aria-label="Ajuste da voz">
+      <div>
+        <div class="editor-head">
+          <h2 id="ed-title">Bumbo</h2>
+          <p id="ed-desc"></p>
+        </div>
+        <div class="screen"><canvas id="scope" role="img" aria-label="Forma de onda da voz selecionada"></canvas></div>
+        <p class="scope-cap" id="scope-cap"></p>
       </div>
-      <div class="slider-inline">
-        <label for="swing">Swing</label>
-        <input id="swing" type="range" min="0" max="50" step="1" value="0">
-        <output id="swing-out" for="swing">0 %</output>
+      <div class="controls" id="controls"></div>
+    </section>
+
+    <section class="panel" aria-label="Transporte">
+      <div class="transport">
+        <button class="pad" id="play" type="button">Tocar</button>
+        <button class="btn" id="clear" type="button">Limpar tudo</button>
+        <button class="btn" id="reset" type="button">Restaurar padrões</button>
+        <div class="slider-inline">
+          <label for="bpm">Tempo</label>
+          <input id="bpm" type="range" min="60" max="200" step="1" value="100">
+          <output id="bpm-out" for="bpm">100 bpm</output>
+        </div>
+        <div class="slider-inline">
+          <label for="swing">Swing</label>
+          <input id="swing" type="range" min="0" max="50" step="1" value="0">
+          <output id="swing-out" for="swing">0 %</output>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <section class="panel" aria-label="Sequenciador">
-    <div class="seq"><div class="grid" id="grid"></div></div>
-  </section>
-
-  <section class="panel" aria-label="Ajuste da voz">
-    <div class="editor-head">
-      <h2 id="ed-title">Bumbo</h2>
-      <p id="ed-desc"></p>
-    </div>
-    <canvas id="scope" role="img" aria-label="Forma de onda da voz selecionada"></canvas>
-    <p class="scope-cap" id="scope-cap"></p>
-    <div class="controls" id="controls"></div>
-  </section>
-
+    <section class="panel steps" aria-label="Sequenciador">
+      <div class="seq"><div class="grid" id="grid"></div></div>
+    </section>
+  </div>
 </main>
 
 <script>
@@ -235,6 +273,7 @@
   // ---------- Formatação ----------
   function fmtHz(v) { return v + " Hz"; }
   function fmtPct(v) { return v + " %"; }
+  function fmtBits(v) { return v + " bits"; }
   function fmtDur(v) { return v >= 1000 ? (v / 1000).toLocaleString("pt-BR") + " s" : v + " ms"; }
 
   var LEVEL = { id: "level", label: "Volume", min: 0, max: 100, step: 1, val: 70,
@@ -502,6 +541,84 @@
     ];
   }
 
+
+  // ---------- Recursos da 707 ----------
+  // Resolução digital: a 707 reproduz amostras de 8 bits (6 bits nos pratos). Aqui o sinal é quantizado em 2^bits níveis.
+  var crushCurves = {};
+  function crushCurve(bits) {
+    if (!crushCurves[bits]) {
+      var n = 16384, half = Math.pow(2, bits - 1), c = new Float32Array(n);
+      for (var i = 0; i < n; i++) {
+        var x = (i / (n - 1)) * 2 - 1;
+        c[i] = Math.max(-1, Math.min(1, Math.round(x * half) / half));
+      }
+      crushCurves[bits] = c;
+    }
+    return crushCurves[bits];
+  }
+  function withCrush(f, o) {
+    return function (ctx, dest, t, p) {
+      var d = dest;
+      if (p.bits < 16) {
+        var ws = ctx.createWaveShaper();
+        ws.curve = crushCurve(p.bits);
+        ws.connect(dest);
+        d = ws;
+      }
+      return f(ctx, d, t, p, o);
+    };
+  }
+  function addBits(list, bits) {
+    var out = list.slice(0, list.length - 1);
+    out.push({ id: "bits", label: "Resolução", min: 4, max: 16, step: 1, val: bits,
+      hint: "Profundidade em bits: mais baixa deixa o som mais granulado, como nas amostras digitais antigas. Em 16 o efeito some.", fmt: fmtBits });
+    out.push(list[list.length - 1]);
+    return out;
+  }
+
+  // Tamborim: ruído filtrado em duas pancadas rápidas (a segunda mais forte).
+  function tamb(ctx, dest, t, p) {
+    var decay = p.decay / 1000;
+    var n = ctx.createBufferSource();
+    n.buffer = noiseBuffer(ctx);
+    var bp = ctx.createBiquadFilter();
+    bp.type = "bandpass"; bp.frequency.value = p.tone; bp.Q.value = 0.9;
+    var env = ctx.createGain();
+    env.gain.setValueAtTime(0, t);
+    env.gain.linearRampToValueAtTime(0.8, t + 0.001);
+    env.gain.setTargetAtTime(0.2, t + 0.001, 0.006);
+    env.gain.setValueAtTime(1, t + 0.022);
+    env.gain.setTargetAtTime(0, t + 0.022, decay / 6.9);
+    var out = ctx.createGain();
+    out.gain.value = 0.9 * (p.level / 70);
+    n.connect(bp); bp.connect(env); env.connect(out); out.connect(dest);
+    n.start(t);
+    n.stop(t + 0.022 + Math.min(0.9, decay * 1.1 + 0.05));
+  }
+
+  function kickP(start, end, sweep, decay, click, drive, dmax) {
+    return addBits([
+      { id: "start", label: "Pitch inicial", min: 100, max: 500, step: 1, val: start, hint: "Frequência no instante do golpe.", fmt: fmtHz },
+      { id: "end", label: "Pitch final", min: 35, max: 120, step: 1, val: end, hint: "Nota em que o bumbo se estabiliza.", fmt: fmtHz },
+      { id: "sweep", label: "Queda do pitch", min: 5, max: 200, step: 1, val: sweep, hint: "Tempo que o pitch leva para descer.", fmt: fmtDur },
+      { id: "decay", label: "Duração", min: 80, max: dmax, step: 10, val: decay, hint: "Tempo até o volume cair ao silêncio.", fmt: fmtDur },
+      { id: "click", label: "Clique do ataque", min: 0, max: 100, step: 1, val: click, hint: "Estalo curto de ruído no início.", fmt: fmtPct },
+      { id: "drive", label: "Saturação", min: 0, max: 100, step: 1, val: drive, hint: "Distorce a onda e acrescenta harmônicos.", fmt: fmtPct },
+      L()
+    ], 8);
+  }
+  function snareP(tune, bodyDecay, body, snappy, noiseDecay, noiseFreq) {
+    return addBits([
+      { id: "tune", label: "Afinação do corpo", min: 120, max: 320, step: 1, val: tune, hint: "Frequência do primeiro oscilador. O segundo fica uns 83% acima.", fmt: fmtHz },
+      { id: "bodyDecay", label: "Duração do corpo", min: 30, max: 300, step: 1, val: bodyDecay, hint: "Quanto tempo o tom da caixa dura.", fmt: fmtDur },
+      { id: "body", label: "Nível do corpo", min: 0, max: 100, step: 1, val: body, hint: "Volume dos dois osciladores.", fmt: fmtPct },
+      { id: "snappy", label: "Nível do ruído", min: 0, max: 100, step: 1, val: snappy, hint: "Volume da esteira.", fmt: fmtPct },
+      { id: "noiseDecay", label: "Duração do ruído", min: 50, max: 500, step: 5, val: noiseDecay, hint: "Tempo que a esteira chia.", fmt: fmtDur },
+      { id: "noiseFreq", label: "Brilho do ruído", min: 500, max: 6000, step: 50, val: noiseFreq, hint: "Corte do filtro passa-alta. Subir deixa o ruído mais fino.", fmt: fmtHz },
+      L()
+    ], 8);
+  }
+
   // ---------- Máquinas ----------
   var MACHINES = {};
 
@@ -694,8 +811,83 @@
     ]
   };
 
+  // --- TR-707 ---
+  var K707 = { clickHz: 2500, clickGain: 0.5, clickTau: 0.003 };
+  var S707 = { type: "triangle", startMul: 1.3, tau: 0.006 };
+  var T707 = { tau: 0.02 };
+  var C707 = { q: 1.3, gap: 0.012 };
+  MACHINES["707"] = {
+    desc: "Quinze vozes, com dois bumbos e duas caixas. Na máquina original, todos os sons eram amostras digitais de 8 bits (6 bits nos pratos). Aqui são aproximações por síntese, sem usar nenhuma amostra da Roland, e o controle Resolução imita o aspecto granulado desse som.",
+    master: 0.6,
+    trim: {"bd":0.72,"b2":0.61,"sd":1.41,"s2":1.41,"lt":0.56,"mt":0.62,"ht":0.69,"rs":1.11,"cb":0.87,"cp":1.67,"tb":0.68,"ch":2.37,"oh":1.03,"cr":0.53,"rd":0.61},
+    defaults: { bd: [0, 6, 8, 14], sd: [4, 12], cp: [12], tb: [2, 10], ch: [0, 2, 4, 6, 8, 10, 12], oh: [14] },
+    voices: [
+      { id: "bd", name: "Bumbo 1", dur: 0.6, fn: withCrush(kick, K707),
+        desc: "Senoide com queda de pitch rápida e um pouco de clique. O primeiro dos dois bumbos da 707: mais curto e firme.",
+        params: kickP(200, 58, 22, 300, 30, 20, 1200) },
+      { id: "b2", name: "Bumbo 2", dur: 0.8, fn: withCrush(kick, K707),
+        desc: "O segundo bumbo da 707: mais grave e mais longo, com menos clique.",
+        params: kickP(150, 48, 35, 450, 15, 10, 1200) },
+      { id: "sd", name: "Caixa 1", dur: 0.5, fn: withCrush(snare, S707),
+        desc: "Dois osciladores triangulares para o corpo e ruído filtrado. A primeira das duas caixas: mais redonda e macia.",
+        params: snareP(175, 100, 75, 50, 160, 1800) },
+      { id: "s2", name: "Caixa 2", dur: 0.5, fn: withCrush(snare, S707),
+        desc: "A segunda caixa: mais grave e com mais esteira.",
+        params: snareP(150, 130, 70, 60, 200, 1500) },
+      { id: "lt", name: "Tom grave", dur: 0.8, fn: withCrush(tom, T707),
+        desc: "Senoide com queda de pitch e um leve clique no ataque.",
+        params: addBits(tomP(100, 60, 220, 320, 80, 800, 45, 120, 20), 8) },
+      { id: "mt", name: "Tom médio", dur: 0.8, fn: withCrush(tom, T707),
+        desc: "Mesmo princípio do tom grave, afinado mais alto.",
+        params: addBits(tomP(150, 90, 320, 260, 80, 800, 45, 120, 20), 8) },
+      { id: "ht", name: "Tom agudo", dur: 0.8, fn: withCrush(tom, T707),
+        desc: "Mesmo princípio do tom grave, afinado ainda mais alto.",
+        params: addBits(tomP(215, 120, 450, 210, 80, 800, 45, 120, 20), 8) },
+      { id: "rs", name: "Rimshot", dur: 0.3, fn: withCrush(rim),
+        desc: "Dois tons muito curtos (um triangular e um quadrado, bem mais agudo) mais um estalo de ruído.",
+        params: addBits([
+          { id: "tune", label: "Afinação", min: 300, max: 800, step: 5, val: 500, hint: "Frequência do tom principal. O outro fica 3,5 vezes mais alto.", fmt: fmtHz },
+          { id: "decay", label: "Duração", min: 10, max: 120, step: 1, val: 35, hint: "Tempo até o som sumir.", fmt: fmtDur },
+          L()
+        ], 8) },
+      { id: "cb", name: "Cowbell", dur: 0.8, fn: withCrush(cowbell),
+        desc: "Duas ondas quadradas filtradas, com um envelope que cai rápido e deixa uma cauda baixa.",
+        params: addBits([
+          { id: "tune", label: "Afinação", min: 400, max: 800, step: 1, val: 560, hint: "Frequência da primeira onda. A segunda fica na mesma proporção.", fmt: fmtHz },
+          { id: "decay", label: "Duração", min: 100, max: 800, step: 10, val: 280, hint: "Tempo até o som sumir.", fmt: fmtDur },
+          L()
+        ], 8) },
+      { id: "cp", name: "Clap", dur: 0.5, fn: withCrush(clap, C707),
+        desc: "Ruído filtrado em três rajadas rápidas, seguidas de uma cauda.",
+        params: addBits([
+          { id: "tone", label: "Tom", min: 600, max: 2800, step: 10, val: 1300, hint: "Frequência central do filtro. Mais alto, mais seco e estalado.", fmt: fmtHz },
+          { id: "tail", label: "Cauda", min: 50, max: 500, step: 5, val: 190, hint: "Duração do som depois das rajadas.", fmt: fmtDur },
+          L()
+        ], 8) },
+      { id: "tb", name: "Tamborim", dur: 0.5, fn: withCrush(tamb),
+        desc: "Ruído filtrado em agudos, em duas pancadas rápidas. A segunda é mais forte.",
+        params: addBits([
+          { id: "tone", label: "Tom", min: 3000, max: 12000, step: 100, val: 7000, hint: "Frequência central do filtro. Mais alto, mais brilhante.", fmt: fmtHz },
+          { id: "decay", label: "Duração", min: 40, max: 400, step: 5, val: 140, hint: "Tempo até o som sumir.", fmt: fmtDur },
+          L()
+        ], 8) },
+      { id: "ch", name: "Hat fechado", dur: 0.3, fn: withCrush(hat, 10000),
+        desc: "Aproximação por síntese de um sample: seis ondas quadradas filtradas, com decaimento curto.",
+        params: addBits(metalP(40, 20, 200, 8000, 3000, 12000, 100), 8) },
+      { id: "oh", name: "Hat aberto", dur: 1.2, fn: withCrush(hat, 10000),
+        desc: "Mesma síntese do hat fechado, com decaimento longo. O hat fechado corta o aberto.",
+        params: addBits(metalP(280, 100, 1000, 8000, 3000, 12000, 100), 8) },
+      { id: "cr", name: "Crash", dur: 2.5, fn: withCrush(cymbal, 9000),
+        desc: "Aproximação por síntese: base metálica com decaimento muito longo. Na 707 os pratos eram de 6 bits, mais granulados que o resto.",
+        params: addBits(metalP(1700, 400, 2500, 4800, 2500, 9000, 95), 6) },
+      { id: "rd", name: "Ride", dur: 2.0, fn: withCrush(cymbal, 9000),
+        desc: "Aproximação por síntese: base metálica com decaimento médio e um pouco mais aguda que o crash. Também em 6 bits.",
+        params: addBits(metalP(1100, 400, 2500, 6200, 2500, 9000, 110), 6) }
+    ]
+  };
+
   // ---------- Estado por máquina ----------
-  var MACHINE_IDS = ["808", "909", "606"];
+  var MACHINE_IDS = ["808", "909", "606", "707"];
   var store = {};
   MACHINE_IDS.forEach(function (mid) {
     var m = MACHINES[mid];
@@ -1025,7 +1217,7 @@
   // ---------- Edição digitando o valor ----------
   function parseValue(txt, unit) {
     var s = String(txt).trim().toLowerCase().replace(",", ".");
-    var m = s.match(/^(-?\d*\.?\d+)\s*(ms|s|hz|bpm|%)?$/);
+    var m = s.match(/^(-?\d*\.?\d+)\s*(ms|s|hz|bpm|bits|%)?$/);
     if (!m) return null;
     var n = parseFloat(m[1]);
     if (unit === "ms" && m[2] === "s") n *= 1000;
@@ -1121,7 +1313,7 @@
         saveSoon();
       });
       input.addEventListener("change", function () { preview(v); });
-      makeEditable(out, input, p.fmt === fmtHz ? "Hz" : (p.fmt === fmtPct ? "%" : "ms"), function () { input.dispatchEvent(new Event("change")); });
+      makeEditable(out, input, p.fmt === fmtHz ? "Hz" : (p.fmt === fmtPct ? "%" : (p.fmt === fmtBits ? "bits" : "ms")), function () { input.dispatchEvent(new Event("change")); });
 
       var hint = document.createElement("p");
       hint.className = "hint";
@@ -1153,6 +1345,7 @@
     var st = store[id];
     var previous = current;
     machineId = id;
+    document.documentElement.setAttribute("data-machine", id);
     machine = MACHINES[id];
     VOICES = machine.voices;
     state = st.state;
@@ -1347,6 +1540,79 @@
   });
 
   setMachine(loadSaved());
+})();
+</script>
+<script>
+// Knobs giratórios: cada um comanda o controle deslizante original, que continua valendo para teclado e leitores de tela.
+(function () {
+  "use strict";
+  var desc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
+  function knobify(inp, big) {
+    if (inp.classList.contains("kn")) return;
+    inp.classList.add("kn");
+    var k = document.createElement("span");
+    k.className = "rk" + (big ? " big" : "");
+    k.setAttribute("aria-hidden", "true");
+    var n = big ? 21 : 11, t = "";
+    for (var i = 0; i < n; i++) {
+      var a = (-135 + 270 / (n - 1) * i) * Math.PI / 180, s = Math.sin(a), c = Math.cos(a);
+      t += '<line x1="' + (32 + s * 28).toFixed(2) + '" y1="' + (32 - c * 28).toFixed(2) + '" x2="' + (32 + s * 31.5).toFixed(2) + '" y2="' + (32 - c * 31.5).toFixed(2) + '"/>';
+    }
+    k.innerHTML = '<svg viewBox="0 0 64 64">' + t + '</svg><span class="rk-cap"></span><span class="rk-ptr"></span>';
+    var ptr = k.lastChild;
+    inp.insertAdjacentElement("afterend", k);
+    var min = Number(inp.min), max = Number(inp.max), step = Number(inp.step) || 1;
+    function render() {
+      var f = (Number(desc.get.call(inp)) - min) / (max - min || 1);
+      ptr.style.transform = "rotate(" + (-135 + 270 * f).toFixed(1) + "deg)";
+    }
+    Object.defineProperty(inp, "value", {
+      configurable: true,
+      get: function () { return desc.get.call(inp); },
+      set: function (v) { desc.set.call(inp, v); render(); }
+    });
+    inp.addEventListener("input", render);
+    function set(v) {
+      v = Math.min(max, Math.max(min, Math.round(v / step) * step));
+      if (v === Number(inp.value)) return;
+      inp.value = v;
+      inp.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    var active = null, sv = 0, sy = 0, moved = false;
+    k.addEventListener("pointerdown", function (e) {
+      if (e.button !== 0) return;
+      k.setPointerCapture(e.pointerId); active = e.pointerId; sv = Number(inp.value); sy = e.clientY; moved = false;
+      e.preventDefault();
+    });
+    k.addEventListener("pointermove", function (e) {
+      if (e.pointerId !== active) return;
+      moved = true;
+      set(sv + (sy - e.clientY) / (e.shiftKey ? 700 : 170) * (max - min));
+    });
+    function end(e) {
+      if (e.pointerId !== active) return;
+      active = null;
+      if (moved) inp.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    k.addEventListener("pointerup", end);
+    k.addEventListener("pointercancel", end);
+    var wheelTimer = null;
+    k.addEventListener("wheel", function (e) {
+      e.preventDefault();
+      set(Number(inp.value) - Math.sign(e.deltaY) * Math.max(step, (max - min) / 50));
+      clearTimeout(wheelTimer);
+      wheelTimer = setTimeout(function () { inp.dispatchEvent(new Event("change", { bubbles: true })); }, 250);
+    }, { passive: false });
+    render();
+  }
+  knobify(document.getElementById("bpm"), true);
+  knobify(document.getElementById("swing"), false);
+  var controls = document.getElementById("controls");
+  function scan() {
+    Array.prototype.forEach.call(controls.querySelectorAll('input[type="range"]'), function (i) { knobify(i, false); });
+  }
+  new MutationObserver(scan).observe(controls, { childList: true });
+  scan();
 })();
 </script>
 </body>
