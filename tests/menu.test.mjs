@@ -5,9 +5,9 @@ import { readFileSync, existsSync } from 'node:fs';
 const list = JSON.parse(readFileSync('instruments.json', 'utf8'));
 const html = readFileSync('index.html', 'utf8');
 
-test('instruments.json: 7 entradas válidas', () => {
-  assert.equal(list.length, 7);
-  assert.equal(new Set(list.map(i => i.id)).size, 7);
+test('instruments.json: 8 entradas válidas', () => {
+  assert.equal(list.length, 8);
+  assert.equal(new Set(list.map(i => i.id)).size, 8);
   for (const i of list) {
     assert.ok(i.name && i.description, i.id);
     assert.equal(i.path, `${i.id}/index.html`);

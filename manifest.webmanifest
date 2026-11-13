@@ -1,7 +1,7 @@
 {
   "name": "Sintetizadores",
   "short_name": "Sintetizadores",
-  "description": "Sintetizadores e drum machines em Web Audio: 808, 909, 606, 303, SH-101 e Juno-106.",
+  "description": "Sintetizadores e drum machines em Web Audio: 808, 909, 606, 303, SH-101, Juno-106 e Minimoog.",
   "lang": "pt-BR",
   "start_url": "./",
   "scope": "./",
