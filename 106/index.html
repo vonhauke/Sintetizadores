@@ -222,7 +222,6 @@ kbd{font-family:var(--font-label);font-size:.9em;padding:0 .3em;border:1px solid
 <div class="wrap">
   <header>
     <h1 class="sr">Juno-106</h1>
-    <p>Clone em Web Audio do sintetizador polifônico de seis vozes: um oscilador por voz com dente de serra, pulso, sub-oscilador e ruído, filtro passa-alta e passa-baixa, LFO com atraso, envelope ADSR e o chorus estéreo. Todo o som é gerado em tempo real, sem amostras.</p>
   </header>
   <button type="button" class="audio-bar" id="audio-bar" hidden>Som desligado. Toque aqui para ativar.</button>
 
@@ -292,7 +291,6 @@ kbd{font-family:var(--font-label);font-size:.9em;padding:0 .3em;border:1px solid
   <section class="accessory" aria-label="Sequenciador acessório">
     <div class="acc-head">
       <h2>Sequenciador</h2>
-      <p>Acessório: o Juno-106 original não tem sequenciador nem arpejador, e era sequenciado por MIDI. Aqui cada passo aceita até seis notas, uma por voz, e a sequência usa o som, o Assign, o portamento e o Key Transpose do painel.</p>
     </div>
     <div class="acc-ctl">
       <button type="button" class="pbtn big" id="seq-play" aria-pressed="false">Tocar</button>
@@ -319,10 +317,6 @@ kbd{font-family:var(--font-label);font-size:.9em;padding:0 .3em;border:1px solid
     <div class="seq-scroll"><div class="seqgrid" id="seqgrid" aria-label="Grade do sequenciador: 16 passos por 25 notas"></div></div>
   </section>
 
-  <div class="help">
-    <p>O teclado tem 61 teclas e seis vozes. Toque pelo mouse, pelo toque ou pelo teclado do computador: <kbd>A</kbd> a <kbd>K</kbd> são as teclas brancas a partir de C4, a fileira de cima são as pretas, e <kbd>Z</kbd> e <kbd>X</kbd> descem e sobem a oitava do teclado do computador.</p>
-    <p>Arraste faders na vertical (com <kbd>Shift</kbd> o ajuste fica fino); duplo clique volta ao valor inicial. A alavanca vai para os lados para dobrar a afinação e para cima para aplicar o vibrato do LFO, e volta sozinha ao soltar. Clique ou arraste na grade do sequenciador para pintar notas; arrastar na vertical forma acordes e na horizontal repete a nota. <kbd>Espaço</kbd> toca e para. Oitava − e + transpõem a sequência inteira (de −2 a +2 oitavas), e Grade ▼ ▲ só mudam quais notas aparecem na grade. Para guardar um som, escolha grupo (A ou B), banco e número e use Gravar patch; o grupo A, banco 1, traz oito sons de exemplo. Poly 1 usa a primeira voz livre, Poly 2 reveza as vozes de 1 a 6, e Unison empilha as seis vozes numa nota só. Com o Key Transpose aceso, a próxima tecla vira o novo C (escolher C zera a transposição). Ajustes e patches ficam salvos neste navegador.</p>
-  </div>
 </div>
 
 <script>
