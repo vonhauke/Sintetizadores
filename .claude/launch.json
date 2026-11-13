@@ -1,6 +1,27 @@
 {
   "version": "0.0.1",
   "configurations": [
-    { "name": "site", "runtimeExecutable": "node", "runtimeArgs": ["scripts/serve.mjs", ".", "8099"], "port": 8099 }
+    {
+      "name": "site",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "scripts/serve.mjs",
+        ".",
+        "8099"
+      ],
+      "port": 8099
+    },
+    {
+      "name": "pwa",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "scripts/serve.mjs",
+        "dist-web",
+        "8098",
+        "/Sintetizadores/"
+      ],
+      "port": 8098,
+      "url": "http://localhost:8098"
+    }
   ]
 }

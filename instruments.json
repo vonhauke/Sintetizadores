@@ -1,11 +1,44 @@
 [
-  { "id": "bateria", "name": "Bateria", "description": "808, 909, 606 e 707 numa só tela", "path": "bateria/index.html" },
-  { "id": "808", "name": "808", "description": "Drum machine completa, o clássico dos graves", "path": "808/index.html" },
-  { "id": "909", "name": "909", "description": "Drum machine completa, bumbo e hi-hats do house e do techno", "path": "909/index.html" },
-  { "id": "606", "name": "606", "description": "Drum machine compacta e seca", "path": "606/index.html" },
-  { "id": "bumbo-808", "name": "Bumbo 808", "description": "Só o bumbo, com todos os ajustes", "path": "bumbo-808/index.html" },
-  { "id": "caixa-808", "name": "Caixa 808", "description": "Só a caixa, com todos os ajustes", "path": "caixa-808/index.html" },
-  { "id": "303", "name": "TB-303", "description": "Baixo ácido com sequenciador", "path": "303/index.html" },
-  { "id": "101", "name": "SH-101", "description": "Sintetizador monofônico de baixos e leads", "path": "101/index.html" },
-  { "id": "106", "name": "Juno-106", "description": "Sintetizador polifônico com chorus", "path": "106/index.html" }
+  {
+    "id": "bateria",
+    "name": "Bateria",
+    "description": "808, 909, 606 e 707 numa só tela",
+    "path": "bateria/index.html"
+  },
+  {
+    "id": "808",
+    "name": "808",
+    "description": "Drum machine completa, o clássico dos graves",
+    "path": "808/index.html"
+  },
+  {
+    "id": "909",
+    "name": "909",
+    "description": "Drum machine completa, bumbo e hi-hats do house e do techno",
+    "path": "909/index.html"
+  },
+  {
+    "id": "606",
+    "name": "606",
+    "description": "Drum machine compacta e seca",
+    "path": "606/index.html"
+  },
+  {
+    "id": "303",
+    "name": "TB-303",
+    "description": "Baixo ácido com sequenciador",
+    "path": "303/index.html"
+  },
+  {
+    "id": "101",
+    "name": "SH-101",
+    "description": "Sintetizador monofônico de baixos e leads",
+    "path": "101/index.html"
+  },
+  {
+    "id": "106",
+    "name": "Juno-106",
+    "description": "Sintetizador polifônico com chorus",
+    "path": "106/index.html"
+  }
 ]

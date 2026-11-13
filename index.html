@@ -6,6 +6,8 @@
 <title>Sintetizadores</title>
 <link rel="stylesheet" href="fonts/fonts.css">
 <link rel="stylesheet" href="menu.css">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1b1d20">
 </head>
 <body>
 <main>
@@ -17,13 +19,17 @@
     <li><a class="card" href="808/index.html" target="_blank"><h2>808</h2><p>Drum machine completa, o clássico dos graves</p></a></li>
     <li><a class="card" href="909/index.html" target="_blank"><h2>909</h2><p>Drum machine completa, bumbo e hi-hats do house e do techno</p></a></li>
     <li><a class="card" href="606/index.html" target="_blank"><h2>606</h2><p>Drum machine compacta e seca</p></a></li>
-    <li><a class="card" href="bumbo-808/index.html" target="_blank"><h2>Bumbo 808</h2><p>Só o bumbo, com todos os ajustes</p></a></li>
-    <li><a class="card" href="caixa-808/index.html" target="_blank"><h2>Caixa 808</h2><p>Só a caixa, com todos os ajustes</p></a></li>
     <li><a class="card" href="303/index.html" target="_blank"><h2>TB-303</h2><p>Baixo ácido com sequenciador</p></a></li>
     <li><a class="card" href="101/index.html" target="_blank"><h2>SH-101</h2><p>Sintetizador monofônico de baixos e leads</p></a></li>
     <li><a class="card" href="106/index.html" target="_blank"><h2>Juno-106</h2><p>Sintetizador polifônico com chorus</p></a></li>
 <!-- /cards -->
   </ul>
 </main>
+<script>
+  // O service worker só vale em http(s); no app instalado (file://) as páginas já são locais.
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    navigator.serviceWorker.register('./sw.js');
+  }
+</script>
 </body>
 </html>
