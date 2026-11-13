@@ -3,21 +3,27 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
 <title>Clone da TB-303</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@300;400;500;600&family=Michroma&display=swap" rel="stylesheet">
 <style>
+/* Layout: três faixas como no aparelho. Em cima, os seis knobs entre duas barras pretas;
+   no meio, tempo, seletor giratório, nome e volume; embaixo, o painel de teclas emoldurado em preto. */
 :root{
-  --page:#1b1d20; --ink:#e4e6e8; --muted:#a3a9af;
-  --silver-hi:#e6e7e3; --silver:#d0d1cd; --silver-lo:#b9bbb6; --silver-edge:#7f827d;
-  --print:#151515; --print-sub:#474946;
-  --black:#121212; --black-2:#262626;
-  --red:#e2311c; --red-dim:#6e1d14; --red-glow:#ff5236;
-  --key-hi:#f1f1ee; --key:#d2d4cf; --key-lo:#a4a6a1;
-  --tick:#222; --focus:#ffb300;
+  --page:#17181a; --ink:#e4e6e8; --muted:#a3a9af;
+  --silver-hi:#e4e5e1; --silver:#cfd0cc; --silver-lo:#bbbdb8; --silver-edge:#80827e;
+  --print:#141414; --print-sub:#4a4c49;
+  --black:#101010; --white:#f3f3f0;
+  --red:#e3321d; --red-dim:#5e1a12; --red-glow:#ff5a3c;
+  --key-hi:#f6f6f3; --key:#d3d4d0; --key-lo:#a5a7a2;
+  --slot:#e2e3df; --slot-blk:#1d1d1d;
+  --amber:#f2a81d; --amber-ink:#1e1505; --focus:#ffb300;
   --metal:conic-gradient(from 25deg,#fbfbf9,#a6a8a3 11%,#ededea 24%,#8a8c87 37%,#e4e4e0 50%,#9d9f9a 63%,#f8f8f5 76%,#90928d 89%,#fbfbf9);
-  --grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.2'/%3E%3C/svg%3E");
+  --led-off:radial-gradient(circle at 38% 30%,#a8554a,var(--red-dim) 55%,#330b07);
+  --led-on:radial-gradient(circle at 38% 30%,#fff,#ffb09c 22%,var(--red) 58%,#a81d0c);
+  --cap:linear-gradient(90deg,rgba(0,0,0,.14),transparent 8%,transparent 92%,rgba(0,0,0,.18)),linear-gradient(180deg,var(--key-hi),var(--key) 48%,var(--key-lo));
   --font-label:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
   --font-body:"Barlow","Helvetica Neue",Arial,sans-serif;
   --font-mark:"Michroma","Eurostile","Arial Black",Arial,sans-serif;
@@ -28,250 +34,248 @@
 }
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *,*::before,*::after{box-sizing:inherit}
-body{margin:0;min-height:100vh;color:var(--ink);font-family:var(--font-body);line-height:1.45;-webkit-font-smoothing:antialiased;
-  background:radial-gradient(120% 80% at 50% 0%,#34383d 0%,var(--page) 60%,#111214 100%) fixed var(--page)}
-.wrap{max-width:1120px;margin:0 auto;padding:28px 20px 64px}
+body{margin:0;color:var(--ink);font-family:var(--font-body);line-height:1.45;-webkit-font-smoothing:antialiased;
+  background:radial-gradient(120% 70% at 50% 0%,#33363a 0%,var(--page) 60%,#0f1011 100%) fixed var(--page)}
+.wrap{max-width:1180px;margin:0 auto;padding-block:28px 64px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 header p{margin:0 0 1.6rem;max-width:62ch;color:var(--muted)}
+button{touch-action:manipulation;font:inherit}
+
+.audio-bar{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:100;display:block;margin:0;padding:.9rem 1rem;border-radius:10px;border:0;box-shadow:0 6px 20px rgba(0,0,0,.35);background:var(--amber);color:var(--amber-ink);font-family:var(--font-label);font-weight:600;font-size:1.05rem;cursor:pointer}
+.audio-bar[hidden]{display:none}
 
 /* ---------- gabinete ---------- */
 .machine{
-  position:relative;border-radius:11px;color:var(--print);
-  padding:7px 7px 9px;
-  background:linear-gradient(180deg,#f2f2ef,#c2c4bf 30%,#a7a9a4 100%);
-  box-shadow:
-    inset 0 1px 0 #fff, inset 0 0 0 1px rgba(255,255,255,.35), inset 0 -2px 2px rgba(0,0,0,.25),
-    0 2px 0 #9a9c97, 0 5px 0 #83858080, 0 6px 0 #6c6e6a, 0 9px 0 #4c4e4b, 0 10px 1px #2c2d2b,
-    0 14px 10px rgba(0,0,0,.55), 0 34px 40px -6px rgba(0,0,0,.6), 0 70px 90px -20px rgba(0,0,0,.65);
+  color:var(--print);border-radius:9px;overflow:hidden;
+  background:
+    repeating-linear-gradient(0deg,rgba(255,255,255,.05) 0 1px,rgba(0,0,0,.025) 1px 2px),
+    linear-gradient(180deg,var(--silver-hi),var(--silver) 45%,var(--silver-lo));
+  box-shadow:inset 0 1px 0 #fff, inset 0 0 0 1px rgba(0,0,0,.3),
+    0 3px 0 #8d8f8a, 0 6px 0 #5d5f5b, 0 8px 1px #2a2b29,
+    0 16px 14px rgba(0,0,0,.5), 0 44px 60px -12px rgba(0,0,0,.7);
 }
-.face{
-  border-radius:6px;overflow:hidden;
-  background:var(--grain),
-    repeating-linear-gradient(0deg,rgba(255,255,255,.05) 0 1px,rgba(0,0,0,.02) 1px 2px),
-    linear-gradient(180deg,var(--silver-hi),var(--silver) 50%,var(--silver-lo));
-  box-shadow:inset 0 0 0 1px rgba(0,0,0,.28), inset 0 2px 3px rgba(0,0,0,.25), 0 1px 0 rgba(255,255,255,.8);
-}
-.strip{position:relative;display:flex;flex-wrap:wrap;align-items:stretch}
-.sec{display:flex;align-items:center;padding:12px 18px}
+.strip{display:flex;flex-wrap:wrap}
+.legend,.ctl-label,.jacks,.k-end{font-family:var(--font-label);font-weight:600;text-transform:uppercase;letter-spacing:.05em;line-height:1.05;white-space:nowrap}
 
-/* faixa de cima: degrau elevado */
-.strip.top{
-  z-index:2;
-  background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,.12) 60%,rgba(0,0,0,.05));
-  box-shadow:inset 0 1px 0 #fff, inset 0 -1px 0 rgba(255,255,255,.5), 0 1px 0 #7b7d79, 0 4px 5px rgba(0,0,0,.3);
-}
-.strip.top .sec.knobs{flex:1 1 500px;justify-content:space-around;margin:12px 0;padding:2px 10px;
-  border-left:3px solid var(--print);border-right:3px solid var(--print);border-radius:2px}
-.strip.top .sec.left,.strip.top .sec.name{flex:0 0 auto;flex-direction:column;justify-content:space-between;gap:10px}
-.strip.top .sec.name{align-items:flex-end}
-.jacks{display:flex;gap:14px;font-family:var(--font-label);font-weight:600;font-size:.7rem;letter-spacing:.05em;text-transform:uppercase;line-height:1.05;white-space:nowrap}
-.jacks span{display:flex;flex-direction:column;align-items:center;gap:1px}
-.jacks span::before{content:"";border:4px solid transparent;border-top:0;border-bottom:7px solid var(--print)}
-.bassline{font-family:var(--font-mark);font-size:clamp(1.3rem,2.7vw,2rem);letter-spacing:.01em;white-space:nowrap;text-shadow:0 1px 0 rgba(255,255,255,.7)}
-.group{display:flex;flex-wrap:wrap;gap:10px 2px}
+/* faixa de cima: conectores, seis knobs entre barras pretas, "Bass Line" */
+.strip.top{align-items:stretch;padding:0 18px;
+  background:linear-gradient(180deg,rgba(255,255,255,.45),rgba(255,255,255,.1) 70%,rgba(0,0,0,.04));
+  box-shadow:inset 0 -1px 0 rgba(255,255,255,.7), 0 1px 0 #6f716d, 0 3px 4px rgba(0,0,0,.28);position:relative;z-index:1}
+.sec{display:flex;padding:12px 0}
+.sec.io{flex:0 0 auto;flex-direction:column;justify-content:space-between;gap:12px}
+.sec.io.left{padding-right:26px;min-width:150px}
+.sec.io.right{padding-left:26px;align-items:flex-end}
+.jacks{display:flex;gap:16px;font-size:.7rem}
+.jacks span{display:flex;flex-direction:column;align-items:center;gap:2px}
+.jacks span::before{content:"";border:4.5px solid transparent;border-top:0;border-bottom:7px solid var(--print)}
+.bassline{font-family:var(--font-mark);font-size:clamp(1.35rem,2.8vw,2.1rem);letter-spacing:.01em;white-space:nowrap;line-height:1.1}
+.sec.knobs{flex:1 1 480px;justify-content:space-around;align-items:flex-start;margin:12px 0;padding:0 8px;
+  border-left:4px solid var(--print);border-right:4px solid var(--print)}
 
-.ctl{display:flex;flex-direction:column;align-items:center;width:86px}
-.ctl-label{order:-1;font-family:var(--font-label);font-weight:600;font-size:.86rem;line-height:1.1;margin-bottom:4px;text-align:center;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;text-shadow:0 1px 0 rgba(255,255,255,.6)}
-.ctl-val{font-family:var(--font-label);font-weight:500;font-size:.8rem;color:var(--print-sub);font-variant-numeric:tabular-nums;min-height:1.15em;white-space:nowrap;margin-top:1px}
-
-/* ---------- knobs em camadas ---------- */
-.knob{position:relative;width:64px;height:64px;cursor:ns-resize;touch-action:none;border-radius:50%;outline:none}
+/* ---------- knobs ---------- */
+.ctl{display:flex;flex-direction:column;align-items:center;width:88px}
+.ctl-label{font-size:.84rem;margin-bottom:5px;text-align:center}
+.ctl-val{font-family:var(--font-label);font-weight:500;font-size:.78rem;color:var(--print-sub);font-variant-numeric:tabular-nums;min-height:1.15em;white-space:nowrap;margin-top:2px}
+.knob{position:relative;width:62px;height:62px;cursor:ns-resize;touch-action:none;border-radius:50%;outline:none}
 .knob svg{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visible;pointer-events:none}
-.k-ticks line{stroke:var(--tick);stroke-width:1.5}
+.k-ticks line{stroke:var(--print);stroke-width:1.4}
 .k-skirt,.k-cap{position:absolute;border-radius:50%;pointer-events:none}
-.k-skirt{inset:13%;
+.k-skirt{inset:14%;
   background:
-    radial-gradient(circle,transparent 58%,rgba(0,0,0,.28) 100%),
-    repeating-conic-gradient(rgba(0,0,0,.42) 0 1.6deg,rgba(255,255,255,.25) 1.6deg 2.4deg,transparent 2.4deg 5deg),
+    radial-gradient(circle,transparent 60%,rgba(0,0,0,.3) 100%),
+    repeating-conic-gradient(rgba(0,0,0,.45) 0 1.6deg,rgba(255,255,255,.3) 1.6deg 2.4deg,transparent 2.4deg 5deg),
     var(--metal);
-  box-shadow:0 0 0 1px #4f514d, 0 1px 0 1px rgba(255,255,255,.5),
-    0 4px 3px rgba(0,0,0,.5), 0 9px 9px rgba(0,0,0,.42), 4px 14px 16px -2px rgba(0,0,0,.35)}
-.k-cap{inset:21%;
-  background:radial-gradient(circle at 35% 28%,rgba(255,255,255,.75),transparent 45%),var(--metal);
-  box-shadow:0 0 0 1px rgba(0,0,0,.4), 0 2px 3px rgba(0,0,0,.55), inset 0 1px 1px #fff, inset 0 -3px 4px rgba(0,0,0,.28)}
-.k-mark{stroke:#111;stroke-width:2.6}
-.k-mark-hi{stroke:rgba(255,255,255,.85);stroke-width:.8}
-.k-bar{fill:url(#kg-bar);stroke:rgba(0,0,0,.45);stroke-width:.5;filter:drop-shadow(0 1.2px 1px rgba(0,0,0,.55))}
+  box-shadow:0 0 0 1px #4f514d, 0 0 0 3px rgba(0,0,0,.12), 0 4px 3px rgba(0,0,0,.5), 2px 9px 9px rgba(0,0,0,.4)}
+.k-cap{inset:23%;
+  background:radial-gradient(circle at 35% 28%,rgba(255,255,255,.8),transparent 45%),var(--metal);
+  box-shadow:0 0 0 1px rgba(0,0,0,.4), 0 2px 3px rgba(0,0,0,.5), inset 0 1px 1px #fff, inset 0 -3px 4px rgba(0,0,0,.25)}
+.k-mark{stroke:#0c0c0c;stroke-width:2.8;stroke-linecap:butt}
 .knob:focus-visible{box-shadow:0 0 0 3px var(--focus)}
-.ctl.big{width:140px}
-.ctl.big .knob{width:116px;height:116px}
-.ctl.big .ctl-label{font-size:1.02rem;letter-spacing:.07em;margin-bottom:2px}
-.ctl.big .k-skirt{inset:11%}
+.ctl.big{width:150px}
+.ctl.big .knob{width:118px;height:118px}
+.ctl.big .ctl-label{font-size:1.02rem;letter-spacing:.07em;margin-bottom:0}
+.ctl.big .k-skirt{inset:12%}
 .ctl.big .k-cap{inset:17%}
-.k-end{position:absolute;bottom:-3px;font-family:var(--font-label);font-weight:600;font-size:.68rem;letter-spacing:.05em;text-transform:uppercase;pointer-events:none}
-.k-end.lo{left:-10px}.k-end.hi{right:-10px}
+.ctl.big .k-mark{stroke-width:1.9}
+.k-end{position:absolute;bottom:-2px;font-size:.66rem;pointer-events:none}
+.k-end.lo{left:-12px}.k-end.hi{right:-12px}
 
-/* chave deslizante de forma de onda */
-.wavebox{display:flex;flex-direction:column;align-items:center;gap:5px}
-.wavebox .ctl-label{order:0;margin:0;font-size:.7rem}
-.seg{display:flex;background:transparent}
-.seg button{appearance:none;border:0;background:transparent;color:var(--print);width:36px;padding:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px}
-.seg button svg{width:24px;height:13px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linejoin:miter}
-.seg button::after{content:"";display:block;width:100%;height:20px;background:linear-gradient(180deg,#000,#1d1d1d);
-  box-shadow:inset 0 3px 4px #000, 0 1px 0 rgba(255,255,255,.8)}
-.seg button:first-child::after{border-radius:4px 0 0 4px}
-.seg button:last-child::after{border-radius:0 4px 4px 0}
-.seg button[aria-checked="true"]::after{
+/* ---------- faixa do meio ---------- */
+.strip.mid{align-items:center;justify-content:space-between;gap:16px 26px;padding:16px 26px 18px;
+  box-shadow:inset 0 -1px 0 rgba(0,0,0,.28), 0 1px 0 rgba(255,255,255,.7)}
+.plate{flex:1 1 230px;display:flex;flex-direction:column;align-items:center;line-height:1}
+.plate b{font-family:var(--font-body);font-weight:300;font-size:clamp(2.1rem,4.6vw,3.2rem);padding:0 .35em .06em;border-bottom:2px solid var(--print)}
+.plate span{font-family:var(--font-body);font-weight:400;font-size:clamp(1rem,2.1vw,1.5rem);margin-top:.25em;white-space:nowrap}
+
+/* seletor giratório de forma de onda, no lugar do seletor MODE */
+.wavebox{display:flex;flex-direction:column;align-items:center}
+.wavebox .ctl-label{font-size:1.02rem;letter-spacing:.07em;margin-bottom:2px}
+.rotsel{display:flex;align-items:flex-start}
+.rotsel button{appearance:none;border:0;background:none;color:var(--print-sub);width:40px;height:40px;padding:0;margin-top:2px;cursor:pointer;display:grid;place-items:center;border-radius:4px;position:relative}
+.rotsel button svg{width:26px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:miter}
+.rotsel button[aria-checked="true"]{color:var(--print)}
+.rotsel button[aria-checked="true"] svg{stroke-width:2.8}
+.rotsel button::after{content:"";position:absolute;bottom:3px;width:5px;height:5px;border-radius:50%;background:var(--print)}
+.rotsel button:focus-visible{outline:3px solid var(--focus);outline-offset:1px}
+.dial{position:relative;width:104px;height:104px;border-radius:50%;cursor:pointer;margin:6px 2px 0;
   background:
-    repeating-linear-gradient(90deg,rgba(0,0,0,.4) 0 1px,rgba(255,255,255,.7) 1px 2px,transparent 2px 4px) center/16px 62% no-repeat,
-    linear-gradient(180deg,#fafaf7,var(--key) 50%,var(--key-lo));
-  box-shadow:inset 0 0 0 3px #0a0a0a, inset 0 4px 0 #0a0a0a, inset 0 -5px 2px rgba(0,0,0,.35), 0 1px 0 rgba(255,255,255,.8)}
-.seg button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+    radial-gradient(circle,transparent 62%,rgba(0,0,0,.3) 100%),
+    repeating-conic-gradient(rgba(0,0,0,.45) 0 1.4deg,rgba(255,255,255,.3) 1.4deg 2.2deg,transparent 2.2deg 4.5deg),
+    var(--metal);
+  box-shadow:0 0 0 1px #4f514d, 0 0 0 4px rgba(0,0,0,.12), 0 5px 4px rgba(0,0,0,.5), 3px 12px 12px rgba(0,0,0,.4)}
+.dial::before{content:"";position:absolute;inset:9%;border-radius:50%;
+  background:radial-gradient(circle at 35% 28%,rgba(255,255,255,.8),transparent 45%),var(--metal);
+  box-shadow:0 0 0 1px rgba(0,0,0,.4), inset 0 1px 1px #fff, inset 0 -3px 4px rgba(0,0,0,.25)}
+.dial-rot{position:absolute;inset:0;transition:transform .12s ease-out;transform:rotate(-45deg)}
+#wave[data-sel="square"] .dial-rot{transform:rotate(45deg)}
+.dial-rot i{position:absolute;left:36%;right:36%;top:3%;bottom:3%;border-radius:3px;
+  background:linear-gradient(90deg,#8f918c,#f7f7f4 30%,#d6d7d3 62%,#888a85);
+  box-shadow:0 0 0 1px rgba(0,0,0,.5), 3px 4px 5px rgba(0,0,0,.5), inset 0 1px 0 #fff}
+.dial-rot i::before{content:"";position:absolute;left:50%;top:5px;width:3px;height:16px;margin-left:-1.5px;background:#0c0c0c;border-radius:1px}
 
-/* faixa do meio */
-.strip.mid{align-items:center;justify-content:space-between;gap:14px 22px;padding:18px 20px 16px;
-  box-shadow:inset 0 -1px 0 rgba(0,0,0,.3), 0 1px 0 rgba(255,255,255,.75)}
-.keys-run{display:flex;flex-wrap:wrap;gap:14px 16px;align-items:flex-end}
-.plate{flex:1 1 220px;display:flex;flex-direction:column;align-items:center;line-height:1;text-shadow:0 1px 0 rgba(255,255,255,.7)}
-.plate b{font-family:var(--font-body);font-weight:300;font-size:clamp(2.1rem,4.8vw,3.2rem);letter-spacing:.01em;padding:0 .4em .08em;border-bottom:2px solid var(--print)}
-.plate span{font-family:var(--font-body);font-weight:400;font-size:clamp(1rem,2.2vw,1.5rem);margin-top:.28em;white-space:nowrap}
+/* ---------- painel de teclas ---------- */
+.strip.keys{padding:14px 16px 18px}
+.frame{flex:1;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;
+  border:2px solid var(--print);border-radius:6px;padding:8px;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.75), 0 1px 0 rgba(255,255,255,.85)}
+.col{display:flex;flex-direction:column;gap:8px}
+.box{flex:1;display:flex;align-items:center;justify-content:center;border:2px solid var(--print);border-radius:5px;padding:10px 10px;min-width:104px}
+.box.seq{display:block;padding:8px 8px 4px;min-width:0}
 
-/* teclas: poço preto + capa metálica */
-.btn{
-  font-family:var(--font-label);font-weight:600;font-size:.95rem;line-height:1.1;color:var(--print);text-shadow:0 1px 0 rgba(255,255,255,.7);
-  padding:.75rem .95rem .85rem;min-height:48px;border-radius:3px;cursor:pointer;border:0;
-  background:linear-gradient(90deg,rgba(0,0,0,.14),transparent 6%,transparent 94%,rgba(0,0,0,.18)),
-             linear-gradient(180deg,#fbfbf8,var(--key) 45%,var(--key-lo));
-  box-shadow:inset 0 1px 0 #fff, inset 0 -5px 0 rgba(0,0,0,.2), inset 0 -6px 0 rgba(255,255,255,.35),
-    0 0 0 3px #0c0c0c, 0 0 0 4px rgba(255,255,255,.55), 0 5px 5px 2px rgba(0,0,0,.45);
-  transition:transform .05s, box-shadow .05s;
-}
-.btn:active{transform:translateY(2px);box-shadow:inset 0 1px 0 #fff, inset 0 -2px 0 rgba(0,0,0,.2), 0 0 0 3px #0c0c0c, 0 0 0 4px rgba(255,255,255,.55), 0 1px 2px 2px rgba(0,0,0,.45)}
-.btn:focus-visible{outline:3px solid var(--focus);outline-offset:5px}
-.btn.play{min-width:7.4rem;min-height:56px;font-size:1.12rem;display:flex;align-items:center;justify-content:center;gap:.6em}
-.btn.play::before,.cell.acc::before,.cell.slide::before{content:"";border-radius:50%;
-  background:radial-gradient(circle at 38% 30%,#b0584c,var(--red-dim) 55%,#3a0d08);
-  box-shadow:0 0 0 1.5px #101010, 0 1px 0 2px rgba(255,255,255,.5), inset 0 1px 1px rgba(255,255,255,.35)}
-.btn.play::before{width:12px;height:12px}
-.btn.play[aria-pressed="true"]::before,.cell.acc.on::before,.cell.slide.on::before{
-  background:radial-gradient(circle at 38% 30%,#fff,#ffb09c 22%,var(--red) 58%,#a81d0c);
-  box-shadow:0 0 0 1.5px #101010, 0 0 10px 3px var(--red-glow), 0 0 22px 6px rgba(255,70,40,.45)}
+/* teclas: capa de alumínio num poço preto, legenda impressa no painel */
+.btn{appearance:none;border:0;background:none;color:var(--print);cursor:pointer;padding:4px;border-radius:4px;
+  display:flex;flex-direction:column;align-items:center;gap:9px;position:relative;
+  font-family:var(--font-label);font-weight:600;font-size:.84rem;text-transform:uppercase;letter-spacing:.05em;line-height:1.05;text-align:center}
+.btn.above{flex-direction:column-reverse}
+.btn::before{content:"";width:66px;height:36px;border-radius:2px;background:var(--cap);
+  box-shadow:inset 0 1px 0 #fff, inset 0 -4px 0 rgba(0,0,0,.18), 0 0 0 3px var(--black), 0 0 0 4px rgba(255,255,255,.55), 0 5px 4px 2px rgba(0,0,0,.4);
+  transition:transform .05s}
+.btn:active::before{transform:translateY(2px)}
+.btn.wide::before{width:84px;height:44px}
+.btn:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.btn.play{padding-top:24px}
+.btn.play::after,.cell.acc::before,.cell.slide::before{content:"";position:absolute;border-radius:50%;background:var(--led-off);
+  box-shadow:0 0 0 1.5px var(--black), 0 1px 0 2px rgba(255,255,255,.5)}
+.btn.play::after{top:4px;left:50%;width:11px;height:11px;margin-left:-5.5px}
+.btn.play[aria-pressed="true"]::after,.cell.acc.on::before,.cell.slide.on::before{background:var(--led-on);
+  box-shadow:0 0 0 1.5px var(--black), 0 0 9px 3px var(--red-glow), 0 0 20px 6px rgba(255,70,40,.4)}
 
-/* ---------- painel de teclas: sequenciador ---------- */
-.keys{padding:14px 16px 18px}
-.frame{border:2px solid var(--black);border-radius:5px;padding:10px 10px 12px;
-  background:linear-gradient(180deg,rgba(255,255,255,.4),rgba(255,255,255,.1));
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.7), inset 0 0 0 3px rgba(0,0,0,.06), 0 1px 0 rgba(255,255,255,.85)}
-.grid-scroll{overflow-x:auto;padding:2px 2px 8px}
-.grid{display:grid;grid-template-columns:64px repeat(16,minmax(30px,1fr));gap:2px;min-width:680px;user-select:none;-webkit-user-select:none}
-.grid>div:first-child{background:var(--black);border-radius:2px;margin-bottom:4px;display:grid;place-items:center}
+/* sequenciador */
+.grid-scroll{overflow-x:auto;padding:0 0 6px}
+.grid{display:grid;grid-template-columns:62px repeat(16,minmax(30px,1fr));gap:2px;min-width:640px;user-select:none;-webkit-user-select:none}
+.grid>div:first-child{background:var(--black);border-radius:2px 0 0 2px;margin-bottom:4px;display:grid;place-items:center}
 .grid>div:first-child::before{content:"PASSO";font-family:var(--font-label);font-weight:700;font-size:.8rem;letter-spacing:.06em;color:var(--red)}
-.rl{font-family:var(--font-label);font-weight:600;font-size:.9rem;color:var(--print);display:flex;align-items:center;justify-content:flex-end;padding-right:8px;line-height:1}
-.rl.blk{background:linear-gradient(180deg,#2a2a2a,var(--black));color:#f1f1ee;border-radius:2px 0 0 2px}
-.gap-row ~ .rl{background:var(--black);color:#f1f1ee;text-transform:uppercase;font-size:.8rem;letter-spacing:.05em;justify-content:center;padding:0;border-radius:2px;margin:3px 3px 5px 0}
-.sn{font-family:var(--font-label);font-weight:700;font-size:.92rem;color:var(--red);background:var(--black);text-align:center;font-variant-numeric:tabular-nums;padding:3px 0;margin-bottom:4px;border-radius:2px;box-shadow:inset 0 1px 2px #000}
-.sn.rest{color:var(--red-dim)}
+.sn{font-family:var(--font-label);font-weight:700;font-size:.95rem;color:var(--red);background:var(--black);text-align:center;font-variant-numeric:tabular-nums;padding:3px 0;margin-bottom:4px;box-shadow:1px 0 0 var(--black),-1px 0 0 var(--black)}
+.sn.rest{color:#8a2a1e}
 .sn.now{color:#fff;background:var(--red);box-shadow:0 0 10px var(--red-glow)}
+.rl{font-family:var(--font-label);font-weight:600;font-size:.9rem;color:var(--print);display:flex;align-items:center;justify-content:flex-end;padding-right:9px;line-height:1}
+.rl.blk{background:var(--black);color:var(--white);border-radius:2px 0 0 2px}
+.gap-row ~ .rl{background:var(--black);color:var(--white);text-transform:uppercase;font-size:.78rem;letter-spacing:.05em;justify-content:center;padding:0;border-radius:2px;margin:4px 4px 6px 0}
 .cell{appearance:none;border:0;border-radius:2px;height:20px;padding:0;cursor:pointer;font-family:var(--font-label);font-size:.9rem;line-height:1;color:var(--print);position:relative}
-.cell.note{background:linear-gradient(180deg,#bfc1bc,#dcddd9 35%,#e9e9e6);box-shadow:inset 0 2px 2px rgba(0,0,0,.32), inset 0 0 0 1px rgba(0,0,0,.22), 0 1px 0 rgba(255,255,255,.8)}
-.cell.note.blk{background:linear-gradient(180deg,#050505,#1c1c1c 40%,#2b2b2b);box-shadow:inset 0 2px 2px #000, 0 1px 0 rgba(255,255,255,.55)}
+.cell.note{background:linear-gradient(180deg,#c3c5c0,var(--slot) 40%,#ecece9);box-shadow:inset 0 2px 2px rgba(0,0,0,.3), inset 0 0 0 1px rgba(0,0,0,.2)}
+.cell.note.blk{background:linear-gradient(180deg,#050505,var(--slot-blk) 45%,#2c2c2c);box-shadow:inset 0 2px 2px #000}
 .cell.note.on{
-  background:linear-gradient(180deg,rgba(255,255,255,.6),rgba(255,255,255,0) 48%),radial-gradient(ellipse at 50% 45%,#ff8a70,var(--red) 62%,#a81d0c);
-  box-shadow:inset 0 0 0 1px rgba(0,0,0,.45), 0 0 9px 1px var(--red-glow), 0 0 18px 2px rgba(255,70,40,.35)}
-.cell.note.now:not(.on){background:linear-gradient(180deg,#d99a8f,#f3c1b8)}
+  background:linear-gradient(180deg,rgba(255,255,255,.55),rgba(255,255,255,0) 48%),radial-gradient(ellipse at 50% 45%,#ff8a70,var(--red) 62%,#a81d0c);
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.45), 0 0 9px 1px var(--red-glow), 0 0 18px 2px rgba(255,70,40,.3)}
+.cell.note.now:not(.on){background:linear-gradient(180deg,#d79a90,#f1c3ba)}
 .cell.note.blk.now:not(.on){background:linear-gradient(180deg,#3c120c,#6b2a20)}
 .cell.on.now{filter:brightness(1.3)}
-/* teclas de oitava, accent e slide */
-.cell.oct,.cell.acc,.cell.slide{height:38px;margin:3px 3px 5px;
-  background:linear-gradient(90deg,rgba(0,0,0,.14),transparent 10%,transparent 90%,rgba(0,0,0,.18)),linear-gradient(180deg,#fbfbf8,var(--key) 45%,var(--key-lo));
-  box-shadow:inset 0 1px 0 #fff, inset 0 -4px 0 rgba(0,0,0,.2), 0 0 0 2px #0c0c0c, 0 0 0 3px rgba(255,255,255,.5), 0 4px 3px 1px rgba(0,0,0,.4)}
+.cell.oct,.cell.acc,.cell.slide{height:26px;margin:16px 4px 6px;background:var(--cap);
+  box-shadow:inset 0 1px 0 #fff, inset 0 -3px 0 rgba(0,0,0,.18), 0 0 0 2px var(--black), 0 0 0 3px rgba(255,255,255,.5), 0 4px 3px 1px rgba(0,0,0,.38)}
+.cell.oct{margin-top:4px;height:30px;font-size:1rem;color:#8a8c87}
 .cell.oct:active,.cell.acc:active,.cell.slide:active{transform:translateY(1px)}
-.cell.acc::before,.cell.slide::before{position:absolute;left:50%;top:7px;width:9px;height:9px;margin-left:-4.5px}
-.cell.oct{font-size:1rem;color:#777}
-.cell.oct.on{color:var(--red);font-weight:700;text-shadow:0 0 6px rgba(255,80,50,.6)}
-.cell.oct.now,.cell.acc.now,.cell.slide.now{box-shadow:inset 0 1px 0 #fff, inset 0 -4px 0 rgba(0,0,0,.2), 0 0 0 2px var(--red), 0 0 8px 2px var(--red-glow), 0 4px 3px 1px rgba(0,0,0,.4);filter:none}
+.cell.acc::before,.cell.slide::before{left:50%;top:-13px;width:8px;height:8px;margin-left:-4px}
+.cell.oct.on{color:var(--red);font-weight:700}
+.cell.oct.now,.cell.acc.now,.cell.slide.now{box-shadow:inset 0 1px 0 #fff, inset 0 -3px 0 rgba(0,0,0,.18), 0 0 0 2px var(--red), 0 0 8px 2px var(--red-glow)}
 .cell:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 .beat{margin-left:6px}
-.cell.oct.beat,.cell.acc.beat,.cell.slide.beat{margin-left:9px}
-.gap-row{grid-column:1/-1;height:9px;margin-top:5px;border-top:2px solid var(--black)}
+.cell.oct.beat,.cell.acc.beat,.cell.slide.beat{margin-left:10px}
+.gap-row{grid-column:1/-1;height:8px;margin-top:5px;border-top:2px solid var(--print)}
 
-.help{max-width:70ch;margin-top:3.2rem;color:var(--muted);font-size:.95rem}
+.help{max-width:70ch;margin-top:3rem;color:var(--muted);font-size:.95rem}
 .help p{margin:.4rem 0}
 kbd{font-family:var(--font-label);font-size:.9em;padding:0 .3em;border:1px solid currentColor;border-radius:3px}
 
-@media (max-width:860px){
-  .jacks{display:none}
-  .strip.top .sec.knobs{flex-basis:100%;order:3;border:0;border-top:3px solid var(--print);border-radius:0;margin:0 14px;padding:12px 0}
-  .strip.top .sec.name{flex:1;justify-content:center}
-  .group{display:grid;grid-template-columns:repeat(3,1fr);justify-items:center;width:100%}
+@media (max-width:900px){
+  .sec.io.left{display:none}
+  .sec.io.right{flex:1 1 100%;order:-1;flex-direction:row-reverse;align-items:center;padding:12px 0 0}
+  .sec.knobs{flex-basis:100%;border:0;border-top:4px solid var(--print);margin:10px 0 0;padding:12px 0;
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));justify-items:center;gap:10px 0}
 }
-@media (max-width:640px){
-  .wrap{padding:20px 12px 56px}
-  .strip.mid{padding:14px}
-  .ctl.big{width:112px}
-  .ctl.big .knob{width:92px;height:92px}
+@media (max-width:760px){
+  .jacks{display:none}
+  .sec.io.right{justify-content:center}
+  .strip.top{padding:0 12px}
+  .strip.mid{padding:14px 12px;justify-content:space-around}
   .plate{order:-1;flex-basis:100%}
-  .strip.mid{justify-content:space-around}
-  #knobs-tempo{order:1}
-  #knobs-out{order:2}
-  .keys-run{order:3}
-  .keys{padding:10px}
-  .frame{padding:8px}
+  .ctl.big{width:124px}
+  .ctl.big .knob{width:96px;height:96px}
+  .dial{width:88px;height:88px}
+  .strip.keys{padding:10px}
+  .frame{grid-template-columns:minmax(0,1fr)}
+  .col{flex-direction:row}
+  .box{min-width:0}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
-<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
-  <defs>
-    <linearGradient id="kg-bar" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#9c9e99"/><stop offset=".35" stop-color="#f6f6f3"/><stop offset=".7" stop-color="#d0d2cd"/><stop offset="1" stop-color="#8e908b"/>
-    </linearGradient>
-  </defs>
-</svg>
 <div class="wrap">
   <header>
     <h1 class="sr-only">TB-303</h1>
     <p>Clone em Web Audio do sintetizador de baixo: uma voz, filtro ressonante e sequenciador de 16 passos com accent e slide. Todo o som é gerado em tempo real, sem amostras.</p>
   </header>
+  <button type="button" class="audio-bar" id="audio-bar" hidden>Som desligado. Toque aqui para ativar.</button>
 
   <section class="machine" aria-label="Sintetizador">
-    <div class="face">
     <div class="strip top">
-      <div class="sec left">
+      <div class="sec io left">
         <div class="jacks" aria-hidden="true"><span>Mix in</span><span>Sync in</span></div>
-        <div class="wavebox">
-          <div class="ctl-label">Waveform</div>
-          <div class="seg" role="radiogroup" aria-label="Waveform" id="wave">
-            <button type="button" role="radio" data-wave="saw" aria-label="Dente de serra"><svg viewBox="0 0 26 16"><path d="M2 14 L12 2 L12 14 L22 2 L22 14"/></svg></button>
-            <button type="button" role="radio" data-wave="square" aria-label="Quadrada"><svg viewBox="0 0 26 16"><path d="M2 14 L2 2 L12 2 L12 14 L22 14 L22 2"/></svg></button>
-          </div>
-        </div>
       </div>
-      <div class="sec knobs group" id="knobs-main"></div>
-      <div class="sec name">
+      <div class="sec knobs" id="knobs-main"></div>
+      <div class="sec io right">
         <div class="jacks" aria-hidden="true"><span>CV</span><span>Gate</span><span>Headphone</span><span>Output</span><span>DC 9V</span></div>
-        <span class="bassline">Bass Line</span>
+        <span class="bassline" aria-hidden="true">Bass Line</span>
       </div>
     </div>
 
     <div class="strip mid">
       <div id="knobs-tempo"></div>
-      <div class="keys-run">
-        <button type="button" class="btn play" id="play" aria-pressed="false">Tocar</button>
+      <div class="wavebox">
+        <div class="ctl-label" id="wave-label">Waveform</div>
+        <div class="rotsel" role="radiogroup" aria-labelledby="wave-label" id="wave">
+          <button type="button" role="radio" data-wave="saw" aria-label="Dente de serra"><svg viewBox="0 0 26 16"><path d="M2 14 L12 2 L12 14 L22 2 L22 14"/></svg></button>
+          <span class="dial" aria-hidden="true"><span class="dial-rot"><i></i></span></span>
+          <button type="button" role="radio" data-wave="square" aria-label="Quadrada"><svg viewBox="0 0 26 16"><path d="M2 14 L2 2 L12 2 L12 14 L22 14 L22 2"/></svg></button>
+        </div>
       </div>
       <div class="plate" aria-hidden="true"><b>TB-303</b><span>Computer Controlled</span></div>
-      <div class="keys-run">
-        <button type="button" class="btn" id="random">Sortear padrão</button>
-        <button type="button" class="btn" id="clear">Limpar padrão</button>
-      </div>
       <div id="knobs-out"></div>
     </div>
 
-    <div class="keys">
+    <div class="strip keys">
       <div class="frame">
-        <div class="grid-scroll">
-          <div class="grid" id="grid" aria-label="Sequenciador de 16 passos"></div>
+        <div class="col">
+          <div class="box"><button type="button" class="btn above" id="clear">Limpar padrão</button></div>
+          <div class="box"><button type="button" class="btn wide play" id="play" aria-pressed="false">Tocar</button></div>
+        </div>
+        <div class="box seq">
+          <div class="grid-scroll">
+            <div class="grid" id="grid" aria-label="Sequenciador de 16 passos"></div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="box"><button type="button" class="btn wide" id="random">Sortear padrão</button></div>
         </div>
       </div>
-    </div>
     </div>
   </section>
 
   <div class="help">
     <p>Clique numa célula para escolher a nota do passo; clique na mesma nota de novo para transformar o passo em pausa. Um slide liga o passo à nota seguinte, sem redisparar o envelope.</p>
     <p>Com o mouse, clique e arraste para preencher vários passos de uma vez. Nas notas, o arrasto desenha a linha por onde o ponteiro passa, inclusive na diagonal; se você começar numa nota já marcada, ele apaga as notas por onde passar. Em Oitava, Accent e Slide, todos os passos do arrasto recebem o mesmo estado que o primeiro.</p>
-    <p>Arraste os knobs para cima ou para baixo (com <kbd>Shift</kbd> o ajuste fica fino); a roda do mouse e as setas do teclado também funcionam, e um duplo clique volta ao valor inicial. <kbd>Espaço</kbd> toca e para. Ajustes e padrão ficam salvos neste navegador.</p>
+    <p>Arraste os knobs para cima ou para baixo (com <kbd>Shift</kbd> o ajuste fica fino); a roda do mouse e as setas do teclado também funcionam, e um duplo clique volta ao valor inicial. O seletor giratório troca a forma de onda. <kbd>Espaço</kbd> toca e para. Ajustes e padrão ficam salvos neste navegador.</p>
   </div>
 </div>
 
@@ -364,13 +368,32 @@ function buildVoice(c){
   return {osc, f1, f2, pre, vol, fEnv, aEnv, vEnv, fAmt, aAmt};
 }
 
+/* iPhone e iPad: o som só liga com um toque solto ou um clique, a chave de silêncio só é ignorada com a sessão "playback", e o contexto pode ser interrompido */
+let audioBar = document.getElementById('audio-bar');
+function syncAudioBar(){
+  if (!audioBar) return;
+  audioBar.hidden = !(window.matchMedia('(pointer: coarse)').matches && !(ctx && ctx.state === 'running'));
+}
+function unlockAudio(){
+  ensureAudio();
+  try { const b = ctx.createBuffer(1, 1, 22050), s = ctx.createBufferSource(); s.buffer = b; s.connect(ctx.destination); s.start(0); } catch (e) {}
+  syncAudioBar();
+}
+for (const ev of ['touchend', 'pointerup', 'click', 'keydown']) document.addEventListener(ev, () => { if (!ctx || ctx.state !== 'running') unlockAudio(); }, {capture:true, passive:true});
+document.addEventListener('visibilitychange', () => { if (!document.hidden && ctx && ctx.state !== 'running') { const r = ctx.resume(); if (r && r.catch) r.catch(() => {}); } });
+window.addEventListener('pageshow', syncAudioBar);
+if (audioBar) audioBar.addEventListener('click', unlockAudio);
+syncAudioBar();
+
 function ensureAudio(){
   if (!ctx) {
     ctx = new (window.AudioContext || window.webkitAudioContext)();
+    ctx.onstatechange = syncAudioBar;
+    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
     V = buildVoice(ctx);
     for (const k in DEFAULT_KNOBS) applyKnob(k);
   }
-  if (ctx.state === 'suspended') ctx.resume();
+  if (ctx.state !== 'running') { const r = ctx.resume(); if (r && r.catch) r.catch(() => {}); }
 }
 
 function applyKnob(id){
@@ -493,19 +516,18 @@ function makeKnob(parent, cfg){
   const k = document.createElement('div'); k.className = 'knob'; k.tabIndex = 0;
   k.setAttribute('role', 'slider'); k.setAttribute('aria-label', cfg.label);
   k.setAttribute('aria-valuemin', '0'); k.setAttribute('aria-valuemax', '100');
+  const n = cfg.big ? 21 : 11, r1 = cfg.big ? 29 : 27.5, r2 = cfg.big ? 31.5 : 31.5;
   let ticks = '';
-  for (let i = 0; i < 11; i++) {
-    const a = (-135 + 27 * i) * Math.PI / 180;
-    ticks += `<line x1="${(32 + Math.sin(a) * 27).toFixed(2)}" y1="${(32 - Math.cos(a) * 27).toFixed(2)}" x2="${(32 + Math.sin(a) * 31).toFixed(2)}" y2="${(32 - Math.cos(a) * 31).toFixed(2)}"/>`;
+  for (let i = 0; i < n; i++) {
+    const a = (-135 + 270 / (n - 1) * i) * Math.PI / 180;
+    ticks += `<line x1="${(32 + Math.sin(a) * r1).toFixed(2)}" y1="${(32 - Math.cos(a) * r1).toFixed(2)}" x2="${(32 + Math.sin(a) * r2).toFixed(2)}" y2="${(32 - Math.cos(a) * r2).toFixed(2)}"/>`;
   }
-  const pointer = cfg.big
-    ? '<rect class="k-bar" x="26.5" y="11.5" width="11" height="41" rx="2.2"/><line class="k-mark" x1="32" y1="12.5" x2="32" y2="24"/>'
-    : '<line class="k-mark" x1="32" y1="27" x2="32" y2="14"/><line class="k-mark-hi" x1="33.7" y1="27" x2="33.7" y2="14.5"/>';
-  const ends = cfg.ends ? `<span class="k-end lo" aria-hidden="true">${cfg.ends[0]}</span><span class="k-end hi" aria-hidden="true">${cfg.ends[1]}</span>` : '';
-  k.innerHTML = `<svg viewBox="0 0 64 64" aria-hidden="true"><g class="k-ticks">${ticks}</g></svg><div class="k-skirt"></div><div class="k-cap"></div><svg viewBox="0 0 64 64" aria-hidden="true"><g class="k-rot">${pointer}</g></svg>${ends}`;
+  const m1 = cfg.big ? 11 : 9.5, m2 = cfg.big ? 30 : 31;
+  k.innerHTML = `<svg viewBox="0 0 64 64" aria-hidden="true"><g class="k-ticks">${ticks}</g></svg><span class="k-skirt"></span><span class="k-cap"></span><svg viewBox="0 0 64 64" aria-hidden="true"><g class="k-rot"><line class="k-mark" x1="32" y1="${m2}" x2="32" y2="${m1}"/></g></svg>`
+    + (cfg.ends ? `<span class="k-end lo" aria-hidden="true">${cfg.ends[0]}</span><span class="k-end hi" aria-hidden="true">${cfg.ends[1]}</span>` : '');
   const lab = document.createElement('div'); lab.className = 'ctl-label'; lab.textContent = cfg.label;
   const out = document.createElement('div'); out.className = 'ctl-val';
-  wrap.append(k, lab, out); parent.append(wrap);
+  wrap.append(lab, k, out); parent.append(wrap);
   const rot = k.querySelector('.k-rot');
   const render = () => {
     const v = st.knobs[cfg.id], txt = cfg.fmt(v);
@@ -532,12 +554,13 @@ const mainEl = document.getElementById('knobs-main');
   {id:'decay', label:'Decay', fmt:v => dec(decayTime(v)) + ' s'},
   {id:'accent', label:'Accent', fmt:pct}
 ].forEach(cfg => makeKnob(mainEl, cfg));
-makeKnob(document.getElementById('knobs-out'), {id:'volume', label:'Volume', fmt:pct, big:true, ends:['Off','Max']});
-makeKnob(document.getElementById('knobs-tempo'), {id:'tempo', label:'Tempo', fmt:v => bpmOf(v) + ' BPM', big:true, ends:['Slow','Fast']});
+makeKnob(document.getElementById('knobs-out'), {id:'volume', label:'Volume', big:true, ends:['Min','Max'], fmt:pct});
+makeKnob(document.getElementById('knobs-tempo'), {id:'tempo', label:'Tempo', big:true, ends:['Slow','Fast'], fmt:v => bpmOf(v) + ' BPM'});
 
-// chave de forma de onda
+// seletor de forma de onda
 const waveEl = document.getElementById('wave');
 function renderWave(){
+  waveEl.dataset.sel = st.wave;
   waveEl.querySelectorAll('button').forEach(b => {
     const on = b.dataset.wave === st.wave;
     b.setAttribute('aria-checked', on); b.tabIndex = on ? 0 : -1;
@@ -547,7 +570,11 @@ function setWave(w){
   st.wave = w; renderWave(); save();
   if (V) V.osc.type = w === 'square' ? 'square' : 'sawtooth';
 }
-waveEl.addEventListener('click', e => { const b = e.target.closest('button'); if (b) setWave(b.dataset.wave); });
+waveEl.addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (b) setWave(b.dataset.wave);
+  else if (e.target.closest('.dial')) setWave(st.wave === 'saw' ? 'square' : 'saw');
+});
 waveEl.addEventListener('keydown', e => {
   if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) {
     e.preventDefault();
