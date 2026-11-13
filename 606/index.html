@@ -201,7 +201,6 @@
 <main>
   <header>
     <h1 class="sr-only">606 completa</h1>
-    <p class="sub">Sete vozes sintetizadas no navegador e um sequenciador de 16 passos. Toque no nome de uma voz para ajustar o timbre dela. A 606 original não tinha clap, rimshot nem cowbell.</p>
   </header>
 
   <div class="machine"><div class="face">
@@ -225,21 +224,17 @@
 
   <section class="panel p-seq" aria-label="Sequenciador">
     <div class="seq"><div class="grid" id="grid"></div></div>
-    <p class="legend">Cada coluna é uma semicolcheia. Os espaços entre os grupos de quatro marcam os tempos do compasso. O hat fechado corta o hat aberto, como na máquina original.</p>
   </section>
 
   <section class="panel p-edit" aria-label="Ajuste da voz">
     <div class="editor-head">
       <h2 id="ed-title">Bumbo</h2>
-      <p id="ed-desc"></p>
     </div>
     <canvas id="scope" role="img" aria-label="Forma de onda da voz selecionada"></canvas>
-    <p class="scope-cap" id="scope-cap"></p>
     <div class="controls" id="controls"></div>
   </section>
   </div></div>
 
-  <p class="note">A barra de espaço liga e desliga o sequenciador. Com o sequenciador parado, ao soltar um controle a voz toca sozinha. Durante a música, nenhuma amostra é disparada. M silencia uma voz e S deixa tocar só as marcadas. Para digitar um valor, toque no número ao lado do nome do controle.</p>
 </main>
 
 <script>
@@ -810,8 +805,6 @@
   // ---------- Editor de voz ----------
   var controls = document.getElementById("controls");
   var edTitle = document.getElementById("ed-title");
-  var edDesc = document.getElementById("ed-desc");
-  var scopeCap = document.getElementById("scope-cap");
 
   function buildControls(v) {
     controls.innerHTML = "";
@@ -841,11 +834,8 @@
       input.addEventListener("change", function () { preview(v); });
       makeEditable(out, input, p.fmt === fmtHz ? "Hz" : (p.fmt === fmtPct ? "%" : "ms"), function () { input.dispatchEvent(new Event("change")); });
 
-      var hint = document.createElement("p");
-      hint.className = "hint";
-      hint.textContent = p.hint;
 
-      wrap.appendChild(row); wrap.appendChild(input); wrap.appendChild(hint);
+      wrap.appendChild(row); wrap.appendChild(input);
       controls.appendChild(wrap);
     });
   }
@@ -857,8 +847,6 @@
       else nameBtns[x.id].removeAttribute("aria-current");
     });
     edTitle.textContent = v.name;
-    edDesc.textContent = v.desc;
-    scopeCap.textContent = "Forma de onda dos primeiros " + v.dur.toLocaleString("pt-BR") + " s.";
     buildControls(v);
     scopeData = null;
     renderScope();

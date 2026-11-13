@@ -234,10 +234,8 @@
       <div>
         <div class="editor-head">
           <h2 id="ed-title">Bumbo</h2>
-          <p id="ed-desc"></p>
         </div>
         <div class="screen"><canvas id="scope" role="img" aria-label="Forma de onda da voz selecionada"></canvas></div>
-        <p class="scope-cap" id="scope-cap"></p>
       </div>
       <div class="controls" id="controls"></div>
     </section>
@@ -1283,8 +1281,6 @@
   // ---------- Editor de voz ----------
   var controls = document.getElementById("controls");
   var edTitle = document.getElementById("ed-title");
-  var edDesc = document.getElementById("ed-desc");
-  var scopeCap = document.getElementById("scope-cap");
 
   function buildControls(v) {
     controls.innerHTML = "";
@@ -1315,11 +1311,8 @@
       input.addEventListener("change", function () { preview(v); });
       makeEditable(out, input, p.fmt === fmtHz ? "Hz" : (p.fmt === fmtPct ? "%" : (p.fmt === fmtBits ? "bits" : "ms")), function () { input.dispatchEvent(new Event("change")); });
 
-      var hint = document.createElement("p");
-      hint.className = "hint";
-      hint.textContent = p.hint;
 
-      wrap.appendChild(row); wrap.appendChild(input); wrap.appendChild(hint);
+      wrap.appendChild(row); wrap.appendChild(input);
       controls.appendChild(wrap);
     });
   }
@@ -1331,8 +1324,6 @@
       else nameBtns[x.id].removeAttribute("aria-current");
     });
     edTitle.textContent = v.name;
-    edDesc.textContent = v.desc;
-    scopeCap.textContent = "Forma de onda dos primeiros " + v.dur.toLocaleString("pt-BR") + " s.";
     buildControls(v);
     scopeData = null;
     renderScope();
