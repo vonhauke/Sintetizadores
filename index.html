@@ -27,6 +27,10 @@
   </ul>
 </main>
 <script>
+  // No PWA instalado (celular) os instrumentos abrem na mesma janela; o botao Menu (voltar.js) volta para ca.
+  if (matchMedia('(display-mode: standalone)').matches || navigator.standalone === true) {
+    document.querySelectorAll('a.card').forEach(a => a.removeAttribute('target'));
+  }
   // O service worker só vale em http(s); no app instalado (file://) as páginas já são locais.
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
     navigator.serviceWorker.register('./sw.js');

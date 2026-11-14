@@ -13,7 +13,7 @@ const walk = (root, dir) => readdirSync(join(root, dir)).flatMap(n => {
 export function webFiles(root = '.') {
   const list = JSON.parse(readFileSync(join(root, 'instruments.json'), 'utf8'));
   return [
-    'index.html', 'menu.css', 'manifest.webmanifest', 'sw.js', 'instruments.json',
+    'index.html', 'menu.css', 'voltar.js', 'manifest.webmanifest', 'sw.js', 'instruments.json',
     ...list.map(i => i.path),
     ...walk(root, 'fonts'),
     ...walk(root, 'icons'),

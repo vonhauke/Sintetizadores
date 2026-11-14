@@ -31,6 +31,7 @@
       "electron/**",
       "index.html",
       "menu.css",
+      "voltar.js",
       "instruments.json",
       "manifest.webmanifest",
       "*/index.html",
