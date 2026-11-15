@@ -46,5 +46,11 @@
     "name": "Minimoog",
     "description": "Sintetizador monofônico clássico, três osciladores e filtro de 24 dB",
     "path": "minimoog/index.html"
+  },
+  {
+    "id": "sp1200",
+    "name": "SP-1200",
+    "description": "Bateria/sampler de 12 bits a 26 kHz; carregue seus próprios samples",
+    "path": "sp1200/index.html"
   }
 ]
