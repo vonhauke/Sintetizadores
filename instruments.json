@@ -52,5 +52,11 @@
     "name": "SP-1200",
     "description": "Bateria/sampler de 12 bits a 26 kHz; carregue seus próprios samples",
     "path": "sp1200/index.html"
+  },
+  {
+    "id": "arp2600",
+    "name": "ARP 2600",
+    "description": "Sintetizador semimodular monofônico com patch por cabos e filtro de escada de 24 dB",
+    "path": "arp2600/index.html"
   }
 ]
