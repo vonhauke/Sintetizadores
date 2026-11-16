@@ -58,5 +58,11 @@
     "name": "ARP 2600",
     "description": "Sintetizador semimodular monofônico com patch por cabos e filtro de escada de 24 dB",
     "path": "arp2600/index.html"
+  },
+  {
+    "id": "ms20",
+    "name": "Korg MS-20",
+    "description": "Sintetizador semimodular monofônico com filtros passa-altas e passa-baixas e patch por cabos",
+    "path": "ms20/index.html"
   }
 ]
