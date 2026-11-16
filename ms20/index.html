@@ -1,0 +1,1018 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Clone do Korg MS-20</title>
+<link rel="stylesheet" href="../fonts/fonts.css">
+<style>
+/* Estrutura: gabinete (painel de knobs à esquerda, painel de cabos à direita, roda e teclado embaixo) e, separada,
+   a faixa de acessórios. Desenho próprio: chapa cor de osso com impressão grafite, knobs cor de ferrugem,
+   LEDs verdes e laterais de alumínio azulado. Não reproduz cores, tipografia nem grafismos do aparelho emulado. */
+:root{
+  --pagina:#14171b; --tinta:#2a2521; --tinta-fraca:#6b6258; --claro:#efe9dc; --apagado:#9aa3ab;
+  --chapa:#d9d0bc; --chapa-clara:#e6dfcd; --chapa-escura:#bfb49c; --linha:#8e8571;
+  --knob:#8a3423; --knob-claro:#b0513b; --knob-escuro:#4f1a10; --ponteiro:#f6efdd;
+  --led:#5fe487; --led-apagado:#2d4a36; --metal:#a9a59b; --furo:#15120f; --foco:#0b63ce;
+  --lateral:#3a4756; --lateral-escura:#222b35; --sulco:#1b1815;
+  --tecla:#f4f1e8; --tecla-baixa:#cdc6b2; --tecla-preta:#1a1c1f; --tecla-preta-baixa:#50565c;
+  --f-rot:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --f-texto:"Barlow","Helvetica Neue",Arial,sans-serif;
+  --f-tit:"Michroma","Arial Black",Arial,sans-serif;
+  color-scheme:dark; box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:inherit}
+html{touch-action:manipulation;-webkit-text-size-adjust:100%}
+body{margin:0;color:var(--claro);font-family:var(--f-texto);line-height:1.4;-webkit-font-smoothing:antialiased;
+  background:radial-gradient(120% 70% at 50% 0%,#252b33 0%,var(--pagina) 60%,#090b0d 100%) fixed var(--pagina)}
+button,select,input{font:inherit;touch-action:manipulation}
+.wrap{max-width:1500px;margin:0 auto;padding-block:20px 90px;
+  padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px))}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:2px solid var(--foco);outline-offset:2px}
+
+.audio-bar{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:100;display:block;min-height:48px;margin:0;padding:.9rem 1rem;border-radius:10px;border:0;
+  box-shadow:0 6px 20px rgba(0,0,0,.45);background:var(--led);color:#06210f;font-family:var(--f-rot);font-weight:600;font-size:1.1rem;cursor:pointer}
+.audio-bar[hidden]{display:none}
+
+/* ---------- gabinete ---------- */
+.gabinete{border-radius:10px;overflow:hidden;border-left:18px solid var(--lateral);border-right:18px solid var(--lateral);
+  border-image:linear-gradient(90deg,var(--lateral-escura),var(--lateral) 40%,#526273 62%,var(--lateral-escura)) 1 100%;
+  background:linear-gradient(180deg,var(--chapa-clara),var(--chapa) 35%,var(--chapa-escura));color:var(--tinta);
+  box-shadow:0 18px 40px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.5)}
+.rolagem{overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:var(--linha) transparent}
+.painel{display:flex;align-items:stretch;min-width:max-content;padding:10px 8px 10px}
+.ctrls{display:grid;grid-template-columns:repeat(5,98px) 98px 98px 98px;grid-template-rows:repeat(8,66px)}   /* 66 px por linha: cabe a escala numérica impressa em volta de cada knob */
+.sec{display:flex;flex-direction:column;padding:4px 3px 2px;border-right:1px solid var(--linha);border-bottom:1px solid var(--linha);min-width:0}
+.sec>h2{margin:0 0 2px;min-height:2.3em;font-family:var(--f-tit);font-weight:400;font-size:.5rem;letter-spacing:.04em;line-height:1.15;text-transform:uppercase;color:var(--tinta)}
+.sec>.col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:space-around}
+.sec>.lin{flex:1;display:flex;align-items:flex-end;justify-content:space-around}
+.sec.sem-base{border-bottom:0}
+.ctl{display:flex;flex-direction:column;align-items:center;min-width:46px}
+.rot{font-family:var(--f-rot);font-weight:600;font-size:.68rem;letter-spacing:.05em;text-transform:uppercase;line-height:1.05;text-align:center;white-space:nowrap;color:var(--tinta);margin-top:1px}
+.val{appearance:none;margin-top:1px;min-width:44px;height:20px;padding:0 4px;border:1px solid rgba(0,0,0,.35);border-radius:3px;background:#2b2622;color:#f3e9cf;
+  font-family:var(--f-rot);font-weight:600;font-size:.78rem;font-variant-numeric:tabular-nums;text-align:center;cursor:text;white-space:nowrap}
+input.val{width:50px;-moz-appearance:textfield}
+input.val::-webkit-outer-spin-button,input.val::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+
+/* knob: escala de 11 traços em volta, corpo cor de ferrugem, ponteiro claro */
+.dial{position:relative;width:54px;height:54px;flex:none;border-radius:50%;cursor:ns-resize;touch-action:none}
+.dial::before{content:"";position:absolute;inset:0;border-radius:50%;
+  background:repeating-conic-gradient(from -135.8deg,var(--tinta) 0 1.6deg,transparent 1.6deg 27deg);
+  -webkit-mask:radial-gradient(circle,transparent 0 23px,#000 23.5px),conic-gradient(from -137deg,#000 0 274deg,transparent 274deg);-webkit-mask-composite:source-in;
+  mask:radial-gradient(circle,transparent 0 23px,#000 23.5px),conic-gradient(from -137deg,#000 0 274deg,transparent 274deg);mask-composite:intersect}
+.dial i{position:absolute;inset:7px;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle at 35% 28%,var(--knob-claro),var(--knob) 55%,var(--knob-escuro));box-shadow:0 3px 5px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.35), 0 0 0 2px rgba(0,0,0,.25);
+  transform:rotate(calc(-135deg + 270deg * var(--t,0)))}
+.dial i::after{content:"";position:absolute;left:50%;top:2px;width:3px;height:14px;margin-left:-1.5px;border-radius:2px;background:var(--ponteiro)}
+.dial.g{width:64px;height:64px}
+.dial.g::before{-webkit-mask:radial-gradient(circle,transparent 0 28px,#000 28.5px),conic-gradient(from -137deg,#000 0 274deg,transparent 274deg);-webkit-mask-composite:source-in;
+  mask:radial-gradient(circle,transparent 0 28px,#000 28.5px),conic-gradient(from -137deg,#000 0 274deg,transparent 274deg);mask-composite:intersect}
+.dial.sel::before{background:repeating-conic-gradient(from -61deg,var(--tinta) 0 2deg,transparent 2deg 40deg);
+  -webkit-mask:radial-gradient(circle,transparent 0 23px,#000 23.5px),conic-gradient(from -63deg,#000 0 126deg,transparent 126deg);-webkit-mask-composite:source-in;
+  mask:radial-gradient(circle,transparent 0 23px,#000 23.5px),conic-gradient(from -63deg,#000 0 126deg,transparent 126deg);mask-composite:intersect}
+.dial.sel i{transform:rotate(calc(-60deg + 120deg * var(--t,0)));background:radial-gradient(circle at 35% 28%,#6a727b,#3c444d 55%,#1e242a)}
+.dial.sel.g::before{-webkit-mask:radial-gradient(circle,transparent 0 28px,#000 28.5px),conic-gradient(from -63deg,#000 0 126deg,transparent 126deg);-webkit-mask-composite:source-in;
+  mask:radial-gradient(circle,transparent 0 28px,#000 28.5px),conic-gradient(from -63deg,#000 0 126deg,transparent 126deg);mask-composite:intersect}
+/* escala impressa em volta do knob (numerais e símbolos da foto); o SVG é maior que o knob e não recebe toque */
+.dial .esc{position:absolute;left:50%;top:50%;width:100px;height:100px;margin:-50px 0 0 -50px;overflow:visible;pointer-events:none}
+.esc text{font-family:var(--f-rot);font-weight:500;font-size:7.5px;fill:var(--tinta);text-anchor:middle;dominant-baseline:central}
+.esc .gl{fill:none;stroke:var(--tinta);stroke-width:1.1;stroke-linejoin:round;stroke-linecap:round}
+.esc line{stroke:var(--tinta);stroke-width:1.2;stroke-linecap:round}
+.dial.vol::before{display:none}
+.patch .ctl.vol{transform:translate(-50%,-58px)}
+.ctl.vol .rot{margin-bottom:11px}
+.ctl.vol .val{margin-top:19px}
+.dial.vol i{transform:rotate(calc(180deg + 300deg * var(--t,0)))}
+.led{display:block;width:10px;height:10px;border-radius:50%;background:var(--led-apagado);box-shadow:inset 0 1px 1px rgba(0,0,0,.6),0 0 0 2px rgba(0,0,0,.2)}
+.led.on{background:var(--led);box-shadow:0 0 8px var(--led),0 0 0 2px rgba(0,0,0,.2)}
+.vca-des{display:block;margin:auto;color:var(--tinta)}
+
+/* ---------- painel de cabos ---------- */
+.patch{position:relative;flex:none;width:662px;height:528px;margin-left:8px;border:1px solid var(--linha);border-radius:4px;background:rgba(0,0,0,.05)}
+.patch svg.fios{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3}
+.patch svg.fundo{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.jack{appearance:none;position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;padding:0;border:0;border-radius:50%;cursor:pointer;z-index:2;
+  background:radial-gradient(circle,var(--furo) 0 7px,#5d584f 7.5px 9px,var(--metal) 9.5px 15px,#7b766b 15.5px 17px,transparent 17.5px)}
+.jack.out{background:radial-gradient(circle,var(--furo) 0 7px,#5d584f 7.5px 9px,#c9b98e 9.5px 15px,#8a7a52 15.5px 17px,transparent 17.5px)}
+.jack.sel{box-shadow:0 0 0 3px var(--foco)}
+.jack.ligado::after{content:"";position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:var(--cor,#222);box-shadow:0 2px 3px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.4)}
+.jack.fixo{cursor:default;opacity:.75}
+.pl{position:absolute;transform:translate(-50%,0);font-family:var(--f-rot);font-weight:600;font-size:.6rem;letter-spacing:.03em;line-height:1;text-transform:uppercase;text-align:center;white-space:nowrap;color:var(--tinta);pointer-events:none;z-index:1}
+.pl.leg{font-weight:500;color:var(--tinta-fraca);font-size:.56rem;text-transform:none}
+.pl.cx{padding:3px 5px;border:1.5px solid var(--tinta);border-radius:2px;background:var(--chapa-clara);transform:translate(-50%,-50%);font-size:.56rem}
+.pl.cx3{font-size:.44rem;line-height:1.1;padding:2px 3px;letter-spacing:.01em}
+.pl.tri{transform:translate(-50%,-50%);font-size:.5rem}
+.pl.tit{font-family:var(--f-tit);font-weight:400;font-size:.52rem;letter-spacing:.06em}
+.patch .ctl{position:absolute;transform:translate(-50%,-27px)}
+.patch .led{position:absolute;margin:-5px 0 0 -5px}
+
+/* ---------- roda, botão e teclado ---------- */
+.baixo{display:flex;align-items:stretch;border-top:2px solid var(--linha);background:linear-gradient(180deg,#30353b,#1d2126);color:var(--claro)}
+.perf{display:flex;align-items:flex-end;gap:12px;padding:12px;border-right:2px solid #0d0f12}
+.perf .rot{color:var(--claro)}
+.perf>*{flex-shrink:0}
+.roda{position:relative;width:46px;height:120px;border-radius:8px;background:var(--sulco);box-shadow:inset 0 2px 6px #000,0 1px 0 rgba(255,255,255,.14);cursor:ns-resize;touch-action:none}
+.roda::before{content:"";position:absolute;left:4px;right:4px;top:50%;height:2px;margin-top:-1px;background:#6d747c}
+.roda b{position:absolute;left:5px;right:5px;height:26px;margin-top:-13px;top:calc(50% - 44px * var(--x,0));border-radius:5px;
+  background:repeating-linear-gradient(180deg,#59616a 0 3px,#3a4047 3px 6px);box-shadow:0 3px 5px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.3)}
+.momento{appearance:none;width:56px;height:56px;border-radius:50%;border:0;cursor:pointer;touch-action:none;
+  background:radial-gradient(circle at 35% 28%,var(--knob-claro),var(--knob) 55%,var(--knob-escuro));box-shadow:0 4px 0 #000a,0 5px 8px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.35)}
+.momento.on{transform:translateY(3px);box-shadow:0 1px 0 #000a, inset 0 1px 0 rgba(255,255,255,.35)}
+.tecl-area{flex:1;min-width:0;display:flex;flex-direction:column}
+.tecl-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 10px}
+.tecl-nav span{font-family:var(--f-rot);font-size:.85rem;color:var(--apagado)}
+.tecl-rol{overflow:hidden;flex:1}
+.tecl{position:relative;display:flex;height:190px;width:max-content;margin:0 auto;user-select:none;-webkit-user-select:none;touch-action:none;-webkit-touch-callout:none;border-top:5px solid #050607}
+.tecl .br{position:relative;width:var(--bw,40px);height:100%;border:1px solid #8d8a7d;border-top:0;border-radius:0 0 4px 4px;background:linear-gradient(180deg,#ddd8c8,var(--tecla) 12%);box-shadow:inset 0 -6px 0 rgba(0,0,0,.08)}
+.tecl .pr{position:absolute;top:0;width:calc(var(--bw,40px) * .58);height:60%;margin-left:calc(var(--bw,40px) * -.29);border-radius:0 0 3px 3px;background:linear-gradient(180deg,#30353a,var(--tecla-preta));box-shadow:2px 3px 4px rgba(0,0,0,.6);z-index:2}
+.tecl .br.on{background:var(--tecla-baixa)} .tecl .pr.on{background:var(--tecla-preta-baixa)}
+.tecl .br span{position:absolute;bottom:6px;left:0;right:0;text-align:center;font-family:var(--f-rot);font-size:.72rem;color:#6d6a5e}
+
+/* ---------- acessórios ---------- */
+.acessorios{margin-top:26px;padding:14px;border:2px dashed #55606b;border-radius:10px;background:#181c21}
+.acessorios>h2{margin:0 0 4px;font-family:var(--f-rot);font-weight:600;font-size:1.05rem;letter-spacing:.06em}
+.acessorios>p{margin:0 0 12px;color:var(--apagado);font-size:.88rem;max-width:90ch}
+.barra{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-bottom:12px}
+.bp{appearance:none;min-height:44px;min-width:44px;padding:0 14px;border-radius:8px;border:1px solid #5f6b77;background:#262c33;color:var(--claro);font-family:var(--f-rot);font-weight:600;font-size:1rem;cursor:pointer}
+.bp[aria-pressed="true"]{background:var(--led);border-color:var(--led);color:#06210f}
+.bp.perigo{border-color:#c0674e}
+.bp:disabled{opacity:.45}
+.campo{display:flex;align-items:center;gap:6px;font-family:var(--f-rot);font-size:.95rem;color:var(--apagado)}
+.campo select,.campo input{min-height:44px;border-radius:8px;border:1px solid #5f6b77;background:#0f1215;color:var(--claro);padding:0 8px}
+.campo input[type=number]{width:74px}
+.passos-rol{overflow-x:auto}
+.passos{display:grid;grid-template-columns:repeat(16,minmax(56px,1fr));gap:5px;min-width:max-content}
+.passo{display:flex;flex-direction:column;gap:4px;padding:5px 4px;border-radius:7px;background:#20262c;border:1px solid #3b454f}
+.passo:nth-child(4n+1){border-color:#7b8793}
+.passo.agora{background:#1f3a2a;border-color:var(--led)}
+.passo.sel{box-shadow:0 0 0 2px #9be7ff}
+.passo small{font-family:var(--f-rot);font-size:.72rem;color:var(--apagado);text-align:center}
+.passo .bp{min-width:0;padding:0 2px;font-size:.92rem}
+.passo .nota{font-variant-numeric:tabular-nums}
+.passo .par{display:grid;grid-template-columns:1fr;gap:3px}
+.estado{font-size:.85rem;color:var(--apagado);min-height:1.3em}
+footer{margin-top:18px;color:#7d8791;font-size:.8rem}
+kbd{font-family:var(--f-rot);padding:0 .3em;border:1px solid currentColor;border-radius:3px}
+
+@media (max-width:820px){
+  .gabinete{border-left-width:8px;border-right-width:8px}
+  .baixo{flex-direction:column}
+  .perf{border-right:0;border-bottom:2px solid #0d0f12;justify-content:center}
+  .tecl{height:160px;margin:0}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 class="sr">Sintetizador monofônico semimodular com painel de cabos</h1>
+  <button type="button" class="audio-bar" id="audio-bar" hidden>Som desligado, toque para ativar</button>
+
+  <section class="gabinete" aria-label="Sintetizador">
+    <div class="rolagem" tabindex="-1"><div class="painel"><div class="ctrls" id="ctrls"></div><div class="patch" id="patch" role="group" aria-label="Painel de cabos"></div></div></div>
+    <div class="baixo">
+      <div class="perf" id="perf"></div>
+      <div class="tecl-area">
+        <div class="tecl-nav">
+          <button type="button" class="bp" id="tecl-esq" aria-label="Mostrar uma oitava mais grave">&#9664; Oitava</button>
+          <span id="tecl-info" aria-live="polite"></span>
+          <button type="button" class="bp" id="tecl-dir" aria-label="Mostrar uma oitava mais aguda">Oitava &#9654;</button>
+        </div>
+        <div class="tecl-rol" id="tecl-rol"><div class="tecl" id="tecl" role="group" aria-label="Teclado de 37 teclas"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="acessorios" aria-labelledby="ac-t">
+    <h2 id="ac-t">Acessórios (não fazem parte do instrumento original)</h2>
+    <p>Sequenciador de 16 passos, uma nota por passo. Toque num passo para selecioná-lo e depois numa tecla do teclado para gravar a nota. Cada passo pode ser nota, pausa ou ligadura (prolonga a nota anterior).</p>
+    <div class="barra">
+      <button type="button" class="bp" id="seq-play" aria-pressed="false">Play</button>
+      <label class="campo">Andamento <input type="number" id="seq-bpm" min="30" max="300" step="1" inputmode="numeric" aria-label="Andamento em batidas por minuto"> bpm</label>
+      <label class="campo">Tônica <select id="seq-tonica"></select></label>
+      <label class="campo">Escala <select id="seq-escala"></select></label>
+      <button type="button" class="bp" id="seq-aleat">Aleatório</button>
+      <button type="button" class="bp" id="hold" aria-pressed="false">Hold</button>
+      <button type="button" class="bp perigo" id="zerar">Zerar</button>
+      <button type="button" class="bp" id="zerar-nao" hidden>Cancelar</button>
+    </div>
+    <div class="passos-rol"><div class="passos" id="passos"></div></div>
+    <div class="barra" style="margin-top:12px;margin-bottom:0">
+      <button type="button" class="bp" id="midi">Ativar MIDI</button>
+      <button type="button" class="bp" id="tira-cabos">Tirar todos os cabos</button>
+      <span class="estado" id="estado" aria-live="polite"></span>
+    </div>
+    <p style="margin:12px 0 0">Cabos: toque num jack de saída (dourado) e depois num de entrada (prateado), ou na ordem inversa. Tocar numa entrada que já tem cabo tira o cabo. Com cabo, a ligação interna daquela entrada deixa de valer, como no aparelho.</p>
+    <p style="margin:8px 0 0">Teclado do computador: <kbd>A</kbd> <kbd>W</kbd> <kbd>S</kbd> <kbd>E</kbd> <kbd>D</kbd> <kbd>F</kbd> <kbd>T</kbd> <kbd>G</kbd> <kbd>Y</kbd> <kbd>H</kbd> <kbd>U</kbd> <kbd>J</kbd> <kbd>K</kbd> tocam; <kbd>Z</kbd> e <kbd>X</kbd> mudam a oitava; <kbd>Espaço</kbd> liga e para o sequenciador. Clique no número de um controle para digitar o valor.</p>
+  </section>
+  <footer>Clone do Korg MS-20. Som gerado no navegador (Web Audio). O processador de sinal externo só recebe sinais do próprio painel de cabos (não há entrada de microfone). Fontes e aproximações em docs/pesquisa/ms20.md.</footer>
+</div>
+
+<!-- Motor de som. Fica como texto para virar Blob (AudioWorklet) e para ser extraído pelos scripts de tests/medicao/ms20. -->
+<script type="text/plain" id="dsp">
+/* Motor de som: monofônico, VCO 1 + VCO 2 -> mixer -> passa-altas -> passa-baixas -> VCA, com patch panel.
+   Este mesmo texto roda em três lugares: no AudioWorklet (via Blob), na página (para ler as tabelas e como
+   reserva em ScriptProcessor) e no Node (tests/medicao/ms20), por isso não usa nada do navegador.
+   As letras (a), (b), (c) nos comentários remetem a docs/pesquisa/ms20.md. */
+'use strict';
+const OS = 4;                 // osciladores e filtros rodam a 4x a taxa de amostragem
+const NOTA_BASE = 36;         // (c) a tecla mais grave do teclado de 37 teclas
+const F_REF = 65.406;         // (c) Hz por volt em 8': a tecla mais grave vale 1 V e a mais aguda 8 V (Hz/V) (a)
+const K1 = 58.4, R_G = 4700, R_F = 270e3;   // (b) estágio de ganho do filtro: 1 + 270k/4,7k
+const D_IS = 2.5e-9, D_NVT = 0.045;         // (c) diodos do limitador (valores típicos de 1N4148)
+const K1_EF = 1 + 1 / (1 / R_F + 2 * D_IS / D_NVT) / R_G;   // ganho de pequeno sinal do estágio (≈ 56,8): a condutância dos diodos em paralelo com os 270 kΩ o reduz abaixo dos 58,4 nominais
+const K_MAX = 2.6;            // (c) ganho de laço com PEAK em 10; oscila a partir de 7/3 (b)
+const U_VCO = 0.015;          // (c) volts na entrada do filtro para um VCO com o nível em 10
+const G_SAIDA = 4.0;          // (c) da saída do filtro (cerca de ±0,55 V) para a escala digital; calibrado para o painel inicial ficar perto de −7,5 dBFS (janela de −12 a −3)
+const DESAFINA2 = 2;          // (c) cents de desvio fixo do VCO 2
+const FONTES = ['mgTri', 'mgRect', 'eg1', 'eg1Rev', 'eg2Rev', 'kbdCv', 'kbdTrig', 'shOut', 'vcaOut', 'pink', 'white', 'roda', 'botao',
+  'espAmp', 'espBpf', 'espCv', 'espEnv', 'espTrig', 'phones'];
+const DESTINOS = ['total', 'freq', 'extSig', 'hpCv', 'lpCv', 'initGain', 'trigIn', 'eg1Trig', 'vco12Cv', 'vco2Cv', 'shClock', 'shIn', 'vcaCtl', 'vcaIn', 'espIn'];
+const S = {}, D = {}; FONTES.forEach((k, i) => { S[k] = i; }); DESTINOS.forEach((k, i) => { D[k] = i; });
+
+const corteHz = k => 50 * Math.pow(300, k / 10);                    // (a) 50 Hz a 15 kHz; a lei exponencial é (c)
+const tempoEg = k => 0.001 * Math.pow(10, 0.4 * k);                 // (c) 1 ms a 10 s (o máximo é (a))
+const tempoHold = k => k <= 0 ? 0 : 0.002 * Math.pow(10, 0.4 * k);  // (c) até 20 s (a)
+const tempoDelay = k => k <= 0 ? 0 : tempoEg(k);
+const tempoPorta = k => k <= 0 ? 0 : 0.01 * Math.pow(10, 0.3 * k);  // (c) até 10 s (a)
+const mgHz = k => 0.1 * Math.pow(200, k / 10);                      // (a) 0,1 a 20 Hz
+const espLowHz = k => 50 * Math.pow(50, k / 10), espHighHz = k => 100 * Math.pow(50, k / 10);   // (a) faixas
+const larguraPulso = pw => 0.5 * (1 - pw / 10);                     // (a) de 1:1 até o pulso sumir
+
+/* Limitador do estágio de ganho: amplificador não inversor com 270k em paralelo com dois diodos na realimentação.
+   Tabela da saída em função da tensão de entrada v (0 a 0,5 V); acima disso vale a fórmula do diodo sozinho. */
+const TD_N = 8192, TD_X = 0.5, TD_ESC = TD_N / TD_X;
+const TD = (() => {
+  const t = new Float64Array(TD_N + 2);
+  for (let j = 0; j < t.length; j++) {
+    const v = j / TD_ESC, i = v / R_G; let vf = Math.min(i * R_F, D_NVT * Math.asinh(i / (2 * D_IS)));
+    for (let k = 0; k < 40; k++) { const e = vf / D_NVT; vf -= (vf / R_F + 2 * D_IS * Math.sinh(e) - i) / (1 / R_F + 2 * D_IS / D_NVT * Math.cosh(e)); }
+    t[j] = v + vf;
+  }
+  return t;
+})();
+function limitador(v) {       // só para medição e documentação; o laço do filtro tem a mesma conta embutida
+  const a = Math.abs(v); let y;
+  if (a < TD_X) { const x = a * TD_ESC, j = x | 0; y = TD[j] + (TD[j + 1] - TD[j]) * (x - j); }
+  else { const i = a / R_G; y = a + D_NVT * Math.log((i + Math.sqrt(i * i + 4 * D_IS * D_IS)) / (2 * D_IS)); }
+  return v < 0 ? -y : y;
+}
+function blep(t) {            // resíduo de um degrau de -1 para +1 limitado em banda, t em amostras, de -2 a 2
+  if (t < -1) { const a = t + 2; return a * a * a * a / 12; }
+  if (t < 0) return 1 + (4 * t - 2 * t * t * t - 0.75 * t * t * t * t) / 3;
+  if (t < 1) return -1 + (4 * t - 2 * t * t * t + 0.75 * t * t * t * t) / 3;
+  const a = 2 - t; return -a * a * a * a / 12;
+}
+const bl = (ph, inc) => ph < 2 * inc ? blep(ph / inc) : ph > 1 - 2 * inc ? blep((ph - 1) / inc) : 0;
+
+class MeiaBanda {             // decimador 2:1 de meia banda (janela de Kaiser)
+  constructor(meio) {         // meio ímpar: 2*meio+1 coeficientes
+    const i0 = x => { let s = 1, t = 1; for (let k = 1; k < 30; k++) { t *= (x / (2 * k)) * (x / (2 * k)); s += t; } return s; };
+    this.m = meio; this.h = new Float64Array(meio + 1); let soma = 0.5;
+    for (let k = 1; k <= meio; k += 2) { this.h[k] = Math.sin(Math.PI * k / 2) / (Math.PI * k) * i0(8 * Math.sqrt(1 - (k / (meio + 0.5)) * (k / (meio + 0.5)))) / i0(8); soma += 2 * this.h[k]; }
+    for (let k = 1; k <= meio; k += 2) this.h[k] /= soma; this.c = 0.5 / soma;
+    this.b = new Float64Array(128); this.pos = 0;
+  }
+  par(a, b) {
+    const B = this.b, h = this.h, m = this.m; let pos = this.pos;
+    B[pos] = a; B[(pos + 1) & 127] = b; pos = (pos + 2) & 127; this.pos = pos;
+    const c = pos - 1 - m; let y = this.c * B[c & 127];
+    for (let q = 1; q <= m; q += 2) y += h[q] * (B[(c - q) & 127] + B[(c + q) & 127]);
+    return y;
+  }
+}
+
+const PADRAO = {              // painel inicial (c): baixo com varredura do passa-baixas
+  vco1Wave: 1, pw: 0, vco1Scale: 2, vco2Wave: 1, pitch: 0, vco2Scale: 1, porta: 0, tune: 0,
+  lvl1: 7, lvl2: 6, fmMg: 0, fmEg1: 0,
+  hpCut: 0, hpPeak: 0, hpMg: 0, hpEg2: 0, lpCut: 4.5, lpPeak: 5, lpMg: 0, lpEg2: 4,
+  mgWave: 5, mgFreq: 5, eg1Delay: 0, eg1Attack: 0, eg1Release: 0,
+  eg2Hold: 0, eg2Attack: 0, eg2Decay: 6, eg2Sustain: 5, eg2Release: 5.5, volume: 7,
+  espLevel: 5, espLow: 0, espHigh: 10, espCv: 5, espThr: 5, roda: 0, botao: 0 };
+
+class Motor {
+  constructor(fs) {
+    this.fs = fs; this.fsOS = fs * OS; this.frame = 0; this.fila = []; this.p = Object.assign({}, PADRAO);
+    this.V = new Float64Array(FONTES.length); this.cabo = new Int8Array(DESTINOS.length).fill(-1);
+    this.conta = new Int16Array(128); this.seq = new Map(); this.nota = 60; this.gate = false;
+    this.cv = 1; this.cvT = 1;   // (c) repouso inicial do teclado: tecla mais grave (1 V); a primeira nota com portamento desliza dali. Sem fonte para o valor real do aparelho
+    this.ph1 = 0; this.ph2 = 0.37; this.mgPh = 0;
+    this.e1 = 0; this.f1 = 0; this.t1 = 0; this.tr1 = false;          // EG1: fase 0 parado, 1 espera, 2 ataque, 3 cheio, 4 release
+    this.e2 = 0; this.f2 = 0; this.t2 = 0; this.tr2 = false;          // EG2: fase 0 parado, 1 ataque, 2 decaimento/sustentação, 3 release
+    this.sh = 0; this.shCk = false; this.pk = [0, 0, 0];
+    this.hp = { s1: 0, s2: 0, v: 0, g: 0.01, M: 1, A: 1, k2: 0, fc: 0 }; this.lp = { s1: 0, s2: 0, v: 0, g: 0.01, M: 1, A: 1, k2: 0, fc: 0 };
+    this.d1 = new MeiaBanda(11); this.d2 = new MeiaBanda(29);
+    this.sem = 22222; this.sem2 = 9731;
+    this.esp = { hp: 0, lp: 0, env: 0, trig: false, arm: false, cont: 0, cv: 0 };
+    this.led = { mg: 0, trig: 0, pk: 0, et: 0 };
+    this.aEnvA = 1 - Math.exp(-1 / (0.003 * fs)); this.aEnvR = 1 - Math.exp(-1 / (0.06 * fs));
+    this.atualiza();
+  }
+
+  /* ---- mensagens ---- */
+  msg(d) {
+    if (d.at != null) { const e = Object.assign({ f: Math.round(d.at * this.fs) }, d); let i = this.fila.length; while (i > 0 && this.fila[i - 1].f > e.f) i--; this.fila.splice(i, 0, e); }
+    else this.aplica(d);
+  }
+  aplica(d) {
+    switch (d.t) {
+      case 'p': this.p[d.k] = d.v; this.atualiza(); break;
+      case 'ps': Object.assign(this.p, d.p); this.atualiza(); break;
+      case 'cabos': this.cabo.fill(-1); for (const k in d.c) if (D[k] != null && S[d.c[k]] != null) this.cabo[D[k]] = S[d.c[k]]; break;
+      case 'on': this.notaOn(d.n); if (d.seq) this.seq.set(d.n, (this.seq.get(d.n) || 0) + 1); break;
+      case 'off': if (d.seq) { const c = this.seq.get(d.n) || 0; if (!c) break; if (c > 1) this.seq.set(d.n, c - 1); else this.seq.delete(d.n); } this.notaOff(d.n); break;
+      case 'seqpara': this.fila = this.fila.filter(e => !e.seq); for (const [n, c] of this.seq) for (let i = 0; i < c; i++) this.notaOff(n); this.seq.clear(); break;
+      case 'panico': this.fila.length = 0; this.conta.fill(0); this.seq.clear(); this.gate = false; break;
+    }
+  }
+  atualiza() {
+    const p = this.p, fs = this.fs, a = t => t <= 0 ? 1 : 1 - Math.exp(-1 / (t * fs));
+    this.g1 = (p.lvl1 / 10) * (p.lvl1 / 10); this.g2 = (p.lvl2 / 10) * (p.lvl2 / 10);     // (c) potenciômetro de áudio
+    this.hp.k2 = K_MAX * p.hpPeak / 10 / K1_EF; this.lp.k2 = K_MAX * p.lpPeak / 10 / K1_EF;   // (b) realimentação k2; ganho de laço de pequeno sinal = K_MAX * PEAK / 10 (oscila em 7/3)
+    this.duty = larguraPulso(p.pw);
+    this.mgInc = mgHz(p.mgFreq) / fs; this.mgR = Math.max(0.02, Math.min(0.98, p.mgWave / 10));
+    this.aA1 = a(tempoEg(p.eg1Attack) / 1.466); this.aR1 = a(tempoEg(p.eg1Release) / 4.6); this.nD1 = tempoDelay(p.eg1Delay) * fs;
+    this.aA2 = a(tempoEg(p.eg2Attack) / 1.466); this.aD2 = a(tempoEg(p.eg2Decay) / 4.6); this.aR2 = a(tempoEg(p.eg2Release) / 4.6);
+    this.nH2 = tempoHold(p.eg2Hold) * fs; this.sus = p.eg2Sustain / 10;
+    this.aPorta = a(tempoPorta(p.porta) / 4.6);
+    this.gVol = (p.volume / 10) * (p.volume / 10);                                          // (c)
+    this.espG = (p.espLevel / 10) * (p.espLevel / 10) * 10;                                 // (c)
+    this.espAL = 1 - Math.exp(-2 * Math.PI * espLowHz(p.espLow) / fs); this.espAH = 1 - Math.exp(-2 * Math.PI * Math.min(0.45 * fs, espHighHz(p.espHigh)) / fs);
+    this.espAdj = Math.pow(2, (p.espCv - 5) / 2.5); this.espThr = 0.05 + p.espThr / 10 * 4.9;   // (c)
+  }
+
+  /* ---- teclado: monofônico, prioridade para a nota mais aguda, um só disparo (b) ---- */
+  notaOn(n) { if (n < 0 || n > 127) return; this.conta[n]++; this.teclas(); }
+  notaOff(n) { if (n < 0 || n > 127 || !this.conta[n]) return; this.conta[n]--; this.teclas(); }
+  teclas() {
+    let alta = -1; for (let n = 127; n >= 0; n--) if (this.conta[n] > 0) { alta = n; break; }
+    this.gate = alta >= 0;
+    if (alta >= 0) { this.nota = alta; this.cvT = Math.pow(2, (alta - NOTA_BASE) / 12); }   // (a) tensão exponencial: dobra a cada oitava
+  }
+
+  /* ---- um filtro Korg35: Sallen-Key com R1 = R2/3 e C1 = 3·C2 (b), limitador de diodos no caminho direto (b).
+     Estados nos dois capacitores; integração por trapézio; a realimentação é resolvida no mesmo instante (Newton).
+     ulp entra como passa-baixas; uhp entra no capacitor que iria ao terra e dá o passa-altas de 6 dB/oitava. ---- */
+  k35(f, ulp, uhp) {
+    const g = f.g, M = f.M, B = g * M, A = f.A, k2 = f.k2, C = f.s2 + uhp + B * (f.s1 + g * ulp);
+    let v = f.v, y = 0, dy = 0;
+    for (let it = 0; it < 4; it++) {
+      const a = v < 0 ? -v : v;
+      if (a < TD_X) { const x = a * TD_ESC, j = x | 0, t0 = TD[j]; dy = (TD[j + 1] - t0); y = t0 + dy * (x - j); dy *= TD_ESC; }
+      else { const i = a / R_G, r = Math.sqrt(i * i + 4 * D_IS * D_IS); y = a + D_NVT * Math.log((i + r) / (2 * D_IS)); dy = 1 + D_NVT / (R_G * r); }
+      if (v < 0) y = -y;
+      if (it === 3) break;
+      v -= (A * v - B * k2 * y - C) / (A - B * k2 * dy);
+    }
+    const F = k2 * y, v1 = M * (f.s1 + g * ulp + g * v / 3 + F);
+    f.s1 = 2 * (v1 - F) - f.s1; f.s2 = 2 * (v - uhp) - f.s2 + 1e-24; f.v = v;
+    return y;
+  }
+  corte(f, hz) {
+    hz = hz < 5 ? 5 : hz > 22000 ? 22000 : hz;
+    if (hz === f.fc) return;
+    f.fc = hz; const g = Math.tan(Math.PI * hz / this.fsOS); f.g = g; f.M = 1 / (1 + 4 * g / 3); f.A = 1 + g - g * g * f.M / 3;
+  }
+
+  /* ---- bloco de n amostras ---- */
+  process(L, R, n) {
+    const p = this.p, V = this.V, cb = this.cabo, fila = this.fila, fsOS = this.fsOS, hp = this.hp, lp = this.lp, esp = this.esp, pk = this.pk;
+    const w1 = p.vco1Wave, w2 = p.vco2Wave, duty = this.duty, g1 = this.g1, g2 = this.g2;
+    for (let i = 0; i < n; i++) {
+      while (fila.length && fila[0].f <= this.frame + i) this.aplica(fila.shift());
+      let c;
+      /* gerador de modulação (a): uma saída vai de serra descendente a triângulo a serra ascendente; a outra é o retângulo correspondente */
+      let ph = this.mgPh + this.mgInc; if (ph >= 1) ph -= 1; this.mgPh = ph;
+      const r = this.mgR, tri = ph < r ? -1 + 2 * ph / r : 1 - 2 * (ph - r) / (1 - r);
+      V[S.mgTri] = 2.5 * tri; V[S.mgRect] = ph < r ? 0 : 5;
+      /* gatilhos: S-trig, ativo com a linha no terra (a); aqui, abaixo de 2,5 V (c) */
+      const gate = this.gate; V[S.kbdTrig] = gate ? 0 : 5;
+      const trig = (c = cb[D.trigIn]) >= 0 ? V[c] < 2.5 : gate, trig1 = (c = cb[D.eg1Trig]) >= 0 ? V[c] < 2.5 : trig;
+      /* EG1: espera, ataque, sustentação no máximo, release (b) */
+      if (trig1 !== this.tr1) { this.tr1 = trig1; if (trig1) { if (this.nD1 > 0) { this.f1 = 1; this.t1 = this.nD1; } else this.f1 = 2; } else this.f1 = this.e1 > 0 ? 4 : 0; }
+      if (this.f1 === 1) { if (--this.t1 <= 0) this.f1 = 2; }
+      else if (this.f1 === 2) { this.e1 += this.aA1 * (1.3 - this.e1); if (this.e1 >= 1) { this.e1 = 1; this.f1 = 3; } }
+      else if (this.f1 === 4) { this.e1 -= this.aR1 * this.e1; if (this.e1 < 1e-5) { this.e1 = 0; this.f1 = 0; } }
+      V[S.eg1] = -5 * (1 - this.e1); V[S.eg1Rev] = 5 * (1 - this.e1);          // (a) -5 V a 0 V e +5 V a 0 V
+      /* EG2: ataque, decaimento, sustentação; HOLD adia o release depois que o gatilho acaba (b) */
+      if (trig !== this.tr2) { this.tr2 = trig; if (trig) { this.f2 = 1; this.t2 = 0; } else this.t2 = this.nH2 > 0 ? this.nH2 : 0.5; }
+      if (!trig && this.t2 > 0 && (this.t2 -= 1) <= 0) { this.t2 = 0; if (this.f2) this.f2 = 3; }
+      if (this.f2 === 1) { this.e2 += this.aA2 * (1.3 - this.e2); if (this.e2 >= 1) { this.e2 = 1; this.f2 = 2; } }
+      else if (this.f2 === 2) this.e2 += this.aD2 * (this.sus - this.e2);
+      else if (this.f2 === 3) { this.e2 -= this.aR2 * this.e2; if (this.e2 < 1e-5) { this.e2 = 0; this.f2 = 0; } }
+      const e2 = this.e2; V[S.eg2Rev] = 5 * (1 - e2);
+      /* teclado com portamento (c: RC sobre a tensão em Hz/V) */
+      this.cv += this.aPorta * (this.cvT - this.cv); V[S.kbdCv] = this.cv;
+      /* ruído branco e rosa, 5 Vp-p (a); roda e botão. Gerados antes do S&H para ele amostrar o valor da amostra corrente */
+      this.sem = (Math.imul(this.sem, 1664525) + 1013904223) | 0; const wn = this.sem / 2147483648;
+      pk[0] = 0.99765 * pk[0] + wn * 0.0990460; pk[1] = 0.96300 * pk[1] + wn * 0.2965164; pk[2] = 0.57000 * pk[2] + wn * 1.0526913;
+      let rosa = (pk[0] + pk[1] + pk[2] + wn * 0.1848) * 0.32; rosa = rosa > 1 ? 1 : rosa < -1 ? -1 : rosa;
+      V[S.white] = 2.5 * wn; V[S.pink] = 2.5 * rosa;
+      V[S.roda] = 5 * p.roda; V[S.botao] = p.botao ? 0 : 5;                    // (a) -5 a +5 V; botão para o terra
+      /* sample & hold: amostra quando o relógio vai ao terra (b) */
+      const ck = (c = cb[D.shClock]) >= 0 && V[c] < 2.5;
+      if (ck && !this.shCk) { const x = (c = cb[D.shIn]) >= 0 ? V[c] : 0; this.sh = x > 5 ? 5 : x < -5 ? -5 : x; }
+      this.shCk = ck; V[S.shOut] = this.sh;
+      /* VCA de modulação (c: linear, 0 a +5 V no controle) */
+      { const ct = (c = cb[D.vcaCtl]) >= 0 ? V[c] : 0, x = (c = cb[D.vcaIn]) >= 0 ? V[c] : 0; V[S.vcaOut] = x * (ct < 0 ? 0 : ct > 5 ? 1 : ct / 5); }
+      /* altura: VCOs lineares em Hz/V (a); FREQ e TOTAL em oitavas por volt (a) */
+      const cv12 = (c = cb[D.vco12Cv]) >= 0 ? V[c] : this.cv, cv2 = (c = cb[D.vco2Cv]) >= 0 ? V[c] : cv12;
+      const vTot = (c = cb[D.total]) >= 0 ? V[c] : V[S.mgTri];
+      const fm = p.fmMg / 10 * vTot + p.fmEg1 / 10 * ((c = cb[D.freq]) >= 0 ? V[c] : V[S.eg1]) + p.tune / 60;
+      let inc1 = F_REF * (cv12 > 0 ? cv12 : 0) * Math.pow(2, fm + p.vco1Scale - 2) / fsOS;
+      let inc2 = F_REF * (cv2 > 0 ? cv2 : 0) * Math.pow(2, fm + p.vco2Scale - 1 + p.pitch / 5 + DESAFINA2 / 1200) / fsOS;
+      if (inc1 > 0.2) inc1 = 0.2; if (inc2 > 0.2) inc2 = 0.2;
+      /* corte dos filtros: knob + MG/T.EXT + EG2/EXT, 2 oitavas por volt (a) */
+      this.corte(hp, corteHz(p.hpCut) * Math.pow(2, 2 * (p.hpMg / 10 * vTot + p.hpEg2 / 10 * ((c = cb[D.hpCv]) >= 0 ? V[c] : 5 * e2))));
+      this.corte(lp, corteHz(p.lpCut) * Math.pow(2, 2 * (p.lpMg / 10 * vTot + p.lpEg2 / 10 * ((c = cb[D.lpCv]) >= 0 ? V[c] : 5 * e2))));
+      const ext = (c = cb[D.extSig]) >= 0 ? V[c] / 1.5 * U_VCO : 0;            // (a) 3 Vp-p de entrada
+      /* osciladores e filtros a 4x */
+      let ph1 = this.ph1, ph2 = this.ph2, s = this.sem2, a0 = 0, a1 = 0, a2 = 0, a3 = 0;
+      for (let q = 0; q < OS; q++) {
+        ph1 += inc1; if (ph1 >= 1) ph1 -= 1;
+        ph2 += inc2; if (ph2 >= 1) ph2 -= 1;
+        s = (Math.imul(s, 1664525) + 1013904223) | 0; const rd = s / 2147483648;
+        let o1 = 0, o2 = 0, pu = 0;
+        if (w1 === 2 || w2 === 3) { pu = (ph1 < duty ? 1 : -1) + bl(ph1, inc1); let dd = ph1 - duty; if (dd < 0) dd += 1; pu -= bl(dd, inc1); }
+        if (g1 > 0) o1 = w1 === 0 ? 1 - 4 * Math.abs(ph1 - 0.5) : w1 === 1 ? 2 * ph1 - 1 - bl(ph1, inc1) : w1 === 2 ? pu : rd;
+        if (g2 > 0) {
+          if (w2 === 0) o2 = 2 * ph2 - 1 - bl(ph2, inc2);
+          else { const d2 = w2 === 2 ? 0.25 : 0.5; let q2 = (ph2 < d2 ? 1 : -1) + bl(ph2, inc2), dd = ph2 - d2; if (dd < 0) dd += 1; q2 -= bl(dd, inc2);   // (b) pulso fixo de 25 %
+            o2 = w2 === 3 ? -pu * q2 : q2; }                                    // (c) "ring": OU-exclusivo do pulso do VCO 1 com a quadrada do VCO 2
+        }
+        const x = U_VCO * (g1 * o1 + g2 * o2) + ext + 2e-7 * rd;                // o resíduo de ruído dá partida na auto-oscilação
+        const y = this.k35(lp, this.k35(hp, 0, x) / K1, 0);
+        if (q === 0) a0 = y; else if (q === 1) a1 = y; else if (q === 2) a2 = y; else a3 = y;
+      }
+      this.ph1 = ph1; this.ph2 = ph2; this.sem2 = s;
+      const b0 = this.d1.par(a0, a1), b1 = this.d1.par(a2, a3), yf = this.d2.par(b0, b1);
+      /* VCA principal: EG2 mais INITIAL GAIN (a); volume; limitador suave de segurança (c) */
+      let ga = e2 + ((c = cb[D.initGain]) >= 0 ? (V[c] > 0 ? V[c] / 5 : 0) : 0); if (ga > 2) ga = 2;
+      let o = yf * G_SAIDA * ga * this.gVol;
+      if (o > 0.7) o = 0.7 + 0.3 * Math.tanh((o - 0.7) / 0.3); else if (o < -0.7) o = -0.7 - 0.3 * Math.tanh((-o - 0.7) / 0.3);
+      L[i] = o; if (R !== L) R[i] = o; V[S.phones] = o;     // (a) saída de sinal de 2 Vp-p: fundo de escala digital = ±1 V
+      /* processador de sinal externo: amplificador, passa-faixa, conversor F-V, seguidor de envelope, gatilho (a); detalhes (c) */
+      let ea = (c = cb[D.espIn]) >= 0 ? V[c] * this.espG : 0; if (ea > 5) ea = 5; else if (ea < -5) ea = -5;
+      esp.hp += this.espAL * (ea - esp.hp); const eh = ea - esp.hp; esp.lp += this.espAH * (eh - esp.lp); const eb = esp.lp;
+      esp.cont++;
+      if (eb < -0.1) esp.arm = true;
+      else if (eb > 0.1 && esp.arm) { esp.arm = false; const f = this.fs / esp.cont; esp.cont = 0; if (f > 20 && f < 5000) { const t = f / F_REF * this.espAdj; esp.cv += 0.5 * ((t > 8.4 ? 8.4 : t) - esp.cv); } }
+      const ab = eb < 0 ? -eb : eb; esp.env += (ab > esp.env ? this.aEnvA : this.aEnvR) * (ab - esp.env);
+      const ev = esp.env * 2 > 5 ? 5 : esp.env * 2;
+      if (ev > this.espThr) esp.trig = true; else if (ev < 0.8 * this.espThr) esp.trig = false;
+      V[S.espAmp] = ea; V[S.espBpf] = eb; V[S.espCv] = esp.cv; V[S.espEnv] = ev; V[S.espTrig] = esp.trig ? 0 : 5;
+      if (ea > 4.5 || ea < -4.5) this.led.pk = 2400;
+    }
+    this.frame += n;
+    const ld = this.led; ld.mg = V[S.mgTri] > 0 ? 1 : 0; ld.trig = this.tr2 ? 1 : 0; ld.et = esp.trig ? 1 : 0; if (ld.pk > 0) ld.pk -= n;
+  }
+}
+Motor.dados = { OS, NOTA_BASE, F_REF, K1, K_MAX, U_VCO, FONTES, DESTINOS, PADRAO, corteHz, tempoEg, tempoHold, tempoDelay, tempoPorta, mgHz, espLowHz, espHighHz, larguraPulso, limitador };
+
+if (typeof AudioWorkletProcessor !== 'undefined' && typeof registerProcessor === 'function') {
+  registerProcessor('motor-ms20', class extends AudioWorkletProcessor {
+    constructor() { super(); this.m = new Motor(sampleRate); this.q = 0; this.port.onmessage = e => this.m.msg(e.data); }
+    process(_, saidas) {
+      const o = saidas[0]; if (!o || !o[0]) return true;
+      this.m.frame = currentFrame; this.m.process(o[0], o[1] || o[0], o[0].length);
+      if ((this.q += o[0].length) >= sampleRate / 25) { this.q = 0; const l = this.m.led; this.port.postMessage({ mg: l.mg, trig: l.trig, pk: l.pk > 0 ? 1 : 0, et: l.et }); }
+      return true;
+    }
+  });
+}
+</script>
+<script>
+(() => {
+'use strict';
+/* Convenção de armazenamento: sint-<id>-v<n>:<coisa>. Aqui só ":estado" (painel, cabos, sequência); o aparelho não tem memórias. */
+const ID = 'ms20', CHAVE = `sint-${ID}-v1`;
+const $ = id => document.getElementById(id);
+const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+const limita = (v, a, b) => Math.max(a, Math.min(b, v));
+const FONTE_DSP = $('dsp').textContent;
+const Motor = new Function(FONTE_DSP + '\nreturn Motor;')();   // na página: só para ler as tabelas e como reserva sem AudioWorklet
+const DD = Motor.dados;
+
+/* ---------- estado ---------- */
+const NOTAS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+const nomeNota = n => NOTAS[n % 12] + (Math.floor(n / 12) - 1);
+const ESCALAS = { maior: ['Maior', [0, 2, 4, 5, 7, 9, 11]], menor: ['Menor natural', [0, 2, 3, 5, 7, 8, 10]], pentamenor: ['Pentatônica menor', [0, 3, 5, 7, 10]],
+  pentamaior: ['Pentatônica maior', [0, 2, 4, 7, 9]], dorico: ['Dórico', [0, 2, 3, 5, 7, 9, 10]], frigio: ['Frígio', [0, 1, 3, 5, 7, 8, 10]],
+  blues: ['Blues', [0, 3, 5, 6, 7, 10]], cromatica: ['Cromática', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]] };
+const SEQ0 = () => [36, 36, 48, 43, 39, 39, 46, 43, 36, 36, 48, 51, 43, 43, 41, 38].map((n, i) => ({ n, m: i === 5 || i === 13 ? 'l' : i === 9 ? 'p' : 'n' }));
+const P0 = () => { const p = Object.assign({}, DD.PADRAO); p.roda = 0; p.botao = 0; return p; };
+const FAIXA = { pitch: [-5, 5], tune: [-5, 5], roda: [-1, 1], vco1Wave: [0, 3], vco1Scale: [0, 3], vco2Wave: [0, 3], vco2Scale: [0, 3] };
+const INTEIRO = { vco1Wave: 1, vco1Scale: 1, vco2Wave: 1, vco2Scale: 1 };
+const estado0 = () => ({ p: P0(), cabos: {}, seq: { bpm: 120, tonica: 0, escala: 'menor', passos: SEQ0() }, hold: false, oitava: 36 });
+let st = estado0();
+try {
+  const s = JSON.parse(localStorage.getItem(CHAVE + ':estado') || 'null');
+  if (s && s.p && typeof s.p === 'object') {
+    for (const k in st.p) if (k !== 'botao' && typeof s.p[k] === 'number' && isFinite(s.p[k])) { const [a, b] = FAIXA[k] || [0, 10]; st.p[k] = limita(INTEIRO[k] ? Math.round(s.p[k]) : s.p[k], a, b); }
+    if (s.cabos && typeof s.cabos === 'object') for (const d of DD.DESTINOS) if (DD.FONTES.includes(s.cabos[d])) st.cabos[d] = s.cabos[d];
+    if (s.seq && Array.isArray(s.seq.passos) && s.seq.passos.length === 16) {
+      st.seq.bpm = limita(+s.seq.bpm || 120, 30, 300); st.seq.tonica = limita(s.seq.tonica | 0, 0, 11); if (ESCALAS[s.seq.escala]) st.seq.escala = s.seq.escala;
+      st.seq.passos = s.seq.passos.map(x => ({ n: limita(x.n | 0, 24, 96), m: 'npl'.includes(x.m) && x.m ? x.m : 'n' }));
+    }
+    st.oitava = limita((s.oitava | 0) || 36, 12, 84);
+  }
+} catch (e) {}
+let tSalva = 0;
+function salva() {
+  clearTimeout(tSalva);
+  tSalva = setTimeout(() => { try { const p = Object.assign({}, st.p); delete p.botao; localStorage.setItem(CHAVE + ':estado', JSON.stringify({ p, cabos: st.cabos, seq: st.seq, oitava: st.oitava })); } catch (e) {} }, 300);
+}
+const diz = t => { $('estado').textContent = t; };
+
+/* ---------- áudio ---------- */
+let ctx = null, no = null, reserva = null, pronto = false; const pendentes = [];
+function manda(m) {
+  if (!ctx) return;
+  if (!pronto) { pendentes.push(m); return; }
+  if (no) no.port.postMessage(m); else reserva.motor.msg(m);
+}
+const barra = $('audio-bar');
+function pintaBarra() {
+  const parado = ctx ? ctx.state !== 'running' : window.matchMedia('(pointer: coarse)').matches;
+  barra.hidden = !parado;
+}
+function ligaAudio() {
+  if (!ctx) {
+    ctx = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'interactive' });
+    ctx.onstatechange = pintaBarra;
+    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}   // iPhone: toca mesmo com a chave de silêncio
+    const fim = () => { pronto = true; manda({ t: 'ps', p: st.p }); manda({ t: 'cabos', c: st.cabos }); for (const m of pendentes.splice(0)) manda(m); };
+    const usaReserva = () => {       // sem AudioWorklet (navegador antigo ou página em http sem ser localhost)
+      const sp = ctx.createScriptProcessor(1024, 0, 2); sp.motor = new Motor(ctx.sampleRate);
+      sp.onaudioprocess = e => { const o = e.outputBuffer; sp.motor.frame = Math.round(e.playbackTime * ctx.sampleRate); sp.motor.process(o.getChannelData(0), o.getChannelData(1), o.length); };
+      sp.connect(ctx.destination); reserva = sp; fim();
+      setInterval(() => { const l = sp.motor.led; pintaLeds({ mg: l.mg, trig: l.trig, pk: l.pk > 0 ? 1 : 0, et: l.et }); }, 60);
+    };
+    if (ctx.audioWorklet && window.AudioWorkletNode) {
+      // O módulo vem de um Blob feito do texto embutido. Em file:// (o app Electron) o Chromium recusa o Blob
+      // ("blob:null", origem opaca), então a segunda tentativa usa o mesmo texto numa URL data:.
+      const url = URL.createObjectURL(new Blob([FONTE_DSP], { type: 'application/javascript' }));
+      const dataUrl = () => 'data:application/javascript;base64,' + btoa(unescape(encodeURIComponent(FONTE_DSP)));
+      ctx.audioWorklet.addModule(url).catch(() => ctx.audioWorklet.addModule(dataUrl())).then(() => {
+        no = new AudioWorkletNode(ctx, 'motor-ms20', { numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [2] });
+        no.port.onmessage = e => pintaLeds(e.data);
+        no.connect(ctx.destination); URL.revokeObjectURL(url); fim();
+      }).catch(usaReserva);
+    } else usaReserva();
+  }
+  if (ctx.state !== 'running') { const r = ctx.resume(); if (r && r.catch) r.catch(() => {}); }
+}
+function desbloqueia() {
+  ligaAudio();
+  try { const b = ctx.createBuffer(1, 1, 22050), s = ctx.createBufferSource(); s.buffer = b; s.connect(ctx.destination); s.start(0); } catch (e) {}
+  pintaBarra();
+}
+/* iPhone: o som só liga no fim de um toque (touchend/pointerup) ou num clique */
+for (const ev of ['touchend', 'pointerup', 'click', 'keydown']) document.addEventListener(ev, () => { if (!ctx || ctx.state !== 'running') desbloqueia(); }, { capture: true, passive: true });
+document.addEventListener('visibilitychange', () => { if (!document.hidden && ctx && ctx.state !== 'running') { const r = ctx.resume(); if (r && r.catch) r.catch(() => {}); } });
+window.addEventListener('pageshow', pintaBarra);
+barra.addEventListener('click', desbloqueia);
+pintaBarra();
+
+/* ---------- controles ---------- */
+const ctls = [];                       // funções que repintam cada controle
+const pinta = () => { for (const f of ctls) f(); };
+function setP(k, v) {
+  if (st.p[k] === v) return;
+  st.p[k] = v; manda({ t: 'p', k, v }); pinta(); if (k !== 'botao') salva();
+}
+const num = (v, c = 1) => v.toFixed(c).replace('.', ',');
+const seg = s => s <= 0 ? 'sem espera' : s < 1 ? Math.round(s * 1000) + ' ms' : num(s, 2) + ' s';
+const hz = f => f < 100 ? num(f, 1) + ' Hz' : Math.round(f) + ' Hz';
+const FISICO = {                       // valor aproximado na unidade física, para a dica do controle (ver docs/pesquisa/ms20.md)
+  pw: v => 'pulso de ' + Math.round(100 * DD.larguraPulso(v)) + ' %', pitch: v => (v >= 0 ? '+' : '') + num(v * 2.4, 1) + ' semitons',
+  tune: v => (v >= 0 ? '+' : '') + Math.round(v * 20) + ' cents', porta: v => v ? seg(DD.tempoPorta(v)) : 'sem deslize',
+  hpCut: v => hz(DD.corteHz(v)), lpCut: v => hz(DD.corteHz(v)), mgFreq: v => num(DD.mgHz(v), 2) + ' Hz',
+  hpPeak: v => v * DD.K_MAX / 10 >= 7 / 3 ? 'auto-oscilação' : '', lpPeak: v => v * DD.K_MAX / 10 >= 7 / 3 ? 'auto-oscilação' : '',
+  eg1Delay: v => seg(DD.tempoDelay(v)), eg1Attack: v => seg(DD.tempoEg(v)), eg1Release: v => seg(DD.tempoEg(v)),
+  eg2Hold: v => seg(DD.tempoHold(v)), eg2Attack: v => seg(DD.tempoEg(v)), eg2Decay: v => seg(DD.tempoEg(v)), eg2Release: v => seg(DD.tempoEg(v)),
+  espLow: v => hz(DD.espLowHz(v)), espHigh: v => hz(DD.espHighHz(v)), roda: v => num(v * 5, 1) + ' V' };
+
+function editaValor(bt, o) {           // clicar no número abre um campo para digitar
+  const inp = el('input', 'val'); inp.type = 'number'; inp.min = o.min; inp.max = o.max; inp.step = o.passo; inp.value = o.get(); inp.inputMode = 'decimal';
+  inp.setAttribute('aria-label', 'Valor de ' + o.nome);
+  let fechado = false;
+  const fecha = aplica => {
+    if (fechado) return; fechado = true;
+    const v = parseFloat(String(inp.value).replace(',', '.'));
+    inp.replaceWith(bt);
+    if (aplica && isFinite(v)) o.set(limita(Math.round(v / o.passo) * o.passo, o.min, o.max));
+  };
+  inp.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') fecha(true); else if (e.key === 'Escape') fecha(false); });
+  inp.addEventListener('blur', () => fecha(true));
+  bt.replaceWith(inp); inp.focus(); inp.select();
+}
+const arred = (v, o) => limita(Math.round(Math.round(v / o.passo) * o.passo * 1000) / 1000, o.min, o.max);
+function arrasta(alvo, o, curso) {     // arrasto vertical relativo
+  alvo.addEventListener('pointerdown', e => {
+    if (e.button) return; e.preventDefault(); alvo.focus(); alvo.setPointerCapture(e.pointerId);
+    const y0 = e.clientY, v0 = o.get();
+    const mv = ev => o.set(arred(v0 + (y0 - ev.clientY) / curso * (o.max - o.min), o));
+    const up = () => { alvo.removeEventListener('pointermove', mv); alvo.removeEventListener('pointerup', up); alvo.removeEventListener('pointercancel', up); };
+    alvo.addEventListener('pointermove', mv); alvo.addEventListener('pointerup', up); alvo.addEventListener('pointercancel', up);
+  });
+  alvo.addEventListener('keydown', e => {
+    const g = Math.max(o.passo, (o.max - o.min) / 10), d = { ArrowUp: o.passo, ArrowRight: o.passo, ArrowDown: -o.passo, ArrowLeft: -o.passo, PageUp: g, PageDown: -g }[e.key];
+    if (d != null) { e.preventDefault(); o.set(arred(o.get() + d, o)); }
+    else if (e.key === 'Home') { e.preventDefault(); o.set(o.min); } else if (e.key === 'End') { e.preventDefault(); o.set(o.max); }
+  });
+}
+/* Escalas impressas em volta dos knobs (conferidas com a foto do painel). Os numerais seguem a foto; os símbolos de forma de onda
+   são desenhos meus a partir da foto e do ms20.md, portanto aproximações visuais (c). Ângulos em graus, no sentido horário a partir do topo. */
+const GL = {      // símbolos numa caixa de 12 x 6, centrados em (0,0); y para baixo (alto = -3, baixo = +3)
+  tri: 'M-6 3L-3 -3L0 3L3 -3L6 3', saw: 'M-6 3L-1 -3V3L4 -3V3', sawDown: 'M-6 3V-3L-1 3V-3L4 3',
+  square: 'M-6 3V-3H-2V3H2V-3H6V3', pulseNarrow: 'M-6 3V-3H-4.5V3H0V-3H1.5V3H6', pulseWide: 'M-6 3V-3H-1.5V3H0V-3H4.5V3H6',
+  noise: 'M-6 0L-5 -3L-4 3L-3 -1L-2 2L-1 -3L0 3L1 -2L2 1L3 -3L4 2L5 -1L6 0', flat: 'M-6 0H6',
+  pwVar: 'M-8 3V-3H-5V3M-3 0H3M-3 0L-1 -1.6M-3 0L-1 1.6M3 0L1 -1.6M3 0L1 1.6M5 3V-3H6.5V3' };
+const NUM_0_10 = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'], NUM_PM5 = ['−5', '−4', '−3', '−2', '−1', '0', '+1', '+2', '+3', '+4', '+5'];
+function escala(o, grande) {
+  const R = grande ? 38 : 33, f1 = x => Math.round(x * 10) / 10; let s = '';
+  const P = (a, r) => [r * Math.sin(a * Math.PI / 180), -r * Math.cos(a * Math.PI / 180)];
+  const T = (x, y, t, a) => `<text x="${f1(x)}" y="${f1(y)}"${a || ''}>${t}</text>`;
+  const G = (n, x, y, e) => `<path class="gl" d="${GL[n]}" transform="translate(${f1(x)} ${f1(y)})${e ? ` scale(${e})` : ''}"/>`;
+  if (o.pos) {                                                    // chave rotativa: símbolo ou texto em cada uma das 4 posições (-60, -20, 20 e 60 graus)
+    o.simb.forEach((q, i) => { const [x, y] = P(-60 + 40 * i, q.g ? 42 : 38); s += q.g ? G(q.g, x, y, q.e) : T(x, y, q.t); });
+  } else if (o.esc === 'pw') {                                    // PW: pulso 1:1 no começo, pulso estreito no meio, linha reta (o pulso some) no fim
+    s += G('square', -26, 29, 0.8) + G('pulseNarrow', 6, -35, 0.8) + G('flat', 26, 29, 0.8);
+  } else if (o.esc === 'mg') {                                    // MG: serra descendente + pulso largo / triângulo + quadrada / serra ascendente + pulso estreito
+    s += G('pulseWide', -39, 24, 0.8) + G('sawDown', -29, 24, 0.8) + G('square', 0, -41, 0.8) + G('tri', 0, -34, 0.8) + G('saw', 29, 24, 0.8) + G('pulseNarrow', 39, 24, 0.8);
+  } else if (o.esc === 'vol') {                                   // VOLUME: STANDBY embaixo e 1 a 10 a cada 30 graus
+    for (let i = 0; i <= 10; i++) { const a = 180 + 30 * i, [x1, y1] = P(a, 29.5), [x2, y2] = P(a, 33.5); s += `<line x1="${f1(x1)}" y1="${f1(y1)}" x2="${f1(x2)}" y2="${f1(y2)}"/>`; if (i) { const [x, y] = P(a, 40.5); s += T(x, y, i); } }
+    s += T(1, 44, 'STANDBY', ' text-anchor="start" style="font-size:6.5px"') + T(-27, 44, 'ON', ' style="font-size:6.5px"');
+  } else (o.esc === 'pm' ? NUM_PM5 : NUM_0_10).forEach((t, i) => { const [x, y] = P(-135 + 27 * i, R); s += T(x, y, t); });
+  return `<svg class="esc" viewBox="-50 -50 100 100" aria-hidden="true">${s}</svg>`;
+}
+/* knob giratório; com o.pos (lista de nomes) vira chave rotativa de posições */
+function knob(pai, k, rot, nome, extra) {
+  const o = Object.assign({ min: 0, max: 10, passo: 0.1, rot, nome, get: () => st.p[k], set: v => setP(k, v), fis: FISICO[k] }, extra);
+  if (o.pos) { o.min = 0; o.max = o.pos.length - 1; o.passo = 1; }
+  const c = el('div', 'ctl' + (o.esc === 'vol' ? ' vol' : '')), f = el('div', 'dial' + (o.g ? ' g' : '') + (o.pos ? ' sel' : '') + (o.esc === 'vol' ? ' vol' : ''));
+  f.tabIndex = 0; f.setAttribute('role', 'slider'); f.setAttribute('aria-label', nome); f.setAttribute('aria-valuemin', o.min); f.setAttribute('aria-valuemax', o.max); f.setAttribute('aria-orientation', 'vertical');
+  f.append(el('i')); f.insertAdjacentHTML('beforeend', escala(o, !!o.g)); f.dataset.k = k;
+  const v = el('button', 'val'); v.type = 'button'; v.dataset.k = k;
+  if (o.pos) { v.setAttribute('aria-label', 'Próxima posição de ' + nome); v.addEventListener('click', () => o.set((o.get() + 1) % o.pos.length)); }
+  else { v.setAttribute('aria-label', 'Digitar o valor de ' + nome); v.addEventListener('click', () => editaValor(v, o)); }
+  arrasta(f, o, o.pos ? 90 : 160);
+  if (o.esc === 'vol') c.append(el('span', 'rot', rot), f, v); else c.append(f, el('span', o.semRot ? 'rot sr' : 'rot', rot), v); pai.append(c);   // semRot: a legenda não existe no painel (foto), fica só para leitor de tela
+  ctls.push(() => {
+    const x = o.get(), txt = o.pos ? o.pos[x] : num(x, 1), fis = o.fis ? o.fis(x) : '';
+    f.style.setProperty('--t', (x - o.min) / (o.max - o.min)); f.setAttribute('aria-valuenow', x); f.setAttribute('aria-valuetext', fis ? `${txt} (${fis})` : txt);
+    v.textContent = txt; c.title = fis ? `${nome}: ${txt} — ${fis}` : `${nome}: ${txt}`;
+  });
+  return c;
+}
+const C = $('ctrls');
+function sec(tit, col, lin, cls) {     // seção do painel numa área da grade: col = "1" ou "6 / 8"; lin = "1 / 7"
+  const s = el('section', 'sec' + (cls ? ' ' + cls : '')); s.style.gridColumn = col; s.style.gridRow = lin; s.setAttribute('aria-label', tit);
+  s.append(el('h2', '', tit)); const b = el('div', 'col'); s.append(b); C.append(s); return b;
+}
+/* painel da esquerda, na ordem e na posição do aparelho (conferido com a foto de referência) */
+let B = sec('Voltage controlled oscillator 1', '1', '1 / 7');
+knob(B, 'vco1Wave', 'WAVE FORM', 'VCO 1 WAVE FORM', { pos: ['triângulo', 'serra', 'pulso', 'ruído'], g: 1, simb: [{ g: 'tri', e: 0.8 }, { g: 'saw', e: 0.8 }, { g: 'pwVar', e: 0.8 }, { g: 'noise', e: 0.8 }] });
+knob(B, 'pw', 'PW', 'VCO 1 PW (largura do pulso)', { esc: 'pw' });
+knob(B, 'vco1Scale', 'SCALE', 'VCO 1 SCALE', { pos: ["32'", "16'", "8'", "4'"], g: 1, simb: [{ t: "32'" }, { t: "16'" }, { t: "8'" }, { t: "4'" }] });
+B = sec('Voltage controlled oscillator 2', '2', '1 / 7');
+knob(B, 'vco2Wave', 'WAVE FORM', 'VCO 2 WAVE FORM', { pos: ['serra', 'quadrada', 'pulso', 'RING'], g: 1, simb: [{ g: 'saw', e: 0.8 }, { g: 'square', e: 0.8 }, { g: 'pulseNarrow', e: 0.8 }, { t: 'RING' }] });
+knob(B, 'pitch', 'PITCH', 'VCO 2 PITCH', { min: -5, max: 5, esc: 'pm' });
+knob(B, 'vco2Scale', 'SCALE', 'VCO 2 SCALE', { pos: ["16'", "8'", "4'", "2'"], g: 1, simb: [{ t: "16'" }, { t: "8'" }, { t: "4'" }, { t: "2'" }] });
+B = sec('Portamento', '1', '7 / 9'); knob(B, 'porta', 'TIME', 'PORTAMENTO TIME');
+B = sec('Master tune', '2', '7 / 9'); knob(B, 'tune', 'TUNE', 'MASTER TUNE', { min: -5, max: 5, semRot: true, esc: 'pm' });
+B = sec('VCO mixer', '3', '1 / 5');
+knob(B, 'lvl1', 'VCO 1 LEVEL', 'VCO 1 LEVEL'); knob(B, 'lvl2', 'VCO 2 LEVEL', 'VCO 2 LEVEL');
+B = sec('Frequency modulation', '3', '5 / 9');
+knob(B, 'fmMg', 'MG/T.EXT', 'FREQUENCY MODULATION MG/T.EXT'); knob(B, 'fmEg1', 'EG1/EXT', 'FREQUENCY MODULATION EG1/EXT');
+B = sec('Voltage controlled highpass filter', '4', '1 / 5');
+knob(B, 'hpCut', 'CUTOFF FREQUENCY', 'HIGHPASS CUTOFF FREQUENCY', { g: 1 }); knob(B, 'hpPeak', 'PEAK', 'HIGHPASS PEAK');
+B = sec('Cutoff frequency modulation', '4', '5 / 9');
+knob(B, 'hpMg', 'MG/T.EXT', 'HIGHPASS CUTOFF MODULATION MG/T.EXT'); knob(B, 'hpEg2', 'EG2/EXT', 'HIGHPASS CUTOFF MODULATION EG2/EXT');
+B = sec('Voltage controlled lowpass filter', '5', '1 / 5');
+knob(B, 'lpCut', 'CUTOFF FREQUENCY', 'LOWPASS CUTOFF FREQUENCY', { g: 1 }); knob(B, 'lpPeak', 'PEAK', 'LOWPASS PEAK');
+B = sec('Cutoff frequency modulation', '5', '5 / 9');
+knob(B, 'lpMg', 'MG/T.EXT', 'LOWPASS CUTOFF MODULATION MG/T.EXT'); knob(B, 'lpEg2', 'EG2/EXT', 'LOWPASS CUTOFF MODULATION EG2/EXT');
+B = sec('Voltage controlled amplifier', '6 / 8', '1 / 4');
+B.insertAdjacentHTML('beforeend', '<svg class="vca-des" width="150" height="70" viewBox="0 0 150 70" aria-hidden="true"><path d="M20 30h35M95 30h35M55 12v36l40-18zM75 54V43" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M75 39l-3.5 7h7z" fill="currentColor"/><text x="75" y="66" text-anchor="middle" font-family="Barlow Condensed,Arial Narrow,Arial" font-weight="600" font-size="10" fill="currentColor">EG 2 &amp; EXT</text></svg>');
+B = sec('Modulation generator', '6', '4 / 9');
+const ledMg = el('span', 'led'); ledMg.title = 'Pisca na frequência do gerador de modulação'; B.append(ledMg);
+knob(B, 'mgWave', 'WAVE FORM', 'MODULATION GENERATOR WAVE FORM', { esc: 'mg', fis: v => v < 4.5 ? 'serra descendente / pulso largo' : v > 5.5 ? 'serra ascendente / pulso estreito' : 'triângulo / quadrada' });
+knob(B, 'mgFreq', 'FREQUENCY', 'MODULATION GENERATOR FREQUENCY');
+B = sec('Envelope generator 1', '7', '4 / 9');
+knob(B, 'eg1Delay', 'DELAY TIME', 'EG1 DELAY TIME'); knob(B, 'eg1Attack', 'ATTACK TIME', 'EG1 ATTACK TIME'); knob(B, 'eg1Release', 'RELEASE TIME', 'EG1 RELEASE TIME');
+B = sec('Envelope generator 2', '8', '1 / 9');
+knob(B, 'eg2Hold', 'HOLD TIME', 'EG2 HOLD TIME'); knob(B, 'eg2Attack', 'ATTACK TIME', 'EG2 ATTACK TIME'); knob(B, 'eg2Decay', 'DECAY TIME', 'EG2 DECAY TIME');
+knob(B, 'eg2Sustain', 'SUSTAIN LEVEL', 'EG2 SUSTAIN LEVEL'); knob(B, 'eg2Release', 'RELEASE TIME', 'EG2 RELEASE TIME');
+
+/* ---------- painel de cabos ---------- */
+const PP = $('patch'), E = 0.3833, EY = 528 / 1294;     // coordenadas tiradas da foto de referência ampliada, em pixels, vezes E na horizontal e EY na vertical (o painel de cabos tem a altura da grade de knobs)
+const JACKS = [   // [id, saída?, x, y, rótulo, faixa, descrição]
+  ['total', 0, 118, 255, 'TOTAL', '−5V~+5V', 'modulação externa total; com cabo, substitui a triangular do MG nos três knobs MG/T.EXT'],
+  ['freq', 0, 340, 255, 'FREQ', '−5V~+5V', 'frequência dos VCOs, 1 oitava/V; com cabo, substitui o EG1 no knob EG1/EXT'],
+  ['extSig', 0, 505, 255, 'EXT SIGNAL IN', '3Vp-p', 'sinal externo somado aos VCOs na entrada dos filtros'],
+  ['hpCv', 0, 675, 255, 'CUTOFF FREQ', '−5V~+5V', 'corte do passa-altas, 2 oitavas/V; com cabo, substitui o EG2 no knob EG2/EXT'],
+  ['lpCv', 0, 862, 255, 'CUTOFF FREQ', '−5V~+5V', 'corte do passa-baixas, 2 oitavas/V; com cabo, substitui o EG2 no knob EG2/EXT'],
+  ['initGain', 0, 1055, 255, 'INITIAL GAIN', '0V~+5V', 'ganho inicial do VCA, somado ao EG2'],
+  ['phones', 1, 1550, 272, 'PHONES', '', 'saída de áudio do instrumento (aqui, serve de origem para o processador de sinal externo)'],
+  ['mgTri', 1, 122, 440, 'OUT', '±2,5V', 'gerador de modulação: serra descendente, triângulo ou serra ascendente'],
+  ['mgRect', 1, 430, 440, 'OUT', '0/+5V', 'gerador de modulação: pulso largo, quadrada ou pulso estreito'],
+  ['eg1', 1, 565, 440, 'OUT', '', 'EG1, de −5 V a 0 V'],
+  ['eg1Rev', 1, 572, 585, 'REV OUT', '', 'EG1 invertido, de +5 V a 0 V'],
+  ['vcaCtl', 0, 725, 585, 'CONTROL INPUT', '', 'controle do VCA de modulação, 0 a +5 V'],
+  ['eg2Rev', 1, 1143, 440, 'REV OUT', '', 'EG2 invertido, de +5 V a 0 V'],
+  ['vco2Cv', 0, 1278, 512, 'VCO 2 CV IN', '', 'altura só do VCO 2 em Hz/V, 0 a +8 V; com cabo, substitui o teclado'],
+  ['vco12Cv', 0, 1410, 440, 'VCO 1+2 CV IN', '', 'altura dos dois VCOs em Hz/V, 0 a +8 V; com cabo, substitui o teclado'],
+  ['kbdCv', 1, 1565, 440, 'KBD CV OUT', '', 'tensão do teclado, exponencial (Hz/V), 0 a +8 V'],
+  ['shClock', 0, 275, 585, 'CLOCK', '⏚', 'relógio do sample & hold: amostra quando vai ao terra'],
+  ['eg1Trig', 0, 957, 585, 'EG 1 TRIG IN', '⏚', 'gatilho só do EG1 (ativo no terra); com cabo, substitui o do teclado'],
+  ['trigIn', 0, 1420, 585, 'TRIG IN', '⏚', 'gatilho de EG1 e EG2 (ativo no terra); com cabo, substitui o do teclado'],
+  ['kbdTrig', 1, 1568, 585, 'TRIG OUT', '⏚', 'gatilho do teclado: +5 V solto, terra com tecla apertada'],
+  ['shIn', 0, 130, 730, 'IN', '', 'sinal a amostrar pelo sample & hold'],
+  ['shOut', 1, 430, 730, 'OUT', '', 'saída em degraus do sample & hold'],
+  ['vcaIn', 0, 580, 730, 'IN', '', 'entrada do VCA de modulação'],
+  ['vcaOut', 1, 812, 730, 'OUT', '', 'saída do VCA de modulação'],
+  ['pink', 1, 962, 730, 'PINK', '', 'ruído rosa, 5 Vp-p'],
+  ['white', 1, 1262, 730, 'WHITE', '', 'ruído branco, 5 Vp-p'],
+  ['roda', 1, 1440, 730, 'RODA', '−5V~+5V', 'roda de controle, −5 V a +5 V'],
+  ['botao', 1, 1578, 730, 'BOTÃO', '⏚', 'botão momentâneo: vai ao terra enquanto apertado'],
+  ['espIn', 0, 132, 935, 'SIGNAL IN', '', 'entrada do processador de sinal externo'],
+  ['espAmp', 1, 432, 935, 'OUT', '', 'saída do amplificador'],
+  ['espBpf', 1, 737, 935, 'OUT', '', 'saída do passa-faixa'],
+  ['espCv', 1, 1040, 935, 'CV OUT', '', 'conversor frequência-tensão, 0 a +8,4 V (Hz/V)'],
+  ['espEnv', 1, 1435, 935, 'ENV OUT', '', 'seguidor de envelope, 0 a +5 V'],
+  ['espTrig', 1, 1585, 935, 'TRIG OUT', '⏚', 'gatilho quando o envelope passa do limiar'] ];
+const CAIXAS = [[285, 440, 'MODULATION\nGENERATOR'], [765, 440, 'ENVELOPE\nGENERATOR 1'], [995, 440, 'ENVELOPE\nGENERATOR 2'], [1492, 512, 'KBD'], [285, 730, 'SAMPLE\nHOLD'], [1110, 730, 'NOISE\nGENERATOR'],
+  [585, 935, 'BAND PASS\nFILTER'], [890, 935, 'F-V\nCONVERTER'], [1240, 935, 'ENVELOPE\nFOLLOWER']];
+/* blocos do alto: nomes completos como na foto (texto pequeno, como no painel). VCO MIXER é a única legenda curta na foto. */
+const CAIXAS3 = [[150, 85, 'VOLTAGE\nCONTROLLED\nOSCILLATOR 1'], [345, 85, 'VOLTAGE\nCONTROLLED\nOSCILLATOR 2'], [520, 85, 'VCO\nMIXER'], [690, 85, 'VOLTAGE\nCONTROLLED\nHP FILTER'], [872, 85, 'VOLTAGE\nCONTROLLED\nLP FILTER'], [1058, 85, 'VOLTAGE\nCONTROLLED\nAMPLIFIER']];
+const TRIANG = [[695, 730, 'VCA'], [282, 935, 'AMP']];    // triângulos de amplificador (foto): largura 62 e altura 56 em unidades da foto
+const LINHAS = 'M210 85H1150 M118 200V150H862V200 M340 200V150 M675 200V120 M862 200V120 M505 200V165H600V120 M1055 200V120 M170 440H215 M355 440H385 M612 440H690 M840 440H925 M1070 440H1098 M1455 440H1520 M1492 480V455 M1465 512V585H1525 M1320 512H1350V440H1362 M900 585H790V470 M1375 585H1060V470 M275 630V695 M178 730H215 M355 730H385 M628 730H664 M725 630V672H697V715 M726 730H765 M1008 730H1035 M1185 730H1215 M180 935H251 M313 935H385 M480 935H510 M660 935H690 M785 935H815 M965 935H993 M345 935V1000H1120V935H1165 M1315 935H1388 M1482 935H1540 M45 800H1690';
+const SETAS = [[675, 120, 'u'], [862, 120, 'u'], [1055, 120, 'u'], [600, 120, 'u'], [1150, 85, 'r'], [697, 715, 'd']];   // pontas de seta (foto): cabo que entra num bloco de cima, fim da cadeia, controle do VCA
+const ponta = ([x, y, d]) => d === 'u' ? `M${x} ${y}l-9 22h18z` : d === 'd' ? `M${x} ${y}l-9 -22h18z` : `M${x} ${y}l-22 -9v18z`;
+PP.insertAdjacentHTML('beforeend', `<svg class="fundo" viewBox="0 0 ${1725} ${1294}" preserveAspectRatio="none" aria-hidden="true"><path d="${LINHAS}" fill="none" stroke="#6b6258" stroke-width="3"/><path d="${SETAS.map(ponta).join('')}" fill="#6b6258"/>${TRIANG.map(([x, y]) => `<path d="M${x - 31} ${y - 28}V${y + 28}L${x + 31} ${y}z" fill="#e6dfcd" stroke="#2a2521" stroke-width="3.5" stroke-linejoin="round"/>`).join('')}</svg>`);
+const px = v => Math.round(v * E) + 'px', py = v => Math.round(v * EY) + 'px';
+function rotulo(x, y, txt, cls) { const s = el('span', 'pl ' + (cls || ''), txt); s.style.left = px(x); s.style.top = py(y); s.style.whiteSpace = 'pre'; PP.append(s); return s; }
+for (const [x, y, t] of CAIXAS) rotulo(x, y, t, 'cx');
+for (const [x, y, t] of CAIXAS3) rotulo(x, y, t, 'cx cx3');
+for (const [x, y, t] of TRIANG) rotulo(x - 9, y, t, 'tri');
+rotulo(460, 828, 'EXTERNAL SIGNAL PROCESSOR', 'tit'); rotulo(1237, 858, 'PEAK', 'leg');
+rotulo(1550, 18, 'SIGNAL OUT'); { const j = el('span', 'jack out fixo'); j.style.left = px(1550); j.style.top = py(105); j.title = 'SIGNAL OUT: é a saída de som desta página'; PP.append(j); }
+const ledPk = el('span', 'led'), ledEt = el('span', 'led');
+ledPk.style.left = px(1237); ledPk.style.top = py(840); ledEt.style.left = px(1585); ledEt.style.top = py(840);
+ledPk.title = 'PEAK: o amplificador do processador saturou'; ledEt.title = 'Gatilho do processador de sinal externo';
+PP.append(ledPk, ledEt);
+function pintaLeds(d) { ledMg.classList.toggle('on', !!d.mg); ledPk.classList.toggle('on', !!d.pk); ledEt.classList.toggle('on', !!d.et); }
+const jk = {}, CORES = ['#d98a1c', '#1f8a70', '#b23a48', '#2d6cdf', '#7a4fb5', '#3f3f46'];
+for (const [id, sai, x, y, rot, faixa, desc] of JACKS) {
+  const b = el('button', 'jack ' + (sai ? 'out' : 'in')); b.type = 'button'; b.style.left = px(x); b.style.top = py(y); b.dataset.j = id;
+  b.setAttribute('aria-label', `${rot} (${sai ? 'saída' : 'entrada'}): ${desc}`); b.title = `${rot} — ${sai ? 'saída' : 'entrada'}: ${desc}`;
+  b.addEventListener('click', () => cliqueJack(id));
+  PP.append(b); jk[id] = { b, sai, x: x * E, y: y * EY, rot };
+  rotulo(x, y - 88, id === 'botao' ? '\u25AC' : rot);     // na foto o jack do botão tem só um pequeno ícone no lugar do nome
+  if (faixa === '\u23DA') rotulo(x + 55, y + 45, faixa, 'leg'); else if (faixa) rotulo(x, y + 58, faixa, 'leg');   // marca de terra ao lado do jack, como na foto, para não bater no nome da fileira de baixo
+}
+const FIOS = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); FIOS.setAttribute('class', 'fios'); FIOS.setAttribute('aria-hidden', 'true'); PP.append(FIOS);
+let jSel = null;
+function mandaCabos() { manda({ t: 'cabos', c: st.cabos }); }
+function pintaCabos() {
+  for (const k in jk) { jk[k].b.classList.remove('ligado'); jk[k].b.classList.toggle('sel', jSel === k); }
+  let h = '', i = 0;
+  for (const d of DD.DESTINOS) {
+    const s = st.cabos[d]; if (!s || !jk[s] || !jk[d]) continue;
+    const a = jk[s], b = jk[d], cor = CORES[DD.DESTINOS.indexOf(d) % CORES.length], cai = 26 + 0.22 * Math.hypot(a.x - b.x, a.y - b.y);
+    const caminho = `M${a.x} ${a.y}C${a.x} ${a.y + cai} ${b.x} ${b.y + cai} ${b.x} ${b.y}`;
+    h += `<path d="${caminho}" fill="none" stroke="rgba(0,0,0,.45)" stroke-width="8" stroke-linecap="round"/><path d="${caminho}" fill="none" stroke="${cor}" stroke-width="5" stroke-linecap="round"/>`;
+    for (const j of [a, b]) { j.b.classList.add('ligado'); j.b.style.setProperty('--cor', cor); }
+    i++;
+  }
+  FIOS.innerHTML = h; $('tira-cabos').disabled = !i;
+}
+function cliqueJack(id) {
+  const j = jk[id];
+  if (!jSel) {
+    if (!j.sai && st.cabos[id]) { const de = jk[st.cabos[id]].rot; delete st.cabos[id]; mandaCabos(); salva(); pintaCabos(); diz(`Cabo tirado de ${j.rot} (vinha de ${de}). A ligação interna voltou a valer.`); return; }
+    jSel = id; pintaCabos(); diz(`${j.rot} escolhido. Agora toque num jack de ${j.sai ? 'entrada (prateado)' : 'saída (dourado)'}.`); return;
+  }
+  if (jSel === id) { jSel = null; pintaCabos(); diz('Escolha desfeita.'); return; }
+  const o = jk[jSel];
+  if (o.sai === j.sai) { jSel = id; pintaCabos(); diz(`Um cabo liga uma saída a uma entrada. ${j.rot} escolhido no lugar.`); return; }
+  const src = o.sai ? jSel : id, dst = o.sai ? id : jSel;
+  st.cabos[dst] = src; jSel = null; mandaCabos(); salva(); pintaCabos(); diz(`Cabo ligado: ${jk[src].rot} → ${jk[dst].rot}.`);
+}
+$('tira-cabos').addEventListener('click', () => { st.cabos = {}; jSel = null; mandaCabos(); salva(); pintaCabos(); diz('Todos os cabos foram tirados.'); });
+/* knobs que ficam no painel de cabos: VOLUME e os cinco do processador de sinal externo */
+function knobEm(x, y, ...a) { const c = knob(PP, ...a); c.style.left = px(x); c.style.top = py(y); return c; }
+knobEm(1364, 150, 'volume', 'VOLUME', 'VOLUME', { g: 1, esc: 'vol', fis: v => v === 0 ? 'STANDBY: sem som' : '' });
+/* LED ON do VOLUME (foto): aceso com o VOLUME acima de 0. O aparelho real tem uma chave de força na posição STANDBY do knob; aqui STANDBY é o volume 0 (c) */
+{ const l = el('span', 'led'); l.style.left = (Math.round(1364 * E) - 42) + 'px'; l.style.top = '102px'; l.title = 'ON: aceso com o VOLUME acima de 0 (STANDBY = volume 0, sem som)'; PP.append(l); ctls.push(() => l.classList.toggle('on', st.p.volume > 0)); }
+knobEm(175, 1120, 'espLevel', 'SIGNAL LEVEL', 'ESP SIGNAL LEVEL'); knobEm(400, 1120, 'espLow', 'LOW CUT FREQ', 'ESP LOW CUT FREQ'); knobEm(630, 1120, 'espHigh', 'HIGH CUT FREQ', 'ESP HIGH CUT FREQ');
+knobEm(860, 1120, 'espCv', 'CV ADJUST', 'ESP CV ADJUST'); knobEm(1090, 1120, 'espThr', 'THRESHOLD LEVEL', 'ESP THRESHOLD LEVEL');
+
+/* roda de controle (sem mola, com trava no centro) e botão momentâneo, à esquerda do teclado */
+const PF = $('perf');
+{ const c = el('div', 'ctl'), r = el('div', 'roda'), o = { min: -1, max: 1, passo: 0.01, nome: 'roda de controle', get: () => st.p.roda, set: v => setP('roda', Math.abs(v) < 0.06 ? 0 : v) };
+  r.tabIndex = 0; r.setAttribute('role', 'slider'); r.setAttribute('aria-label', 'Roda de controle (só age com cabo no jack RODA)'); r.setAttribute('aria-valuemin', -1); r.setAttribute('aria-valuemax', 1); r.setAttribute('aria-orientation', 'vertical');
+  r.append(el('b')); r.dataset.k = 'roda'; arrasta(r, o, 88); r.addEventListener('dblclick', () => setP('roda', 0));
+  const v = el('button', 'val'); v.type = 'button'; v.setAttribute('aria-label', 'Digitar o valor da roda de controle'); v.addEventListener('click', () => editaValor(v, o));
+  c.append(r, el('span', 'rot', 'RODA'), v); PF.append(c);
+  ctls.push(() => { const x = st.p.roda; r.style.setProperty('--x', x); r.setAttribute('aria-valuenow', x); v.textContent = num(x, 2); c.title = 'Roda de controle: ' + FISICO.roda(x) + ' no jack RODA. Duplo clique volta ao centro.'; }); }
+{ const c = el('div', 'ctl'), b = el('button', 'momento'); b.type = 'button'; b.id = 'momento'; b.setAttribute('aria-label', 'Botão momentâneo (só age com cabo no jack BOTÃO)'); b.title = 'Botão momentâneo: leva o jack BOTÃO ao terra enquanto apertado';
+  const poe = v => { b.classList.toggle('on', !!v); setP('botao', v); };
+  b.addEventListener('pointerdown', e => { e.preventDefault(); try { b.setPointerCapture(e.pointerId); } catch (x) {} poe(1); });
+  for (const ev of ['pointerup', 'pointercancel']) b.addEventListener(ev, () => poe(0));
+  b.addEventListener('keydown', e => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); e.stopPropagation(); poe(1); } });
+  b.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') { e.stopPropagation(); poe(0); } }); b.addEventListener('blur', () => poe(0));
+  c.append(b, el('span', 'rot', 'BOTÃO')); PF.append(c); }
+
+/* ---------- notas: teclado da tela, teclado do computador, MIDI, Hold ---------- */
+const fisicas = new Map(), presasHold = new Set();
+function teclaOn(nota, midi, chave) {
+  if (!midi && selPasso >= 0) { st.seq.passos[selPasso] = { n: nota, m: 'n' }; selPasso = (selPasso + 1) % 16; pintaSeq(); salva(); }
+  if (nota < 0 || nota > 127) return;
+  ligaAudio();
+  fisicas.set(chave, nota);
+  if (st.hold) { if (presasHold.has(nota)) return; presasHold.add(nota); }
+  manda({ t: 'on', n: nota });
+}
+function teclaOff(chave) {
+  const n = fisicas.get(chave); if (n == null) return; fisicas.delete(chave);
+  if (st.hold) return;
+  manda({ t: 'off', n });
+}
+function soltaTudo() { manda({ t: 'panico' }); fisicas.clear(); presasHold.clear(); if (seqTocando) seqPara(); document.querySelectorAll('.tecl .on').forEach(k => k.classList.remove('on')); }
+$('hold').addEventListener('click', () => {
+  st.hold = !st.hold; $('hold').setAttribute('aria-pressed', st.hold);
+  if (!st.hold) { const seguras = new Set(fisicas.values()); for (const n of presasHold) if (!seguras.has(n)) manda({ t: 'off', n }); presasHold.clear(); }
+  else for (const n of fisicas.values()) presasHold.add(n);
+});
+
+const TECL = $('tecl'), PRIMEIRA = DD.NOTA_BASE, ULTIMA = DD.NOTA_BASE + 36, teclas = {};
+{ let x = 0;   // x = quantas teclas brancas já passaram; a largura da tecla vem de --bw (a página preenche a largura, como na foto)
+  for (let n = PRIMEIRA; n <= ULTIMA; n++) {
+    const preta = [1, 3, 6, 8, 10].includes(n % 12), k = el('div', preta ? 'pr' : 'br'); k.dataset.n = n;
+    if (preta) k.style.left = `calc(var(--bw, 40px) * ${x})`; else { x += 1; if (n % 12 === 0) k.append(el('span', '', nomeNota(n))); }
+    TECL.append(k); teclas[n] = k;
+  } }
+const dedos = new Map();
+const notaEm = e => { const k = document.elementFromPoint(e.clientX, e.clientY); return k && k.dataset && k.dataset.n && TECL.contains(k) ? +k.dataset.n : null; };
+function dedo(e, baixo) {
+  const id = 'd' + e.pointerId, ant = dedos.get(id), n = baixo ? notaEm(e) : null;
+  if (ant === n || (ant == null && n == null)) return;
+  if (ant != null) { teclas[ant].classList.remove('on'); teclaOff(id + ':' + ant); }
+  if (n != null) { dedos.set(id, n); teclas[n].classList.add('on'); teclaOn(n, false, id + ':' + n); } else dedos.delete(id);
+}
+TECL.addEventListener('pointerdown', e => { e.preventDefault(); try { TECL.setPointerCapture(e.pointerId); } catch (x) {} dedo(e, true); });
+TECL.addEventListener('pointermove', e => { if (dedos.has('d' + e.pointerId)) dedo(e, true); });
+for (const ev of ['pointerup', 'pointercancel']) TECL.addEventListener(ev, e => dedo(e, false));
+TECL.addEventListener('contextmenu', e => e.preventDefault());
+const ROL = $('tecl-rol');
+let BW = 40;
+function ajustaTecl() {      // 22 teclas brancas ocupam a largura disponível (mínimo 40 px; abaixo disso o teclado rola por oitavas)
+  const disp = $('tecl-rol').clientWidth; BW = limita(Math.floor(disp / 22), 40, 80); TECL.style.setProperty('--bw', BW + 'px');
+}
+function rola(d) {
+  ajustaTecl(); const O = 7 * BW;
+  const max = Math.max(0, TECL.scrollWidth - ROL.clientWidth);
+  ROL.scrollLeft = limita(Math.round((ROL.scrollLeft + d * O) / O) * O, 0, max);
+  const a = PRIMEIRA + Math.round(ROL.scrollLeft / O) * 12, vis = Math.floor(ROL.clientWidth / O) * 12;
+  $('tecl-info').textContent = max ? `Teclas ${nomeNota(a)} a ${nomeNota(Math.min(ULTIMA, a + Math.max(12, vis)))}` : '';
+  $('tecl-esq').disabled = ROL.scrollLeft <= 0; $('tecl-dir').disabled = ROL.scrollLeft >= max;
+  $('tecl-esq').hidden = $('tecl-dir').hidden = !max;
+}
+$('tecl-esq').addEventListener('click', () => rola(-1)); $('tecl-dir').addEventListener('click', () => rola(1));
+window.addEventListener('resize', () => rola(0));
+
+const MAPA_PC = { KeyA: 0, KeyW: 1, KeyS: 2, KeyE: 3, KeyD: 4, KeyF: 5, KeyT: 6, KeyG: 7, KeyY: 8, KeyH: 9, KeyU: 10, KeyJ: 11, KeyK: 12, KeyO: 13, KeyL: 14, KeyP: 15, Semicolon: 16 };
+const digitando = e => /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName);
+const fisicasPc = new Map();
+document.addEventListener('keydown', e => {
+  if (digitando(e) || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.code === 'Space' && (e.target === document.body || e.target === document.documentElement)) { e.preventDefault(); if (!e.repeat) seqTocando ? seqPara() : seqToca(); return; }
+  if (e.repeat) return;
+  if (e.code === 'KeyZ') { st.oitava = limita(st.oitava - 12, 12, 84); diz('Teclado do computador a partir de ' + nomeNota(st.oitava) + '.'); salva(); return; }
+  if (e.code === 'KeyX') { st.oitava = limita(st.oitava + 12, 12, 84); diz('Teclado do computador a partir de ' + nomeNota(st.oitava) + '.'); salva(); return; }
+  const d = MAPA_PC[e.code]; if (d == null) return;
+  const n = st.oitava + d; if (teclas[n]) teclas[n].classList.add('on');
+  teclaOn(n, false, 'pc' + e.code); fisicasPc.set(e.code, n);
+});
+document.addEventListener('keyup', e => { const n = fisicasPc.get(e.code); if (n == null) return; fisicasPc.delete(e.code); if (teclas[n]) teclas[n].classList.remove('on'); teclaOff('pc' + e.code); });
+window.addEventListener('blur', () => { for (const [c, n] of fisicasPc) { if (teclas[n]) teclas[n].classList.remove('on'); teclaOff('pc' + c); } fisicasPc.clear(); });
+
+/* Web MIDI: só notas, sem velocidade, como a reedição do aparelho (que só aceita o canal 1; aqui valem todos os canais).
+   O pitch bend move a roda de controle, que só age se houver cabo no jack RODA. */
+$('midi').addEventListener('click', () => {
+  if (!navigator.requestMIDIAccess) { diz('Este navegador não oferece Web MIDI.'); return; }
+  navigator.requestMIDIAccess().then(ac => {
+    const liga = () => { let q = 0; for (const inp of ac.inputs.values()) { inp.onmidimessage = midiMsg; q++; } diz(q ? `MIDI ativo: ${q} entrada(s).` : 'MIDI ativo, mas nenhuma entrada encontrada.'); };
+    ac.onstatechange = liga; liga(); $('midi').setAttribute('aria-pressed', 'true');
+  }, () => diz('Acesso ao MIDI negado.'));
+});
+function midiMsg(e) {
+  const [s, a, b] = e.data, tipo = s & 0xF0;
+  if (tipo === 0xF0) return;
+  if (tipo === 0x90 && b > 0) { teclaOn(a, true, 'm' + a); if (teclas[a]) teclas[a].classList.add('on'); }
+  else if (tipo === 0x80 || tipo === 0x90) { teclaOff('m' + a); if (teclas[a]) teclas[a].classList.remove('on'); }
+  else if (tipo === 0xE0) setP('roda', Math.round(((b << 7 | a) - 8192) / 8192 * 100) / 100);
+  else if (tipo === 0xB0 && a >= 123) soltaTudo();
+}
+
+/* ---------- acessórios: sequenciador de 16 passos ---------- */
+let selPasso = -1, seqTocando = false, seqProx = 0, seqI = 0, seqRel = 0; const seqFila = [];
+const PASSOS = $('passos'), cel = [];
+const MODOS = { n: 'Nota', p: 'Pausa', l: 'Liga' };
+for (let i = 0; i < 16; i++) {
+  const c = el('div', 'passo'); c.append(el('small', '', String(i + 1)));
+  const nota = el('button', 'bp nota'); nota.type = 'button';
+  nota.addEventListener('click', () => { selPasso = selPasso === i ? -1 : i; pintaSeq(); });
+  const par = el('div', 'par'), mais = el('button', 'bp', '+'), menos = el('button', 'bp', '−'); menos.type = mais.type = 'button';
+  menos.setAttribute('aria-label', `Passo ${i + 1}: um semitom abaixo`); mais.setAttribute('aria-label', `Passo ${i + 1}: um semitom acima`);
+  const muda = d => { const p = st.seq.passos[i]; p.n = limita(p.n + d, 24, 96); pintaSeq(); salva(); };
+  menos.addEventListener('click', () => muda(-1)); mais.addEventListener('click', () => muda(1)); par.append(mais, menos);
+  const md = el('button', 'bp'); md.type = 'button';
+  md.addEventListener('click', () => { const p = st.seq.passos[i]; p.m = { n: 'p', p: 'l', l: 'n' }[p.m]; pintaSeq(); salva(); });
+  c.append(nota, par, md); PASSOS.append(c); cel.push({ c, nota, md });
+}
+function pintaSeq() {
+  st.seq.passos.forEach((p, i) => {
+    const x = cel[i]; x.nota.textContent = p.m === 'n' ? nomeNota(p.n) : p.m === 'p' ? '·' : '—';
+    x.nota.setAttribute('aria-label', `Passo ${i + 1}: ${p.m === 'n' ? nomeNota(p.n) : MODOS[p.m]}. Selecionar para gravar pelo teclado`);
+    x.nota.setAttribute('aria-pressed', selPasso === i); x.md.textContent = MODOS[p.m]; x.c.classList.toggle('sel', selPasso === i);
+  });
+  $('seq-bpm').value = st.seq.bpm; $('seq-tonica').value = st.seq.tonica; $('seq-escala').value = st.seq.escala;
+}
+NOTAS.forEach((n, i) => { const o = el('option', '', n); o.value = i; $('seq-tonica').append(o); });
+for (const k in ESCALAS) { const o = el('option', '', ESCALAS[k][0]); o.value = k; $('seq-escala').append(o); }
+$('seq-bpm').addEventListener('change', e => { st.seq.bpm = limita(Math.round(+e.target.value) || 120, 30, 300); e.target.value = st.seq.bpm; salva(); });
+$('seq-tonica').addEventListener('change', e => { st.seq.tonica = +e.target.value; salva(); });
+$('seq-escala').addEventListener('change', e => { st.seq.escala = e.target.value; salva(); });
+$('seq-aleat').addEventListener('click', () => {
+  const graus = ESCALAS[st.seq.escala][1], base = 36 + st.seq.tonica, notas = [];
+  for (let o = 0; o < 2; o++) for (const g of graus) notas.push(base + 12 * o + g);
+  notas.push(base + 24);
+  st.seq.passos = Array.from({ length: 16 }, (_, i) => {
+    const r = Math.random(), n = notas[Math.floor(Math.random() * notas.length)];
+    return i === 0 ? { n: base + 12, m: 'n' } : r < 0.14 ? { n, m: 'p' } : r < 0.28 ? { n, m: 'l' } : { n, m: 'n' };
+  });
+  st.seq.passos.forEach((p, i) => { if (p.m === 'l' && st.seq.passos[i - 1].m === 'p') p.m = 'n'; });
+  pintaSeq(); salva();
+});
+/* Agendamento: um temporizador curto olha 150 ms à frente e manda os eventos com a hora do relógio do AudioContext;
+   o motor dispara cada evento na amostra certa. O setInterval só decide quando agendar, não quando soa. */
+const durPasso = () => 60 / st.seq.bpm / 4;
+function seqAgenda() {
+  if (!seqTocando || !ctx) return;
+  const agora = ctx.currentTime;
+  if (seqProx < agora - 0.25) seqProx = agora + 0.03;   // a aba ficou em segundo plano
+  while (seqProx < agora + 0.15) {
+    const i = seqI, p = st.seq.passos[i], d = durPasso();
+    if (p.m === 'n') {
+      let lig = 0; while (i + 1 + lig < 16 && st.seq.passos[i + 1 + lig].m === 'l') lig++;
+      manda({ t: 'on', n: p.n, at: seqProx, seq: 1 }); manda({ t: 'off', n: p.n, at: seqProx + d * (lig + 0.6), seq: 1 });
+    }
+    seqFila.push({ i, t: seqProx }); seqProx += d; seqI = (seqI + 1) % 16;
+  }
+}
+function seqToca() {
+  if (seqTocando) return;
+  ligaAudio(); seqTocando = true; seqI = 0; seqFila.length = 0; seqProx = ctx.currentTime + 0.08;
+  seqRel = setInterval(seqAgenda, 25); seqAgenda(); requestAnimationFrame(seqDesenha);
+  $('seq-play').setAttribute('aria-pressed', 'true'); $('seq-play').textContent = 'Stop';
+}
+function seqPara() {
+  if (!seqTocando) return;
+  seqTocando = false; clearInterval(seqRel); seqFila.length = 0; manda({ t: 'seqpara' });
+  cel.forEach(x => x.c.classList.remove('agora')); $('seq-play').setAttribute('aria-pressed', 'false'); $('seq-play').textContent = 'Play';
+}
+function seqDesenha() {
+  if (!seqTocando) return;
+  const agora = ctx.currentTime; let cur = -1;
+  while (seqFila.length && seqFila[0].t <= agora) cur = seqFila.shift().i;
+  if (cur >= 0) cel.forEach((x, i) => x.c.classList.toggle('agora', i === cur));
+  requestAnimationFrame(seqDesenha);
+}
+$('seq-play').addEventListener('click', () => seqTocando ? seqPara() : seqToca());
+
+/* botão com confirmação em dois toques (sem window.confirm, que alguns PWAs bloqueiam) */
+function confirma(id, rotulo, pergunta, acao) {
+  const b = $(id), nao = $(id + '-nao'); let t = 0;
+  const desarma = () => { clearTimeout(t); b.dataset.armado = ''; b.textContent = rotulo; nao.hidden = true; };
+  b.addEventListener('click', () => { if (b.dataset.armado) { desarma(); acao(); } else { b.dataset.armado = '1'; b.textContent = pergunta; nao.hidden = false; t = setTimeout(desarma, 6000); } });
+  nao.addEventListener('click', desarma);
+}
+confirma('zerar', 'Zerar', 'Confirmar: zerar painel, cabos e sequência', () => {
+  soltaTudo(); st = estado0(); selPasso = -1; jSel = null;
+  $('hold').setAttribute('aria-pressed', 'false'); manda({ t: 'ps', p: st.p }); mandaCabos(); pinta(); pintaCabos(); pintaSeq(); salva(); diz('Painel, cabos e sequência voltaram ao padrão.');
+});
+
+$('hold').setAttribute('aria-pressed', 'false');
+pinta(); pintaCabos(); pintaSeq();
+requestAnimationFrame(() => rola(0));
+})();
+</script>
+<script src="../voltar.js"></script>
+</body>
+</html>
