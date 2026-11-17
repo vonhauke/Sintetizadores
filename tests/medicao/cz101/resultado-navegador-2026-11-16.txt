@@ -1,0 +1,95 @@
+ok   título da página
+ok   painel sem marca nem nome de modelo
+ok   51 botões, 49 teclas, 1 visor
+ok   alvos de toque de 44 px ou mais
+ok   sem URLs externas na página
+ok   motor carregado como AudioWorklet em file:// (sem cair na reserva) — {"nos":1,"sp":0}
+ok   tecla da tela produz som — 0.1851
+ok   som para depois de soltar — 0.00000
+ok   teclado do computador produz som — 0.2640
+ok   8 notas juntas: som presente, finito e dentro de ±1 — 0.540
+ok   botão internal: escolhe o banco INTERNAL
+ok   botão cart: escolhe o banco CARTRIDGE
+ok   botão preset: escolhe o banco PRESET
+ok   botão n1: escolhe o timbre 1
+ok   botão n2: escolhe o timbre 2
+ok   botão n3: escolhe o timbre 3
+ok   botão n4: escolhe o timbre 4
+ok   botão n5: escolhe o timbre 5
+ok   botão n6: escolhe o timbre 6
+ok   botão n7: escolhe o timbre 7
+ok   botão n8: escolhe o timbre 8
+ok   botão select: alterna 1–8 e 9–16
+ok   botão n3: escolhe o timbre 11 na segunda metade
+ok   botão select: volta à primeira metade
+ok   botão vib: abre a tela do vibrato
+ok   botão valUp: VALUE △ aumenta o campo
+ok   botão valDn: VALUE ▽ diminui o campo
+ok   botão curR: CURSOR ▷ vai ao campo seguinte
+ok   botão curL: CURSOR ◁ volta ao campo anterior
+ok   botão compare: COMPARE/RECALL mostra o original
+ok   botão compare: COMPARE/RECALL volta ao editado
+ok   botão oct: abre a tela OCTAVE
+ok   botão valUp: OCTAVE +1
+ok   botão detune: abre a tela DETUNE
+ok   botão curR: CURSOR no campo OCT do DETUNE
+ok   botão valUp: DETUNE OCT +1
+ok   botão dco1w: DCO 1 WAVE FORM abre a tela de forma de onda da linha 1
+ok   botão valUp: VALUE muda a forma de onda
+ok   botão dco1e: DCO 1 ENV abre o envelope de pitch
+ok   botão dcw1e: DCW 1 ENV abre o envelope de wave
+ok   botão dca1e: DCA 1 ENV abre o envelope de amp
+ok   botão dcw1k: DCW 1 KEY FOLLOW
+ok   botão dca1k: DCA 1 KEY FOLLOW
+ok   botão dco2w: DCO 2 WAVE FORM abre a tela de forma de onda da linha 2
+ok   botão valUp: VALUE muda a forma de onda
+ok   botão dco2e: DCO 2 ENV abre o envelope de pitch
+ok   botão dcw2e: DCW 2 ENV abre o envelope de wave
+ok   botão dca2e: DCA 2 ENV abre o envelope de amp
+ok   botão dcw2k: DCW 2 KEY FOLLOW
+ok   botão dca2k: DCA 2 KEY FOLLOW
+ok   botão envUp: ENV STEP △ avança o passo
+ok   botão envDn: ENV STEP ▽ volta o passo
+ok   botão sus: SUSTAIN marca o ponto de sustain
+ok   botão fim: END marca o fim do envelope
+ok   botão init: INITIALIZE restaura o envelope
+ok   botão linesel: LINE SELECT passa à próxima combinação
+ok   botão ring: RING liga (com duas linhas)
+ok   botão noise: NOISE liga e desliga o RING
+ok   botão solo: SOLO liga
+ok   botão mix: TONE MIX liga e desliga o SOLO
+ok   botão mix: TONE MIX desliga
+ok   botão portOn: PORTAMENTO ON/OFF liga
+ok   botão portT: PORTAMENTO TIME abre a tela
+ok   botão valUp: portamento TIME +1
+ok   botão bend: BEND RANGE abre a tela
+ok   botão valUp: BEND RANGE +1
+ok   botão transp: KEY TRANSPOSE abre a tela
+ok   botão valUp: KEY TRANSPOSE +1
+ok   botão midi: MIDI abre a tela
+ok   botão curR: CURSOR vai ao Program Change
+ok   botão valUp: Program Change ENA/DIS alterna
+ok   botão vibOn: VIBRATO ON/OFF alterna
+ok   botão mUp: MASTER TUNE △ +5 cents
+ok   botão mDn: MASTER TUNE ▽ −5 cents
+ok   botão write: WRITE arma a gravação
+ok   botão n7: WRITE + 7 grava no INTERNAL 7
+ok   botão write: WRITE arma de novo
+ok   botão valDn: WRITE + ▽ (SAVE) copia o banco interno para o cartucho
+ok   slider VOLUME acompanha o arrasto — 0.87
+ok   roda de pitch bend sobe e volta ao centro ao soltar — 0.8 → 0
+ok   POWER desliga e apaga o visor
+ok   POWER liga de novo
+ok   salvamento automático: memórias, parâmetros e volume voltam depois de recarregar — int 0.87
+ok   Aleatório muda a sequência — C3 D4 F2 G#3 — G#2 C4 F3 F4 G#3 D#2 C2 G4 D#4 · D2
+ok   Play: o sequenciador toca e acende um passo — 0.2580, 1 passo(s)
+ok   Stop silencia
+ok   Hold mantém o som depois de soltar e solta ao desligar — 0.1820 → 0.00000
+ok   Zerar (dois toques) volta ao padrão e mantém as memórias
+ok   MIDI substituto: entrada listada — 2
+ok   MIDI learn: o CC ligado move o volume na faixa inteira — 1
+ok   nota MIDI soa — 0.2418
+ok   celular (375 px): sem rolagem horizontal da página, alvos de 44 px e aviso de som desligado — {"larg":375,"rolaPagina":false,"pequenos":0,"barra":true}
+ok   sem erros no console
+
+0 falha(s).

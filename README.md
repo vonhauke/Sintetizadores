@@ -1,6 +1,6 @@
 # Sintetizadores
 
-Drum machines (808, 909, 606, 707) e sintetizadores (TB-303, SH-101, Juno-106, Minimoog, ARP 2600, Korg MS-20) e a bateria/sampler SP-1200 em Web Audio, reunidos num único aplicativo com menu. Tudo funciona offline.
+Drum machines (808, 909, 606, 707) e sintetizadores (TB-303, SH-101, Juno-106, Minimoog, ARP 2600, Korg MS-20, Casio CZ-101) e a bateria/sampler SP-1200 em Web Audio, reunidos num único aplicativo com menu. Tudo funciona offline.
 
 ## Como usar
 
