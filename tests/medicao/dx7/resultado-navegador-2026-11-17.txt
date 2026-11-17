@@ -1,0 +1,44 @@
+ok   título da página
+ok   painel sem marca nem nome de modelo
+ok   42 botões (32 + 8 de modo + NO/YES), 61 teclas, 1 visor
+ok   32 diagramas de algoritmo
+ok   alvos de toque de 44 px ou mais (teclas pretas ficam de fora)
+ok   LCD inicial — INTERNAL VOICE   | INT01 FM PIANO  
+ok   som pelo AudioWorklet (file://) — rms 0.202 {"nos":1,"sp":0}
+ok   os 32 botões em PLAY, EDIT e FUNCTION e os de modo respondem sem erro
+ok   todos os parâmetros de edição e de função respeitam mínimo e máximo (48 testados)
+ok   16 teclas e mais uma: segue soando, sem estourar — rms 0.718 / 0.609
+ok   EDIT + botão 27 mostram OUTPUT LEVEL do OP1 — OUTPUT LEVEL     | 99          OP1 
+ok   arrastar o DATA ENTRY muda o valor — OL 50
+ok   YES soma 1
+ok   NO subtrai 1
+ok   OPERATOR SELECT troca para o OP2 — OUTPUT LEVEL     | 62          OP2 
+ok   botão 1 em EDIT liga/desliga o operador — OP ON/OFF STATUS | 011111          
+ok   botão 7 + YES troca o algoritmo
+ok   diagrama grande acompanha o algoritmo
+ok   STORE grava a voz editada na posição 20
+ok   autosave: banco, voz atual, voz em edição e flag de edição voltam depois de recarregar — cur 19 fb 7
+ok   salvamento corrompido: abre no padrão, sem erro
+ok   salvamento com valores absurdos é limitado
+ok   Hold segura a nota depois de soltar a tecla — rms 0.080 hold=true vozes=true
+ok   controle de sopro move o slider e o estado
+ok   Aleatório gera 16 passos dentro da escala e do teclado — 48n,64n,76n,52n,79n,60n,40n,79l,79l,52n,67n,67n,47l,59n,57n,69n
+ok   sequenciador toca (voz MARIMBA) — rms 0.093
+ok   Stop cala o sequenciador — rms 0.0000
+ok   Zerar volta volume, afinação e andamento ao padrão
+ok   Zerar mantém as memórias
+ok   Zerar mantém as ligações MIDI
+ok   nota MIDI com velocity toca — rms 0.210
+ok   pitch bend MIDI move a roda
+ok   aftertouch de canal chega ao controle AT
+ok   program change seleciona a voz interna
+ok   CC 1 move a roda de modulação
+ok   CC 7 muda o volume
+ok   filtro de canal: canal 3 passa e o 1 é ignorado — rms 0.108
+ok   MIDI learn liga o CC 20 ao volume — {"mapa":{"1:20":"vol"},"disp":"","ativo":false}
+ok   CC ligado a um botão age como gatilho ao cruzar 64 — LFO WAVE=        | TRIANGL         
+ok   apagar todas as ligações esvazia o mapa — {"mapa":{},"disp":"","ativo":false}
+ok   celular (375 px): sem rolagem horizontal da página, alvos de 44 px e aviso de som desligado — {"larg":375,"rolaPagina":false,"pequenos":0,"barra":true}
+ok   sem erros no console
+
+0 falha(s).
