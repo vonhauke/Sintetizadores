@@ -70,5 +70,11 @@
     "name": "Casio CZ-101",
     "description": "Sintetizador digital de distorção de fase, 8 vozes, envelopes de 8 passos e memória de timbres",
     "path": "cz101/index.html"
+  },
+  {
+    "id": "jupiter8",
+    "name": "Roland Jupiter-8",
+    "description": "Sintetizador polifônico de 8 vozes com dois timbres, SPLIT, DUAL, arpejador e memória de patches",
+    "path": "jupiter8/index.html"
   }
 ]

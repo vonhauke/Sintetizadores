@@ -1,0 +1,83 @@
+ok   título da página
+ok   painel sem marca nem nome de modelo
+ok   26 sliders, 8 knobs + 4 seletores, 17 chaves, 42 botões, 61 teclas, 1 visor de 4 dígitos
+ok   botões e campos com 44 px ou mais (tamanho real)
+ok   sem URLs externas na página
+ok   motor carregado como AudioWorklet em file:// (sem cair na reserva) — {"nos":1,"sp":0}
+ok   tecla da tela produz som e o som para depois de soltar — 0.1868 → 0.00000
+ok   teclado do computador produz som — 0.1892
+ok   8 notas juntas: som presente, finito e dentro de ±1 — 0.995
+ok   slider (VCF CUT OFF) sobe ao arrastar para cima e a barra de valor mostra o controle — 7 → 10.00
+ok   digitar o valor na barra de valor — 3.5
+ok   knob (VOLUME) responde ao arrasto — 8 → 10.00
+ok   seletor rotativo (LFO WAVE FORM): um toque avança uma posição — 0 → 1
+ok   chave de 2 posições (VCO-2 RANGE normal/LOW FREQ) alterna
+ok   chave de 3 posições (FREQ MOD destino): toque na posição de baixo escolhe VCO-2 — 1 → 2
+ok   bender: vai ao extremo e volta ao centro ao soltar — 1 → 0
+ok   os 55 controles de valor respondem ao mouse (26 sliders, 8 knobs, 4 seletores, 17 chaves) — 55 ok
+ok   os 42 botões aceitam o clique sem erro — 42 botões
+ok   botão km1: SPLIT
+ok   botão pl: PANEL MODE LOWER edita o Lower
+ok   em PANEL MODE LOWER o slider edita só o patch Lower — 6.3 / 2.0
+ok   botão pu: PANEL MODE UPPER
+ok   botão km2: DUAL
+ok   botão km0: WHOLE (força o Upper)
+ok   botão as0: ASSIGN SOLO
+ok   botão as1: ASSIGN UNISON
+ok   botão as2: ASSIGN POLY 1
+ok   botão as3: ASSIGN POLY 2
+ok   botão holdL: HOLD LOWER liga
+ok   botão holdU: HOLD UPPER liga
+ok   botão am3: arpejo U&D liga em RANGE 4 e POLY 2
+ok   botão ar2: RANGE 2
+ok   arpejo toca — 0.1890
+ok   botão am3: apertar de novo desliga o arpejo
+ok   botão tuneBt: TUNE
+ok   botão lfoBt: LFO MODULATION (pressionado)
+ok   WRITE + 3 + 5 grava no patch 35 — índice 20
+ok   número 16 carrega o patch recriado SYNC LEAD (sync ligado)
+ok   MANUAL devolve os controles
+ok   preset A carrega o par de patches e o KEY MODE (SPLIT)
+ok   SAVE gera o arquivo com os 64 patches e os 8 presets
+ok   VERIFY com o mesmo arquivo confere (DATA CHECK apagado)
+ok   VERIFY com a memória alterada acusa diferença (DATA CHECK aceso)
+ok   LOAD restaura a memória do arquivo
+ok   arquivo inválido: DATA CHECK acende e a memória fica como estava
+ok   salvamento automático: patches, memória, controles e volume voltam depois de recarregar — hpf 6.5, volume 6
+ok   armazenamento corrompido: abre com o padrão e sem erro
+ok   Aleatório muda a sequência — C1 · C3 F3 A#0 A#3 G0 C2 G#1 G0 G3 D2 D#2 G3 G2 F1
+ok   Aleatório só usa notas da escala (Ré pentatônica menor) e do teclado — 0 fora de 480
+ok   Play: o sequenciador toca e acende um passo — 0.2106, 1 passo(s)
+ok   Stop silencia
+ok   passo selecionado grava a nota tocada
+ok   Zerar pede confirmação
+ok   Zerar (dois toques): painel e sequência no padrão, memória mantida
+ok   MIDI substituto: entradas listadas
+ok   nota MIDI soa — 0.1819
+ok   pitch bend MIDI no máximo
+ok   Program Change 5 carrega o patch 16
+ok   Program Change 66 carrega o preset C
+ok   canal 3: mensagem do canal 1 ignorada
+ok   canal 3: mensagem do canal 3 aceita
+ok   MIDI learn: 5 controles ligados (slider, seletor, botão, botão de estado, bender) — {"1:74":"cut","1:75":"lfoWave","1:76":"bt:km2","1:77":"bt:holdL","1:78":"bender"}
+ok   slider: CC 127 = máximo da faixa
+ok   slider: CC 0 = mínimo
+ok   slider: CC 64 ≈ meio — 5.039
+ok   seletor de 4 posições: CC 0 = posição 0 — 0
+ok   seletor de 4 posições: CC 40 = posição 1 — 1
+ok   seletor de 4 posições: CC 90 = posição 2 — 2
+ok   seletor de 4 posições: CC 127 = posição 3 — 3
+ok   botão DUAL: CC >= 64 age
+ok   HOLD LOWER liga com CC >= 64
+ok   HOLD LOWER desliga com CC < 64
+ok   bender: CC 127 = +1
+ok   bender: CC 0 = −1
+ok   CC 64 (pedal) liga o HOLD em WHOLE
+ok   CC 64 solto devolve o HOLD
+ok   desfazer a ligação de um controle
+ok   mapa salvo no localStorage
+ok   apagar todas as ligações
+ok   celular (375 px): painel em tamanho real, sem rolagem horizontal da página, alvos de 44 px e aviso de som desligado — {"larg":375,"rolaPagina":false,"pequenos":0,"barra":true,"cheio":"true"}
+ok   sem erros no console
+
+0 falha(s).
