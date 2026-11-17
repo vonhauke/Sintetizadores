@@ -1,0 +1,113 @@
+| Grupo | Medição | Esperado (pesquisa) | Medido | | Fonte |
+|---|---|---|---|---|---|
+| VCO-1 | 8', tecla C0 (nota 36) | 65,41 Hz (±2 cents) | 65,40 Hz (-0,12 cents) | ok | (a) escala 1 V/oitava; Lá = 440 Hz (c) |
+| VCO-1 | 8', tecla A1 (nota 57) | 220,00 Hz (±2 cents) | 219,99 Hz (-0,04 cents) | ok | (a) escala 1 V/oitava; Lá = 440 Hz (c) |
+| VCO-1 | 8', tecla A2 (nota 69) | 440,00 Hz (±2 cents) | 440,00 Hz (0,00 cents) | ok | (a) escala 1 V/oitava; Lá = 440 Hz (c) |
+| VCO-1 | 8', tecla A3 (nota 81) | 880,00 Hz (±2 cents) | 880,00 Hz (-0,00 cents) | ok | (a) escala 1 V/oitava; Lá = 440 Hz (c) |
+| VCO-1 | 8', tecla C5 (nota 96) | 2093,00 Hz (±2 cents) | 2093,01 Hz (0,00 cents) | ok | (a) escala 1 V/oitava; Lá = 440 Hz (c) |
+| VCO-1 | RANGE 16' na tecla A2 | 220 Hz (±2 cents) | -0,04 cents | ok | (a) |
+| VCO-1 | RANGE 4' na tecla A2 | 880 Hz (±2 cents) | -0,00 cents | ok | (a) |
+| VCO-1 | RANGE 2' na tecla A2 | 1760 Hz (±2 cents) | -0,00 cents | ok | (a) |
+| VCO-2 | RANGE: os 37 passos em semitons exatos (16' a 2') | ±2 cents | pior 0,00 cents (passo 0) | ok | (a) semitons; os 37 passos são (c) |
+| VCO-2 | FINE TUNE no extremo (−50 cents) | −50 cents (±3) | -49,98 cents | ok | (a) |
+| VCO-2 | FINE TUNE no extremo (+50 cents) | +50 cents (±3) | 49,98 cents | ok | (a) |
+| Geral | MASTER TUNE no extremo (−50 cents) | −50 cents (±3) | -49,98 cents | ok | (a) |
+| Geral | MASTER TUNE no extremo (+50 cents) | +50 cents (±3) | 49,98 cents | ok | (a) |
+| VCO-2 | LOW FREQ: não segue o teclado (teclas C0 e C5) | mesma frequência | 4,032 Hz e 4,032 Hz | ok | (a); a faixa de 0,1 a 25 Hz é (c) |
+| VCO-1 | ENV MOD = 10, ENV-1 em sustain 10: patamar | +3 oitavas (+3600 cents, ±50) | 3600,0 cents | ok | (a) Service Notes |
+| VCO-1 | ENV MOD = 10 com POLARITY invertida | −3 oitavas (−3600 cents, ±50) | -3599,8 cents | ok | (a); simetria (c) |
+| VCO-1 | LFO MOD = 10 (LFO quadrado): picos | +1 e −1 oitava (±100 cents) | 1200 e -1200 cents | ok | (a, OCR duvidoso) |
+| Performance | bender no extremo, sensibilidade VCO = 10 (+1) | 1200 cents (±50) | 1200,0 cents | ok | (c) inferido do ajuste BENDER LEVEL |
+| Performance | bender no extremo, sensibilidade VCO = 10 (−1) | -1200 cents (±50) | -1200,0 cents | ok | (c) inferido do ajuste BENDER LEVEL |
+| VCO MODULATOR | destino VCO-1: VCO-1 sobe, VCO-2 não muda | VCO-1 +3 oitavas; VCO-2 0 cent | 3600 e -0,0 cents | ok | (a) |
+| VCO MODULATOR | destino VCO-2: VCO-2 sobe, VCO-1 não muda | VCO-2 +3 oitavas; VCO-1 0 cent | 3600 e -0,0 cents | ok | (a) |
+| VCO MODULATOR | destino BOTH: os dois sobem | +3 oitavas nos dois | 3600 e 3600 cents | ok | (a) |
+| Performance | chave VCO-1 BEND desligada: só o VCO-2 sobe | VCO-1 0 cent; VCO-2 +1200 | 0,0 e 1200 cents | ok | (a) |
+| Performance | chave VCO-2 BEND desligada: só o VCO-1 sobe | VCO-2 0 cent; VCO-1 +1200 | 0,0 e 1200 cents | ok | (a) |
+| Onda | dente de serra (VCO-1): harmônicos 2 a 10 | queda de 1/n, ±1,5 dB | pior desvio 1,02 dB | ok | (c) |
+| Onda | quadrada (VCO-1): harmônicos pares | abaixo de −40 dB (ciclo de 50 %) | -166,0 dB | ok | (a) |
+| Onda | pulso com PWM manual 0: harmônicos pares | abaixo de −40 dB (ciclo de 50 %) | -166,0 dB | ok | (a) |
+| Onda | pulso com PWM manual = 10: ciclo estreito | valor a definir (NE); registrar | h2/h1 = 0,912, ciclo ≈ 13,5 % | ok | NE: o modelo usa 5 % (c) |
+| Onda | triangular (VCO-1): 3º harmônico | −19,1 dB (1/n², ±1,5) | -19,6 dB | ok | (c) |
+| Onda | triangular: harmônicos pares | abaixo de −40 dB | -166,8 dB | ok | (c) |
+| Onda | senoide (VCO-2): maior harmônico | abaixo de −60 dB | -71,9 dB | ok | (c) o limite é meu |
+| Onda | PWM por LFO senoidal: h2/h1 no cruzamento do LFO e nos picos | ciclo de 50 % no cruzamento (h2/h1 ≈ 0) e ciclo estreito ou largo nos picos (h2/h1 > 0,8) | 0,07 no cruzamento; 0,97 e 0,97 nos picos | ok | (a) |
+| Onda | ruído (VCO-2): densidade espectral entre 250 Hz e 2 kHz (acima disso o filtro aberto, com corte perto de 9 kHz, já curva) | plano (branco), ±3 dB | variação 0,8 dB | ok | (b) |
+| Onda | SYNC ligado, VCO-2 uma quinta acima: picos espectrais | todos nos múltiplos da frequência do VCO-1 (±1 %) | 34 de 34 picos | ok | (a) |
+| Cross mod | CROSS MOD = 5, VCO-2 quadrado em LOW FREQ: as duas frequências do VCO-1 | razão de 8 (3 oitavas, ±8 %) | 2484 e 317 Hz, razão 7,84 | ok | (a) Service Notes |
+| Cross mod | CROSS MOD = 0 com o VCO-2 rodando | sem bandas laterais: frequência do VCO-1 exata (±2 cents) | 0,00 cents | ok | (a) |
+| Onda | aliasing: serra em 2' na tecla C5 (8,4 kHz): maior componente fora dos harmônicos | abaixo de −60 dB (sugestão), registrar | -74,3 dB | ok | (c) |
+| VCF | −24 dB/oitava, RES = 0: queda entre 4× e 8× o corte | -24 dB (±3) | -23,6 dB | ok | (a) |
+| VCF | −12 dB/oitava, RES = 0: queda entre 4× e 8× o corte | -12 dB (±3) | -12,0 dB | ok | (a) |
+| HPF | inclinação abaixo do corte (de fc/8 a fc/4) | +6 dB/oitava (±1,5) | 5,7 dB | ok | (a); a frequência de corte é (c) |
+| HPF | slider em LOW: resposta plana até o grave (60 Hz contra 1 kHz) | diferença menor que 3 dB | 0,0 dB | ok | (a) |
+| VCF | CUT OFF em LOW | silêncio (< −60 dB) | -240,0 dBFS | ok | (a) |
+| VCF | RES = 10, sem entrada: não sustenta oscilação | o sinal decai (< −60 dB depois de 1 s) | -240,0 dB | ok | (b) o aparelho calibrado não auto-oscila; o ganho de malha é (c) |
+| VCF | frequência do pico de ressonância (RES = 8) contra o pico da malha linear do próprio filtro, nos sliders 3, 5 e 7 | ±60 cents (o pico fica pouco abaixo do corte, como em todo filtro de escada) | slider 3: 99 Hz, teórico 101 Hz (-28 cents); slider 5: 394 Hz, teórico 401 Hz (-32 cents); slider 7: 1513 Hz, teórico 1559 Hz (-52 cents) | ok | (c) o corte em 442 Hz no slider 5 é (a, OCR duvidoso) |
+| VCF | RES = 10: pico na frequência de corte | pico pronunciado (valor NE); registrar | 13,2 dB acima da banda passante | ok | NE: ganho de malha (c) |
+| VCF | nível da banda passante com RES = 0 e RES = 10 | queda pequena (compensação de volume), menos de 4 dB | -3,2 dB | ok | (b); a quantidade é (c) |
+| VCF | KEY FOLLOW = 0: corte igual em todas as teclas (C0 contra C5, a 1 kHz) | diferença menor que 1 dB | 0,00 dB | ok | (a) |
+| VCF | KEY FOLLOW no ponto de 100 %: pico de ressonância uma oitava acima do Dó central | razão 2,000 (±6 %) | 2,040 | ok | (a) |
+| VCF | KEY FOLLOW 10 (120 %): pico de ressonância uma oitava acima do Dó central | razão 2,297 (±6 %) | 2,320 | ok | (a) |
+| VCF | ENV MOD = 10 com o envelope no patamar: o corte sobe | +6 oitavas (×64, ±15 %) | ENV-2: ×55,5; ENV-1: ×55,5 | ok | (c) 6 oitavas |
+| VCF | chave ENV-1 / ENV-2: o corte segue o envelope selecionado | com ENV-1 sem sustain, o corte não sobe | ENV-1 com sustain 0: ×0,94 | ok | (a) |
+| VCF | saturação: dois VCOs no máximo, RES = 10, 8 notas | sem clipping digital: pico ≤ 1 e finito | 0,985 | ok | (c) |
+| Envelope | ATTACK mínimo (slider 0), 0 a 100 % | 1 ms (±5 % ou 1 amostra) | 1,00 ms | ok | (a); critério: tempo até 100 % (c) |
+| Envelope | ATTACK máximo (slider 10) | 5 s (aceitar até 6 s) | 5,00 s | ok | (a); o ajuste de fábrica dá 6 s |
+| Envelope | DECAY mínimo e máximo (até 1 %) | 1 ms e 10 s (±5 % ou 1 amostra) | 1,02 ms e 10,01 s | ok | (a); critério: tempo até 1 % (c) |
+| Envelope | RELEASE mínimo e máximo (até 1 %) | 1 ms e 10 s (±5 % ou 1 amostra) | 1,02 ms e 10,01 s | ok | (a) |
+| Envelope | SUSTAIN em 0 | 0 % | 0,0 % | ok | (a) extremos, (c) meio |
+| Envelope | SUSTAIN em 5 | 50 % | 50,0 % | ok | (a) extremos, (c) meio |
+| Envelope | SUSTAIN em 10 | 100 % | 100,0 % | ok | (a) extremos, (c) meio |
+| Envelope | forma do decaimento | exponencial (razão constante entre amostras igualmente espaçadas, ±2 %) | razões 0,100, 0,100, 0,100, 0,100 | ok | (c) NE em fonte primária |
+| Envelope | KEY FOLLOW ligado: ATTACK em C0 contra C5 | C0 mais longo que C5, razão 5,66 (±5 %) | 0,332 s e 0,059 s, razão 5,66 | ok | (a) sentido; razão (c) |
+| LFO | RATE mínimo e máximo | 0,05 e 40 Hz (±3 %) | 0,050 e 40,00 Hz | ok | (a) |
+| LFO | DELAY TIME máximo: tempo até a modulação aparecer | cerca de 4 s (±5 %) | 4,00 s | ok | (a); a lei é (c) |
+| LFO | DELAY TIME = 0: modulação presente desde o início da nota | imediata | 0,0 ms | ok | (a) |
+| LFO | senoide | valor em 1/4 do ciclo = +1; em 3/4 = −1 | 1,000 e -1,000 | ok | (a) |
+| LFO | dente de serra (invertido: rampa descendente) | +1 no começo, 0 na metade, −1 no fim | 1,00, -0,00, -1,00 | ok | (a); o sentido da rampa é (c) |
+| LFO | quadrada | +1 na primeira metade, −1 na segunda | 1 e -1 | ok | (a) |
+| LFO | RANDOM: degraus aleatórios à taxa do LFO | um nível novo por ciclo, constante dentro dele | 6 níveis distintos em 5,5 ciclos | ok | (a) |
+| LFO | Upper e Lower têm velocidades independentes | os dois LFOs seguem o seu patch | 2,76 Hz e 20,50 Hz | ok | (a) |
+| LFO | VCA LFO MOD 0 a 3: tremolo (razão entre os dois semiciclos de uma quadrada) | sem tremolo no 0 e profundidade crescente (valores NE: (c) 1, 0,85, 0,65, 0,4; ±0,05) | 1,00, 0,85, 0,65, 0,40 | ok | (a) ordem; valores (c) |
+| LFO | botão LFO MODULATION com RISE TIME 0 e 10 | entrada imediata e gradual (3 s no 10, (c); ±5 %) | 0,0 ms e 3,00 s | ok | (a); o tempo é (c) |
+| Níveis | patch inicial, nota 36: pico | −12 a −3 dBFS | -7,5 dBFS | ok | (c) |
+| Níveis | patch inicial, nota 48: pico | −12 a −3 dBFS | -8,0 dBFS | ok | (c) |
+| Níveis | patch inicial, nota 60: pico | −12 a −3 dBFS | -8,6 dBFS | ok | (c) |
+| Níveis | patch inicial, nota 72: pico | −12 a −3 dBFS | -9,5 dBFS | ok | (c) |
+| Níveis | patch inicial, nota 84: pico | −12 a −3 dBFS | -10,8 dBFS | ok | (c) |
+| Níveis | patch inicial, nota 96: pico | −12 a −3 dBFS | -11,5 dBFS | ok | (c) |
+| Níveis | 8 notas, dois VCOs em serra, filtro aberto, volume 10 | sem clipping: pico ≤ 1 e finito | 1,000 | ok | (c) |
+| Mixer | SOURCE MIX em 0: só o VCO-1 | VCO-2 abaixo de −60 dB | -160,8 dB | ok | (a) |
+| Mixer | SOURCE MIX em 10: só o VCO-2 | VCO-1 abaixo de −60 dB | -167,9 dB | ok | (a) |
+| Mixer | SOURCE MIX no centro: mistura igual (triangular e senoide, níveis de pico diferentes: ±3 dB) | níveis próximos | -2,1 dB | ok | (a) |
+| VCA | LEVEL de 0 a 10 | 0 em silêncio; nível crescente | -240,0, -28,2, -20,3, -14,3 dBFS | ok | (a) |
+| Níveis | UNISON com 1, 2 e 8 teclas: nível por tecla | constante: o total acompanha a soma de potências das teclas (±3 dB) | 2 teclas -0,0 dB; 8 teclas 2,1 dB | ok | (a) "nível constante"; a lei do ganho é (c) |
+| Balance | DUAL, BALANCE em 0: só o Lower | o Upper some (> 12 dB abaixo do centro) e o Lower fica igual ao do centro (±1 dB) | Upper -165,0 dB; Lower -0,0 dB | ok | (a) |
+| Balance | DUAL, BALANCE em 10: só o Upper | o Lower some (> 12 dB abaixo do centro) e o Upper fica igual ao do centro (±1 dB) | Lower -165,1 dB; Upper 0,0 dB | ok | (a) |
+| Balance | BALANCE não atua em WHOLE (só o Upper toca) | mesmo nível do Upper nos extremos (±0,1 dB) | -18,90 e -18,90 dB | ok | (a) |
+| Níveis | VOLUME em 0 | silêncio (< −90 dBFS) | -240,0 dBFS | ok | (a) |
+| Polifonia | WHOLE + POLY 1: 8 notas presas e uma 9ª | a 9ª não soa (não há roubo de voz) | 8 vozes; 9ª nota soando? false | ok | (a) |
+| Polifonia | POLY 1: a mesma tecla 8 vezes | vozes A a H em sequência (0 a 7) | 0 1 2 3 4 5 6 7 | ok | (a) Service Notes |
+| Polifonia | POLY 1 contra POLY 2 com release longo | POLY 1: 2 vozes soando; POLY 2: o release anterior é cortado (1 voz) | 2 e 1 vozes | ok | (a) |
+| Polifonia | SOLO: três teclas presas | uma voz, a nota mais grave | 1 voz(es), nota 60 | ok | (a) |
+| Polifonia | UNISON com 1 tecla | 8 voz(es) por tecla | 8 | ok | (a) |
+| Polifonia | UNISON com 2 teclas | 4 voz(es) por tecla | 4, 4 | ok | (a) |
+| Polifonia | UNISON com 8 teclas | 1 voz(es) por tecla | 1, 1, 1, 1, 1, 1, 1, 1 | ok | (a) |
+| Polifonia | SPLIT: 5 notas no Lower | a 5ª não soa (4 vozes por seção) | 4 vozes; 5ª soando? false | ok | (a) |
+| Polifonia | SPLIT: ponto padrão (24 teclas a partir do grave) e redefinição | nota 59 no Lower e 60 no Upper; com o ponto em 72, a 60 vai ao Lower | Lower e Upper; redefinido: Lower | ok | (a) |
+| Polifonia | DUAL: cada tecla soa com os dois patches; 4 notas | cada tecla com 2 vozes (uma de cada seção); 5ª não soa | 8 vozes: 60×2 62×2 64×2 65×2 | ok | (a) |
+| Hold | HOLD LOWER e HOLD UPPER em SPLIT | cada um segura só a sua seção | só Lower: "L"; só Upper: "U"; nenhum: "" | ok | (a) |
+| Portamento | chave UPPER ONLY / OFF / ON em SPLIT | só Upper / nenhum / os dois | UPPER ONLY "U"; OFF ""; ON "LU" | ok | (a) |
+| Arpejo | UP, RANGE 1, teclas tocadas C, G, D, E | C, G, D, E e repete (ordem tocada) | 60 67 62 64 60 67 62 64 | ok | (a) manual; (b) KVR |
+| Arpejo | UP, RANGE 2 | a sequência se repete uma oitava acima a cada volta | 60 67 72 79 60 67 72 79 | ok | (a) |
+| Arpejo | DOWN, RANGE 1 | a sequência percorrida ao contrário | 64 62 67 60 64 62 67 60 | ok | (a) |
+| Arpejo | U&D, RANGE 1, três notas | sobe e desce sem repetir as pontas (virada NE: (c)) | 60 62 64 62 60 62 64 62 | ok | (a); virada (c) |
+| Arpejo | RANDOM, RANGE 3 | só notas tocadas, dentro da faixa de 3 oitavas | 60 notas, de 60 a 91, 9 distintas | ok | (a) |
+| Arpejo | RATE mínimo e máximo | 1 e 20 passos por segundo (±3 %) | 1,00 e 20,00 passos/s | ok | (a) |
+| Arpejo | escolher um modo | passa a RANGE 4 e POLY 2 | RANGE 4, assign 1 | ok | (a) |
+| Arpejo | SPLIT: só o Lower arpeja | o Upper toca a tecla direta; o Lower arpeja | 40 passos só com a nota 48; Upper direto: 1 voz | ok | (a) |
+| Arpejo | mais de 8 notas | a memória guarda 8 | 8 notas na memória | ok | (a) |
+| Custo | 10 s de áudio, 8 vozes com tudo ligado (neste computador, Node) | bem abaixo de 100 % do tempo real | 12,1 % do tempo real | ok |  |
+
+109 medições, 0 fora da tolerância.
