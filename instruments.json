@@ -76,5 +76,11 @@
     "name": "Roland Jupiter-8",
     "description": "Sintetizador polifônico de 8 vozes com dois timbres, SPLIT, DUAL, arpejador e memória de patches",
     "path": "jupiter8/index.html"
+  },
+  {
+    "id": "dx7",
+    "name": "Yamaha DX7",
+    "description": "Sintetizador digital FM de 6 operadores e 32 algoritmos, 16 vozes, memória de 32 vozes e MIDI learn",
+    "path": "dx7/index.html"
   }
 ]

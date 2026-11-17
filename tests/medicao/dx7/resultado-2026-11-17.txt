@@ -1,0 +1,119 @@
+| Grupo | Medição | Esperado (pesquisa) | Medido | | Fonte |
+|---|---|---|---|---|---|
+| Frequência | senoide pura (VOICE INIT), 61 teclas, nota 36 a 96 | ±1,2 cent (um passo de quantização) | pior: 0,77 cents (nota 37) | ok | (a)/(b) 4.2 |
+| Frequência | lá 440 Hz | ±1,2 cent | 439,925 Hz (-0,30 cents) | ok | (a) MAN |
+| Frequência | modo RATIO: COARSE 0,1,2,3,7,15,31; FINE 1, 50, 99 | nota × COARSE × (1 + FINE/100), ±1,2 cent | pior: -0,39 cents (FINE 50) | ok | (a) 4.3 |
+| Frequência | COARSE 0 com FINE 99 (multiplica 0,5) | 0,995 × nota | 0,23 cents de erro | ok | (c) 4.3 |
+| Frequência | modo FIXED: COARSE 0 a 3, FINE 0, 50, 99 (1 Hz a 9772 Hz) | 10^(COARSE mod 4) × 10^(FINE/100) Hz, ±0,2 % (3,5 cents) | pior: 1,41 cents (COARSE 0 FINE 0) | ok | (a) 4.4 |
+| Frequência | FIXED não segue o teclado (notas 36 e 96) | mesma frequência | 0,00 cents de diferença | ok | (b) 4.4 |
+| Frequência | DETUNE -7, nota 36 | sem valor primário (aproximação do Dexed, (c)) | -2,14 cents | registro | (c) 4.5; passo de 1,17 cent limita a resolução |
+| Frequência | DETUNE -7, nota 60 | sem valor primário (aproximação do Dexed, (c)) | -1,16 cents | registro | (c) 4.5; passo de 1,17 cent limita a resolução |
+| Frequência | DETUNE -7, nota 84 | sem valor primário (aproximação do Dexed, (c)) | -0,24 cents | registro | (c) 4.5; passo de 1,17 cent limita a resolução |
+| Frequência | DETUNE 0, nota 36 | sem valor primário (aproximação do Dexed, (c)) | 0,09 cents | registro | (c) 4.5; passo de 1,17 cent limita a resolução |
+| Frequência | DETUNE 0, nota 60 | sem valor primário (aproximação do Dexed, (c)) | -0,16 cents | registro | (c) 4.5; passo de 1,17 cent limita a resolução |
+| Frequência | DETUNE 0, nota 84 | sem valor primário (aproximação do Dexed, (c)) | -0,24 cents | registro | (c) 4.5; passo de 1,17 cent limita a resolução |
+| Frequência | DETUNE +7, nota 36 | sem valor primário (aproximação do Dexed, (c)) | 2,46 cents | registro | (c) 4.5; passo de 1,17 cent limita a resolução |
+| Frequência | DETUNE +7, nota 60 | sem valor primário (aproximação do Dexed, (c)) | 1,07 cents | registro | (c) 4.5; passo de 1,17 cent limita a resolução |
+| Frequência | DETUNE +7, nota 84 | sem valor primário (aproximação do Dexed, (c)) | 1,00 cents | registro | (c) 4.5; passo de 1,17 cent limita a resolução |
+| Frequência | KEY TRANSPOSE -24 semitons | ±24 semitons (±1,2 cent) | 0,09 cents de erro | ok | (a) 2.2 |
+| Frequência | KEY TRANSPOSE +24 semitons | ±24 semitons (±1,2 cent) | -0,24 cents de erro | ok | (a) 2.2 |
+| Frequência | MASTER TUNE -75 cents | -75 cents (±1,2) | -0,14 cents de erro | ok | (a) 4.7 |
+| Frequência | MASTER TUNE +75 cents | 75 cents (±1,2) | -0,21 cents de erro | ok | (a) 4.7 |
+| Frequência | pitch bend, RANGE 0, 2, 12 nos dois sentidos | RANGE semitons (±1,2 cent) | pior: -0,32 cents (RANGE 12 −) | ok | (a) 4.7; curva da roda linear (c) |
+| Frequência | pitch bend com STEP 1, 4 e 12 (degraus em semitons, faixa 12) | frequência em semitons inteiros múltiplos de STEP (±1,2 cent) | pior: -0,54 cents (STEP 4, roda 0.45 = 4 semitons) | ok | (a) 4.7 |
+| Frequência | pitch EG: níveis 0, 20, 40, 50, 60, 99 (parados) | −4 oit, −30/32 oit, −375 cents, 0, +375 cents, +127/32 oit (±1,2 cent) | pior: 1,00 cents (nível 0) | ok | (a) tabela do firmware, 1/32 de oitava por unidade (b) |
+| Frequência | pitch EG nível 99 vs. manual ("+4 oitavas") | 4 oitavas no manual; tabela dá 127/32 = 3,97 oitavas | 4763 cents na tabela (4800 no manual) | registro | (a) MAN e FW; diferença de 37 cents registrada |
+| Frequência | pitch EG: tempo de 1 oitava com taxa 50 | 0,418 s (tabela ÷ 21,3), ±5 % | 0,419 s | ok | (b) 4.6; tabela de taxas reconstruída (c) |
+| Frequência | pitch EG: tempo de 1 oitava com taxa 99 | 0,084 s (tabela ÷ 21,3), ±5 % | 0,084 s | ok | (b) 4.6; tabela de taxas reconstruída (c) |
+| Frequência | portamento TIME 25: tempo de uma oitava (12 semitons) | ≈ 0,023 s (modelo do Dexed, (c)), ±5 % | 0,023 s | ok | (c) 4.7; sem valor primário |
+| Frequência | portamento TIME 50: tempo de uma oitava (12 semitons) | ≈ 0,090 s (modelo do Dexed, (c)), ±5 % | 0,091 s | ok | (c) 4.7; sem valor primário |
+| Frequência | portamento TIME 75: tempo de uma oitava (12 semitons) | ≈ 0,357 s (modelo do Dexed, (c)), ±5 % | 0,357 s | ok | (c) 4.7; sem valor primário |
+| Frequência | portamento TIME 99: tempo de uma oitava (12 semitons) | ≈ 1,341 s (modelo do Dexed, (c)), ±5 % | 1,341 s | ok | (c) 4.7; sem valor primário |
+| Frequência | portamento TIME 0 | instantâneo (sem deslize) | instantâneo | ok | (a) FW |
+| Frequência | glissando: a frequência durante o deslize anda em semitons inteiros | múltiplos de 1 semitom (±1,2 cent) | 0,58 cents (29 leituras) | ok | (b) DEX |
+| Frequência | taxa de amostragem do núcleo | 49 096 Hz (4,71325 MHz ÷ 96), reamostrada para a taxa do contexto | 49096 Hz | ok | (a)/(b) 3.1 |
+| Espectro | par 1:1 (algoritmo 1), OP2 = 60..99: parciais 2 a 6 contra Bessel com I = π·2^(33/16 − TL/8) | ±1 dB (parciais acima de −20 dB do maior) | pior: 0,13 dB (OL 99, parcial 6; 17 parciais) | ok | (b) 3.3 |
+| Espectro | índice de modulação com OL 99 | ≈ 13,12 rad | 13,12 rad | ok | (b) 3.3 |
+| Espectro | cada 8 passos de OL dobram o índice | razão 2 | 0,500 (OL 91/99 = 0,500) | ok | (b) 3.3 |
+| Algoritmos | 32 algoritmos: nº de parciais = nº de portadoras; cada modulador só afeta as portadoras que ele alimenta; sem modulação a portadora é pura | sem divergências | conferido (parciais, um modulador por vez, todos ligados) | ok | (b) 3.4 |
+| Algoritmos | compensação de nível, algoritmo 1 (2 portadoras iguais em fase) contra o 16 (1) | 0,00 dB (±0,1) | 0,00 dB | ok | (b) 3.4; esperado de 2^1,625, 2^2,375 e 2^2,625 (c) |
+| Algoritmos | compensação de nível, algoritmo 5 (3 portadoras iguais em fase) contra o 16 (1) | -0,23 dB (±0,1) | -0,24 dB | ok | (b) 3.4; esperado de 2^1,625, 2^2,375 e 2^2,625 (c) |
+| Algoritmos | compensação de nível, algoritmo 22 (4 portadoras iguais em fase) contra o 16 (1) | 0,00 dB (±0,1) | 0,00 dB | ok | (b) 3.4; esperado de 2^1,625, 2^2,375 e 2^2,625 (c) |
+| Algoritmos | compensação de nível, algoritmo 31 (5 portadoras iguais em fase) contra o 16 (1) | -0,32 dB (±0,1) | -0,32 dB | ok | (b) 3.4; esperado de 2^1,625, 2^2,375 e 2^2,625 (c) |
+| Algoritmos | compensação de nível, algoritmo 32 (6 portadoras iguais em fase) contra o 16 (1) | -0,24 dB (±0,1) | -0,24 dB | ok | (b) 3.4; esperado de 2^1,625, 2^2,375 e 2^2,625 (c) |
+| Realimentação | OP6 sozinho, FEEDBACK 0: senoide pura | uma só linha acima de −60 dBc | 1 linha(s) | ok | (a) 3.5 |
+| Realimentação | o espectro cresce a cada passo de FEEDBACK (linhas acima de −60 dBc) | não decresce | 1, 3, 4, 7, 18, 69, 565, 3096 | ok | (b) 3.5 |
+| Realimentação | FEEDBACK 7: forma próxima de dente de serra (2º e 3º harmônico em relação ao 1º) | 2º ≈ −6 dB, 3º ≈ −9,5 dB (±6 dB; valor absoluto é aproximação) | 2º -6,9 dB, 3º -13,7 dB | registro | (c) 3.5 |
+| Realimentação | FEEDBACK 7: sem oscilação em Nyquist (a maior linha acima de 20 kHz é menor que a maior entre 8 e 12 kHz; efeito da média de 2 amostras) | < 0 dB (o espectro decresce) | -12,9 dB | ok | (b) 3.5 |
+| Realimentação | conteúdo harmônico 2º (dBc) para FEEDBACK 0..7 | cresce | -118,7 / -26,3 / -20,3 / -14,5 / -9,6 / -7,4 / -4,4 / -6,9 | registro | (c) registro |
+| Realimentação | algoritmo 4: o laço 6>5>4>6 só existe com os operadores 4, 5 e 6 ligados (linhas com FEEDBACK 0 / 7 / 7 sem OP5 / 7 sem OP6 / 0 sem OP6) | FB 7 muda o espectro com os três; sem OP5 fica senoide pura (1 linha); sem OP6 o FB 7 não muda nada (o OP5 puro continua modulando o 4) | 34 / 3012 / 1 / 9 / 9 | ok | (b) 3.4 |
+| Realimentação | algoritmo 6: o laço 6>5>6 (a saída do 5 volta para o 6) | FB 7 muda o espectro com OP5 e OP6; sem OP6, senoide pura | 9 / 2964 / 1 | ok | (b) 3.4 |
+| Espectro | OSC KEY SYNC ligado: notas repetidas começam com a mesma fase | fase inicial 0 | fase inicial 0 em todas | ok | (a) 3.2 |
+| Espectro | OSC KEY SYNC desligado: a fase inicial varia | fase inicial diferente a cada nota | diferentes | ok | (a) 3.2 |
+| Níveis | OUTPUT LEVEL 99..20: dB em relação ao OL 99 | 0,7526 dB por passo (±0,2 dB; abaixo de −40 dB soma-se 7/amplitude em unidades, pela saída de 14 bits) | pior: -0,68 dB (OL 20), 67 % da tolerância | ok | (b)/(a) 5.2 |
+| Níveis | OUTPUT LEVEL 0 a 19: nível do envelope lido dentro do motor (esses valores ficam abaixo do piso da saída de 14 bits) | 32 × OL′ − 224 (1/256 de oitava, mínimo 16), exato | pior: 0 passos () | ok | (b) 5.2 e 5.3 |
+| Níveis | OUTPUT LEVEL 0 e 1 | derivado: −95,6 dB (abaixo da resolução da saída de 14 bits) | OL 0: -235,4 dB; OL 1: -235,4 dB | registro | (c) 5.2; os níveis mínimos ficam no piso de quantização |
+| Níveis | níveis do EG L = 99, 98, 97, 96, 90, 80, 50, 20: dB em relação a L 99 | 1,505 dB por unidade escalada: 98 = 99, 96 = 97 (±0,3 dB; abaixo de −40 dB soma-se 7/amplitude em unidades) | pior: -0,57 dB (L 20), 55 % da tolerância | ok | (b) 5.3 |
+| Níveis | níveis do EG L = 99 a 0: nível interno lido dentro do motor | 64 × nível escalado + 32 × OL′ − 4256 (exato) | pior: 0 passos () | ok | (b) 5.3 |
+| Níveis | KVS 0: a velocidade não altera o nível | 0 dB | pior: 0,00 dB () | ok | (a) 5.4 |
+| Níveis | velocidade medida na saída de áudio (valores até −45 dB) | contra as mesmas tabelas (±1 dB e a quantização de 14 bits) | 3 % da tolerância | ok | (a)/(b) 5.4 |
+| Níveis | velocidade com KVS 1, 4, 7 e vel 32, 64, 100, 127: nível medido contra as tabelas do firmware | −(tabela × KVS / 8) × 0,7526 dB, lido no nível interno (±0,1 dB) | pior: 0,00 dB (KVS 7 vel 1). 1/1: -12,0; 1/32: -8,3; 1/64: -4,5; 1/100: -0,8; 1/127: 0,0; 4/1: -48,2; 4/32: -35,4; 4/64: -19,6; 4/100: -4,5; 4/127: 0,0; 7/1: -84,3; 7/32: -61,7; 7/64: -33,9; 7/100: -7,5; 7/127: 0,0 | ok | (a) tabelas; combinação com KVS é leitura (b) |
+| Níveis | KVS 7, toque mais fraco (vel 1): quase mudo | ≈ −84 dB em relação à vel 127 (a pesquisa dá −79 dB contra a vel 100 e +5,3 dB para a 127, no Dexed): nível interno ±1 dB; na saída abaixo do piso | nível interno −84,3 dB; na saída mudo | ok | (c) 5.4 (conta derivada) |
+| Níveis | KVS 7, vel 100 em relação à vel 127 | pesquisa (Dexed): −5,3 dB (c); tabelas do firmware dão -7,5 dB | -7,5 dB | registro | (c) 5.4; divergência de ~2 dB entre as duas leituras, registrada |
+| Níveis | keyboard level scaling: 4 curvas, DEPTH 99 e 50, 1 a 3 oitavas, dois lados (42 casos medidos no áudio, 6 pelo nível interno por ficarem abaixo de −30 dB) | unidades de 0,7526 dB da tabela do firmware (±0,3 dB no áudio; exato no nível interno) | áudio: pior -0,12 dB (−LIN 50 esq 2 oit), 35 % da tolerância; interno: 0 passos | ok | (a) tabelas; escala 329/32768 (b) |
+| Níveis | −LIN, DEPTH 99: dB por oitava | manual: 22 dB/oitava; fórmula do Dexed ≈ 23,9 | 23,4 dB na 1ª oitava, 22,7 dB/oitava média em 3 | registro | (a) MAN vs (c) conta; diferença registrada para decisão |
+| Níveis | grupos de 3 teclas | degraus a cada 3 teclas (grupos 0,0,1,1,1,2,2,2,3 nas notas BP+0 a BP+8) | 0 0 7 7 7 15 15 15 23 | ok | (b) 5.5 |
+| Níveis | algoritmo 32, tudo em 99, velocidade 127: 1 nota | pico ≤ 1 e entre −12 e −3 dBFS | -5,8 dBFS | ok | (c) padrão do repositório |
+| Níveis | o mesmo com 16 notas | sem corte (pico ≤ 1,0; limitador suave) | 1,000 (0,0 dBFS) | ok | (c) 7.2: saturação do estágio analógico desconhecida |
+| Níveis | polifonia: 16 notas; a 17ª corta a mais antiga | 16 vozes; a nota 40 some, a 80 entra | 16 vozes; depois: 16 vozes, nota 40 cortada, nota 80 soa | ok | (a) MAN |
+| Níveis | modo MONO: uma nota só | 1 voz ativa | 1 voz(es) | ok | (a) MAN |
+| Níveis | MONO: soltar a última nota volta para a anterior ainda pressionada | nota 64 | nota 64 | ok | (c) |
+| Níveis | volume por MIDI em 8 degraus | não implementado no motor: é do painel (fase D); o motor aceita volume contínuo | NE | registro | (a) 6.4; tabela do firmware não foi lida |
+| Envelope | queda: inclinação (dB/s) com R = 20, 40, 50, 60, 80; reta em dB | 0,2819 × 2^(qrate/4) × (1 + 0,25 × (qrate mod 4)) dB/s (±5 %) | pior: -1,1 % (R 20: -2,2 dB/s contra -2,3) | ok | (b) 5.3 |
+| Envelope | queda com R = 0, 10 e 99 (lido dentro do motor, porque 5 minutos ou 1 ms não cabem numa janela de áudio) | mesma fórmula (±1 %) | pior: -0,00 % (R 0: 0,28 dB/s contra 0,28) | ok | (b) 5.3; R 0 ≈ 0,28 dB/s, R 99 ≈ 16165 dB/s (c) |
+| Envelope | ataque: tempo de 10 % a 90 % da amplitude, R1 = 30 | 817,5 ms (modelo do MSFA-E, ±10 % ou 1 ms) | 818,0 ms | ok | (b) 5.3 |
+| Envelope | ataque: tempo de 10 % a 90 % da amplitude, R1 = 50 | 89,4 ms (modelo do MSFA-E, ±10 % ou 1 ms) | 89,8 ms | ok | (b) 5.3 |
+| Envelope | ataque: tempo de 10 % a 90 % da amplitude, R1 = 70 | 11,2 ms (modelo do MSFA-E, ±10 % ou 1 ms) | 11,8 ms | ok | (b) 5.3 |
+| Envelope | ataque: tempo de 10 % a 90 % da amplitude, R1 = 99 | 0,4 ms (modelo do MSFA-E, ±10 % ou 1 ms) | 0,3 ms | ok | (b) 5.3 |
+| Envelope | salto inicial do ataque | começa ≈ 50 dB abaixo do máximo (40 dB acima do piso de 90 dB) | -51,9 dB do máximo no primeiro 0,6 ms | ok | (b) 5.3; 1700 contra 1716 passos registrado |
+| Envelope | sequência L = 99, 50, 80, 0 (R = 95): patamar em L3 e release até L4 | L3 = -13,5 dB em relação a 99 (±0,5 dB); depois do release, L4 = -94,8 dB (silêncio) | patamar -18,0 dBFS; depois -240,0 dBFS | ok | (a) 5.3 |
+| Envelope | segmentos 1, 2 e 3 em ordem com níveis que sobem e descem (L 99, 20, 50) | índices 0, 1, 2 (sustenta em L3) | 0, 1, 2 | ok | (a) 5.3 |
+| Envelope | rate scaling: queda em C1, C3 e C6 com sensibilidade 0, 3 e 7 | qrate + (RS × x) >> 3, x = nota/3 − 7 (±5 %) | pior: 0,2 % (nota 96, RS 3: -108,5 contra -108,2 dB/s) | ok | (b) 5.6 |
+| Envelope | degraus do envelope (0,0235 dB) | reproduzidos: o nível do envelope é inteiro em 1/256 de oitava | por construção | registro | (b) 5.3 |
+| Envelope | tempo de espera em segmento entre níveis iguais | não implementado: o segmento termina na hora (a tabela de 77 durações do Dexed não foi reproduzida) | NE | registro | (b) 5.3 |
+| LFO | frequência para SPEED 0, 10, 30, 50, 70, 90, 99 | tabela da seção 6.1 (±3 %) | pior: 0,00 % (SPEED 0: 0,063 Hz contra 0,063) | ok | (b) 6.1; entre os pontos medidos, interpolação linear (c) |
+| LFO | triângulo: de −1 a +1, simétrico | máx 1, mín −1, média 0 | 1,00 / -1,00 / 0,000 | ok | (a) 6.1 |
+| LFO | serra descendente / ascendente | rampas opostas | 1,00→-1,00 / -1,00→1,00 | ok | (a) 6.1 |
+| LFO | quadrada: metade em +1, metade em −1 | 50 % de ciclo ativo | 50 % | ok | (a) 6.1 |
+| LFO | seno (tabela de 8 bits): erro máximo contra o seno ideal | < 0,06 | 0,021 | ok | (a) 6.1 |
+| LFO | sample & hold: um valor novo por ciclo | 17,0 ciclos → ≈ 17 mudanças (±1) | 17 mudanças | ok | (a) 6.1 |
+| LFO | DELAY 0: tempo até o início e até a profundidade total | referência Dexed: início 0,00 s, total 0,00 s (c) | 0,00 s e 0,00 s (janela de 6 s) | registro | (c) 6.1; sem tabela em segundos |
+| LFO | DELAY 50: tempo até o início e até a profundidade total | referência Dexed: início 0,31 s, total 0,65 s (c) | 0,31 s e 0,64 s (janela de 6 s) | registro | (c) 6.1; sem tabela em segundos |
+| LFO | DELAY 99: tempo até o início e até a profundidade total | referência Dexed: início 2,66 s, total 3,33 s (c) | 2,66 s e 3,32 s (janela de 6 s) | registro | (c) 6.1; sem tabela em segundos |
+| LFO | vibrato: desvio de pico | sem referência primária; escolha de projeto: 1 oitava com PMS 7 e PMD 99, proporcional (PMS/255 × PMD/99) | PMS 1/PMD 99: ±47 cents; PMS 4/PMD 99: ±259 cents; PMS 7/PMD 99: ±1200 cents; PMS 7/PMD 25: ±303 cents; PMS 7/PMD 50: ±606 cents | registro | (c) 6.2 |
+| LFO | tremolo: profundidade com AMS 1, 2, 3 e AMD 99 (quadrada lenta) | AMS × 24 dB com fatores 0,259 / 0,427 / 1 (aproximação, (c)); ±0,6 dB | AMS 1: 6,2 dB (esp. 6,2); AMS 2: 10,3 dB (esp. 10,2); AMS 3: 24,0 dB (esp. 24,0) | ok | (c) 6.3 |
+| LFO | SYNC ligado: a fase volta a zero a cada nota | fase 0 | 0,000 | ok | (a) 6.1 |
+| LFO | SYNC desligado: a fase continua | fase igual à de antes | 1,780 | ok | (a) 6.1 |
+| Controladores | roda de modulação → PITCH, RANGE 99 / 50 / 0 com PMS 7 | proporcional ao RANGE; 0 anula | 1200 / 606 / 0 cents | ok | (a) 6.4 |
+| Controladores | PMS 0 na voz anula o efeito do controlador | 0 | 0,00 cents | ok | (a) 6.4 |
+| Controladores | roda → AMPLITUDE com AMS 3 e com AMS 0 | AMS 3: profundidade de tremolo; AMS 0: nenhuma | 24,0 dB e 0,0 dB | ok | (a) 6.4 |
+| Controladores | roda → EG BIAS: controlador em 0 atenua os operadores com AMS, em 1 deixa no máximo | nível em 1 maior que em 0 | nível em 0: 2820; em 1: 3840 (1/256 de oitava) | ok | (c) 6.4 |
+| Filtro | resposta da cadeia de saída (senoides de 0,26 a 23 kHz, taxa 48000 Hz) | ponto de −3 dB entre 15 e 17 kHz (referência ~16 kHz (b); a inclinação é escolha de projeto) | −3 dB em ≈ 16,8 kHz; 0,3k: 0,0, 2,1k: -0,0, 4,2k: -0,0, 8,4k: -0,1, 12,6k: -0,7, 16,7k: -2,9, 20,9k: -14,6, 23,0k: -39,1 | ok | (b) 7.1; ordem do filtro não encontrada |
+| Filtro | resposta da cadeia de saída (senoides de 0,26 a 23 kHz, taxa 44100 Hz) | ponto de −3 dB entre 15 e 17 kHz (referência ~16 kHz (b); a inclinação é escolha de projeto) | −3 dB em ≈ 16,9 kHz; 0,3k: 0,0, 2,1k: -0,0, 4,2k: -0,0, 8,4k: -0,1, 12,6k: -0,7, 16,7k: -2,5, 20,9k: -15,1 | ok | (b) 7.1; ordem do filtro não encontrada |
+| Filtro | resposta da cadeia de saída (senoides de 0,26 a 23 kHz, taxa 49096 Hz) | ponto de −3 dB entre 15 e 17 kHz (referência ~16 kHz (b); a inclinação é escolha de projeto) | −3 dB em ≈ 15,4 kHz; 0,3k: 0,0, 2,1k: -0,0, 4,2k: -0,0, 8,4k: -0,1, 12,6k: -0,6, 16,7k: -4,1, 20,9k: -16,6, 23,0k: -31,8 | ok | (b) 7.1; ordem do filtro não encontrada |
+| Filtro | aliasing: a parcial mais forte acima de Nyquist (24,5 kHz) dobra para baixo (taxa de contexto = 49 096 Hz) | parcial de 89,62 kHz aparece em 8,57 kHz | linha em 8,57 kHz: -21,3 dB | ok | (b) 7.2 |
+| Filtro | relação sinal/ruído de uma senoide em 0, −20 e −40 dB (saída de 12 bits com 4 faixas) | sem referência: o ruído cai com o sinal por causa das faixas | 0 dB: 54,3 dB; -20 dB: 54,0 dB; -40 dB: 44,7 dB | registro | (b) 7.2 |
+| Patches | seis patches recriados (nota 60, vel 100): pico | entre −30 e −3 dBFS e finito (não são os de fábrica; (c)) | FM PIANO: -8,5 dBFS; FM BASS: -17,9 dBFS; FM BELL: -13,1 dBFS; FM BRASS: -19,4 dBFS; FM ORGAN: -17,3 dBFS; FM MARIMBA: -24,3 dBFS | ok | (c) 9 |
+| Patches | depois de soltar a nota, cada patch recriado fica em silêncio em 8 s | sem nota presa (< −60 dBFS) | todos soltam | ok |  |
+| Patches | nomes de até 10 caracteres e valores já dentro das faixas (norm não muda nada) | verdadeiro | FM PIANO, FM BASS, FM BELL, FM BRASS, FM ORGAN, FM MARIMBA | ok |  |
+| Agendamento | evento com hora ("at", relógio do AudioContext) | a nota começa em 0,250 s (até +3 ms) | 0,2500 s | ok |  |
+| Agendamento | "seqpara" solta só as notas do sequenciador e cancela as agendadas | a nota tocada à mão continua; a do sequenciador solta; a agendada some | notas ativas: 60 | ok |  |
+| Calibração | norm: valores inválidos são limitados e o nome cortado em 10 caracteres | ops[0].ol = 99 (padrão do VOICE INIT para valor inválido), r limitados a 0..99, alg 31, nome de 10 letras | ol 99, r 99,0, alg 31, nome "NOME MUITO" | ok |  |
+| Calibração | sem tecla | silêncio (< −80 dBFS) | -240,0 dBFS | ok |  |
+| Calibração | depois de soltar (L4 = 0) | silêncio (< −80 dBFS) e voz liberada | -240,0 dBFS, 0 voz(es) | ok |  |
+| Calibração | pedal de sustain | a nota continua com o pedal; solta ao levantá-lo | segurou | ok | (a) MAN |
+| Calibração | mensagem agendada pela fila (campo f) | a nota 64 entra no quadro 12000 | vozes: 60,64 | ok |  |
+| Custo | 10 s de áudio, 16 vozes com 6 portadoras (neste computador, Node) | bem abaixo de 100 % do tempo real | 22,3 % do tempo real | ok |  |
+| Calibração | casos extremos (fb 7, tudo em 99, várias notas e algoritmos): sem NaN e sem passar de 1,0 | finito e |x| ≤ 1 | ok | ok |  |
+
+115 medições, 0 fora da tolerância, 23 só registro.

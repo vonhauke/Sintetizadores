@@ -1,0 +1,1265 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Clone do sintetizador FM de seis operadores</title>
+<link rel="stylesheet" href="../fonts/fonts.css">
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Estrutura: gabinete com faixa superior (diagramas dos 32 algoritmos, EG e escala de teclado), faixa de controles (sliders, 8 botões de modo,
+   visor, 32 botões de membrana, slot), rodas e teclado de 61 teclas. Tudo posicionado por coordenadas tiradas das duas fotos (escala 0,7).
+   Desenho próprio: chapa ameixa-grafite, legendas marfim e âmbar, botões areia, oliva, coral e pervinca, LED vermelho, visor verde-oliva.
+   Não reproduz logotipo, nome do modelo nem as cores do aparelho emulado. A faixa de acessórios fica separada e marcada como não original. */
+:root{
+  --pagina:#120f13; --tinta:#e2dccb; --tinta-fraca:#a39aa0; --claro:#efe9da; --apagado:#a79ea4;
+  --topo:#150f14; --chapa:#3a2e38; --chapa-clara:#46394a; --chapa-escura:#2b212b; --linha:#1b1319; --faixa:#d9a84e;
+  --ambar:#e3b45c; --rosa:#d9a596; --areia:#d9c590; --grafite:#2a2429; --coral:#c9503f; --oliva:#7da071; --pervinca:#8f98d9; --tan:#c79a6a;
+  --led:#ff4b3a; --led-apagado:#4a2320; --ambar-led:#ffb23c;
+  --lcd:#b9c6a2; --lcd-tinta:#243020; --foco:#7ec8ff;
+  --tecla:#f4efe0; --tecla-baixa:#cdc5ac; --tecla-preta:#17141a; --tecla-preta-baixa:#55505a;
+  --f-rot:"Barlow Condensed","Arial Narrow",Arial,sans-serif; --f-texto:"Barlow","Helvetica Neue",Arial,sans-serif; --f-tit:"Michroma","Arial Black",Arial,sans-serif;
+  --f-lcd:ui-monospace,"Cascadia Mono","Consolas","Courier New",monospace;
+  color-scheme:dark; box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:inherit}
+html{touch-action:manipulation;-webkit-text-size-adjust:100%}
+body{margin:0;color:var(--claro);font-family:var(--f-texto);line-height:1.4;-webkit-font-smoothing:antialiased;
+  background:radial-gradient(120% 70% at 50% 0%,#241a26 0%,var(--pagina) 60%,#08060a 100%) fixed var(--pagina)}
+button,select,input{font:inherit;touch-action:manipulation}
+.wrap{max-width:2300px;margin:0 auto;padding-block:20px 90px;
+  padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px))}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:2px solid var(--foco);outline-offset:2px}
+.audio-bar{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:100;display:block;min-height:48px;margin:0;padding:.9rem 1rem;border-radius:10px;border:0;
+  box-shadow:0 6px 20px rgba(0,0,0,.45);background:var(--ambar-led);color:#2a1a02;font-family:var(--f-rot);font-weight:600;font-size:1.1rem;cursor:pointer}
+.audio-bar[hidden]{display:none}
+
+.gabinete{border-radius:10px;padding:10px;background:linear-gradient(180deg,#1e1620,#0d090e);box-shadow:0 18px 40px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.08)}
+.rolagem{overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:#6b5870 transparent;border-radius:4px}
+.painel{position:relative;width:2125px;height:742px;color:var(--tinta);border-radius:4px;overflow:hidden;
+  background:linear-gradient(180deg,var(--chapa-clara),var(--chapa) 26%,var(--chapa-escura));box-shadow:inset 0 0 0 2px rgba(255,255,255,.07)}
+.painel>*{position:absolute}
+.faixa-topo{left:0;top:0;width:2125px;height:178px;background:linear-gradient(180deg,#1a121a,var(--topo));border-bottom:2px solid #000}
+.faixa-ctl{left:0;top:178px;width:2125px;height:176px;background:linear-gradient(180deg,#34292f,#2a2128);border-bottom:2px solid #000;border-top:1px solid rgba(255,255,255,.06)}
+.tit{transform:translate(-50%,-50%);font-family:var(--f-tit);font-weight:400;font-size:11px;letter-spacing:.14em;color:var(--ambar);text-transform:uppercase;white-space:nowrap;pointer-events:none}
+.tx{transform:translate(-50%,-50%);font-family:var(--f-rot);font-weight:600;font-size:9.5px;letter-spacing:.04em;color:var(--ambar);text-transform:uppercase;line-height:1.02;text-align:center;white-space:pre;pointer-events:none}
+.tx.s8{font-size:8px;letter-spacing:.02em} .tx.b{color:var(--rosa)} .tx.n{color:var(--tinta)} .tx.g{font-size:10.5px;color:var(--tinta)}
+.lin{height:1px;background:var(--ambar);opacity:.85;pointer-events:none} .lin.b{background:var(--rosa)}
+.caixa{border:1.5px solid rgba(226,220,203,.55);border-radius:2px;pointer-events:none}
+svg.dg{pointer-events:none;overflow:visible}
+svg.dg .op rect{fill:none;stroke:var(--tinta);stroke-width:.8} svg.dg line,svg.dg path{fill:none;stroke:var(--tinta);stroke-width:.8}
+svg.dg .at rect{stroke:var(--faixa);stroke-width:1.4} svg.dg .at line,svg.dg .at path{stroke:var(--faixa);stroke-width:1.2}
+svg.dg text{fill:var(--tinta);font-family:var(--f-rot);font-size:5px;text-anchor:middle}
+.alg-cel{cursor:pointer;pointer-events:auto}
+.alg-n{transform:translateX(-50%);font-family:var(--f-rot);font-size:8px;color:var(--tinta-fraca);pointer-events:none}
+
+/* botões: área de toque de 46 x 44, desenho de 43 x 20 */
+.bw{width:46px;height:44px;transform:translate(-50%,-22px)}
+.bt{appearance:none;position:absolute;inset:0;padding:0;border:0;background:none;cursor:pointer;-webkit-tap-highlight-color:transparent;color:var(--sym)}
+.bt::before{content:"";position:absolute;left:1px;right:1px;top:11px;bottom:11px;border-radius:2px;background:linear-gradient(180deg,var(--c1),var(--c2));
+  box-shadow:0 2px 0 rgba(0,0,0,.6),0 3px 5px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.3)}
+.bt.dn::before{transform:translateY(1px);box-shadow:0 1px 0 rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.2)}
+.bt.ac::before{filter:brightness(1.18);box-shadow:0 0 8px 1px rgba(255,200,120,.75),0 2px 0 rgba(0,0,0,.6)}
+.bt .nu{position:absolute;left:5px;top:0;bottom:0;display:grid;place-items:center;font-family:var(--f-rot);font-weight:700;font-size:13px;pointer-events:none}
+.bt .ch{position:absolute;right:4px;bottom:11px;font-family:var(--f-rot);font-size:7px;line-height:1;opacity:.75;pointer-events:none}
+.t-areia{--c1:#e8d8a2;--c2:#b79c58;--sym:#2a2412}
+.t-oliva{--c1:#95b98a;--c2:#587a4f;--sym:#10200c}
+.t-coral{--c1:#e0705e;--c2:#9a3326;--sym:#fff}
+.t-pervinca{--c1:#a7aff0;--c2:#6870b3;--sym:#10132e}
+.t-tan{--c1:#d9ad7c;--c2:#97683c;--sym:#2a1a0a}
+.ledp{position:absolute;left:50%;top:7px;width:8px;height:4px;margin-left:-4px;border-radius:1px;background:var(--led-apagado);pointer-events:none}
+.ledp.on{background:var(--led);box-shadow:0 0 6px 1px rgba(255,75,58,.8)}
+
+/* visor e LED */
+.lcd-m{background:#0d0a0e;border:2px solid #05030a;border-radius:3px;box-shadow:inset 0 0 0 3px #1e1620}
+.lcd{position:absolute;inset:7px;border-radius:2px;background:var(--lcd);box-shadow:inset 0 2px 6px rgba(0,0,0,.45);padding:5px 8px;font-family:var(--f-lcd);font-weight:700;font-size:17px;line-height:22px;color:var(--lcd-tinta);white-space:pre;overflow:hidden}
+.lcd .ln{display:block;height:22px}
+.lcd .sel{background:var(--lcd-tinta);color:var(--lcd)}
+.led7{background:#0a0507;border:2px solid #05030a;border-radius:3px}
+.led7 svg{position:absolute;inset:0;width:100%;height:100%}
+.led7 .sg{fill:#3a1613} .led7 .sg.on{fill:var(--led);filter:drop-shadow(0 0 3px rgba(255,75,58,.8))}
+
+/* sliders e rodas */
+.vslider{width:50px;height:132px;touch-action:none;cursor:ns-resize;transform:translateX(-50%)}
+.vslider::before{content:"";position:absolute;left:50%;top:6px;bottom:6px;width:7px;margin-left:-3.5px;border-radius:4px;background:#07050a;box-shadow:inset 0 1px 3px #000, 0 1px 0 rgba(255,255,255,.12)}
+.vslider i{position:absolute;left:50%;width:36px;height:24px;margin:-12px 0 0 -18px;top:calc(14px + (100% - 28px) * (1 - var(--t,0)));border-radius:3px;background:linear-gradient(180deg,#5b4f62,#2a2229 45%,#171318);box-shadow:0 4px 5px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.25)}
+.vslider i::after{content:"";position:absolute;left:4px;right:4px;top:11px;height:2px;background:var(--tinta)}
+.escala{width:12px;height:100px;background:repeating-linear-gradient(180deg,var(--tinta-fraca) 0 1px,transparent 1px 5px);opacity:.8;pointer-events:none}
+.bloco-rodas{left:45px;top:410px;width:273px;height:310px;border-radius:4px;background:linear-gradient(180deg,#2a2029,#1c141d);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+.roda{width:46px;height:148px;border-radius:7px;background:#0a070c;box-shadow:inset 0 3px 8px #000,0 1px 0 rgba(255,255,255,.1);cursor:ns-resize;touch-action:none;transform:translateX(-50%)}
+.roda b{position:absolute;left:8px;right:8px;height:48px;margin-top:-24px;top:calc(50% - 50px * var(--x,0));border-radius:6px;
+  background:repeating-linear-gradient(180deg,#6f6475 0 3px,#37303c 3px 6px);box-shadow:0 4px 6px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.3)}
+.roda.mod b{top:calc(100% - 28px - (100% - 56px) * var(--x,0))}
+
+/* teclado de 61 teclas */
+.teclado{left:300px;top:410px;width:1810px;height:312px;user-select:none;-webkit-user-select:none;touch-action:none;-webkit-touch-callout:none;border-top:5px solid #050407;background:#050407;z-index:2}
+.teclado .br{position:absolute;top:0;height:100%;border:1px solid #8d8678;border-top:0;border-radius:0 0 4px 4px;background:linear-gradient(180deg,#dcd5c2,var(--tecla) 10%);box-shadow:inset 0 -6px 0 rgba(0,0,0,.08)}
+.teclado .pr{position:absolute;top:0;height:62%;border-radius:0 0 3px 3px;background:linear-gradient(180deg,#352f3a,var(--tecla-preta));box-shadow:2px 3px 4px rgba(0,0,0,.6);z-index:3}
+.teclado .br.on{background:var(--tecla-baixa)} .teclado .pr.on{background:var(--tecla-preta-baixa)}
+.teclado .br span{position:absolute;bottom:6px;left:0;right:0;text-align:center;font-family:var(--f-rot);font-size:.7rem;color:#6d6a5e;pointer-events:none}
+.slot{border-radius:3px;background:#0b080c;box-shadow:inset 0 2px 6px #000,0 1px 0 rgba(255,255,255,.1)}
+
+/* ---------- acessórios ---------- */
+.acessorios{margin-top:26px;padding:14px;border:2px dashed #55606b;border-radius:10px;background:#14181b}
+.acessorios>h2{margin:0 0 4px;font-family:var(--f-rot);font-weight:600;font-size:1.05rem;letter-spacing:.06em}
+.acessorios>p{margin:0 0 8px;color:var(--apagado);font-size:.88rem;max-width:90ch}
+.estado{font-size:.85rem;color:var(--apagado);min-height:1.3em}
+.barra{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-bottom:12px}
+.bp{appearance:none;min-height:44px;min-width:44px;padding:0 14px;border-radius:8px;border:1px solid #5f6b77;background:#232a30;color:var(--claro);font-family:var(--f-rot);font-weight:600;font-size:1rem;cursor:pointer}
+.bp[aria-pressed="true"]{background:var(--ambar-led);border-color:var(--ambar-led);color:#2a1a02}
+.bp.perigo{border-color:#c0674e}
+.bp:disabled{opacity:.45}
+.campo{display:flex;align-items:center;gap:6px;font-family:var(--f-rot);font-size:.95rem;color:var(--apagado)}
+.campo select,.campo input{min-height:44px;border-radius:8px;border:1px solid #5f6b77;background:#0e1214;color:var(--claro);padding:0 8px;max-width:100%}
+.campo input[type=number]{width:74px}
+.passos-rol{overflow-x:auto}
+.passos{display:grid;grid-template-columns:repeat(16,minmax(56px,1fr));gap:5px;min-width:max-content}
+.passo{display:flex;flex-direction:column;gap:4px;padding:5px 4px;border-radius:7px;background:#1c2227;border:1px solid #3b454f}
+.passo:nth-child(4n+1){border-color:#7b8793}
+.passo.agora{background:#3a2c17;border-color:var(--ambar-led)}
+.passo.sel{box-shadow:0 0 0 2px #9be7ff}
+.passo small{font-family:var(--f-rot);font-size:.72rem;color:var(--apagado);text-align:center}
+.passo .bp{min-width:0;padding:0 2px;font-size:.92rem}
+.passo .par{display:grid;grid-template-columns:1fr;gap:3px}
+.alvo-midi{outline:3px solid var(--foco)!important;outline-offset:2px;border-radius:4px}
+.painel.aprende{cursor:crosshair}
+.lista-midi{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px;padding:0;list-style:none}
+.lista-midi li{display:flex;align-items:center;gap:6px;padding:2px 4px 2px 10px;border:1px solid #3b454f;border-radius:999px;font-family:var(--f-rot);font-size:.9rem;color:var(--claro)}
+.lista-midi li button{min-width:44px;min-height:44px;margin:-8px -2px -8px 0;border:0;background:none;color:var(--apagado);font-size:1.2rem;cursor:pointer}
+kbd{font-family:var(--f-rot);padding:0 .3em;border:1px solid currentColor;border-radius:3px}
+footer{margin-top:18px;color:#8b8190;font-size:.8rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 class="sr">Sintetizador digital FM de seis operadores, 16 vozes</h1>
+  <button type="button" class="audio-bar" id="audio-bar" hidden>Som desligado, toque para ativar</button>
+  <section class="gabinete" aria-label="Sintetizador">
+    <div class="rolagem" tabindex="-1"><div class="painel" id="painel"></div></div>
+  </section>
+  <section class="acessorios" aria-labelledby="ac-t">
+    <h2 id="ac-t">Acessórios (não fazem parte do instrumento original)</h2>
+    <p>Sequenciador de 16 passos, uma nota por passo (o original não tem sequenciador nem arpejador). Toque num passo e depois numa tecla para gravar a nota; cada passo pode ser nota, pausa ou ligadura (prolonga a nota anterior). O Hold funciona como o pedal de sustain. Os três controles abaixo fazem o papel das entradas de pedal, sopro e aftertouch, que a tela não tem.</p>
+    <div class="barra">
+      <button type="button" class="bp" id="seq-play" aria-pressed="false">Play</button>
+      <label class="campo">Andamento <input type="number" id="seq-bpm" min="30" max="300" step="1" inputmode="numeric" aria-label="Andamento em batidas por minuto"> bpm</label>
+      <label class="campo">Tônica <select id="seq-tonica"></select></label>
+      <label class="campo">Escala <select id="seq-escala"></select></label>
+      <button type="button" class="bp" id="seq-aleat">Aleatório</button>
+      <button type="button" class="bp" id="hold" aria-pressed="false">Hold</button>
+      <button type="button" class="bp perigo" id="zerar">Zerar</button>
+      <button type="button" class="bp" id="zerar-nao" hidden>Cancelar</button>
+    </div>
+    <div class="passos-rol"><div class="passos" id="passos"></div></div>
+    <div class="barra" style="margin-top:14px">
+      <label class="campo">Velocidade das teclas da tela <input type="range" id="vel-tecla" min="1" max="127" step="1" aria-label="Velocidade das teclas da tela e do computador"> <output id="vel-n">100</output></label>
+      <label class="campo">Pedal (foot) <input type="range" id="ctl-foot" min="0" max="99" step="1" aria-label="Foot control"></label>
+      <label class="campo">Sopro (breath) <input type="range" id="ctl-breath" min="0" max="99" step="1" aria-label="Breath control"></label>
+      <label class="campo">Aftertouch <input type="range" id="ctl-at" min="0" max="99" step="1" aria-label="After touch"></label>
+    </div>
+    <div class="barra" style="margin-top:14px">
+      <button type="button" class="bp" id="midi-ativar" aria-pressed="false">Ativar MIDI</button>
+      <label class="campo">Entrada <select id="midi-entrada" aria-label="Dispositivo de entrada MIDI"><option value="">Todas</option></select></label>
+      <label class="campo">Canal <select id="midi-canal" aria-label="Canal MIDI"></select></label>
+      <button type="button" class="bp" id="midi-aprende" aria-pressed="false">MIDI learn</button>
+      <button type="button" class="bp" id="midi-desfaz" disabled>Desfazer ligação</button>
+      <button type="button" class="bp perigo" id="midi-apaga">Apagar todas as ligações</button>
+    </div>
+    <p>MIDI learn: ligue o modo, toque num controle (botão do painel, DATA ENTRY, visor, volume, rodas, Hold ou um dos controles acima) e mexa num botão ou knob do controlador. O mesmo CC passa a mover o controle. Sem ligação, valem os CCs 1 (modulação), 2 (sopro), 4 (pedal), 5 (tempo de portamento), 7 (volume) e 64 (sustain), além de pitch bend, aftertouch de canal e program change (voz interna 1 a 32).</p>
+    <ul class="lista-midi" id="midi-lista" aria-label="Ligações MIDI"></ul>
+    <p style="margin:0">Teclado do computador: <kbd>A</kbd> <kbd>W</kbd> <kbd>S</kbd> <kbd>E</kbd> <kbd>D</kbd> <kbd>F</kbd> <kbd>T</kbd> <kbd>G</kbd> <kbd>Y</kbd> <kbd>H</kbd> <kbd>U</kbd> <kbd>J</kbd> <kbd>K</kbd> tocam uma oitava a partir do dó central; <kbd>Z</kbd> e <kbd>X</kbd> descem e sobem uma oitava.</p>
+    <p class="estado" id="estado" aria-live="polite"></p>
+  </section>
+  <footer>Clone de um sintetizador digital FM de seis operadores e 16 vozes. Som gerado no navegador (Web Audio). O que vem de fonte e o que é aproximação está em docs/pesquisa/dx7.md.</footer>
+</div>
+
+<!-- Motor de som. Fica como texto para virar Blob (AudioWorklet) e para ser extraído pelos scripts de tests/medicao/dx7. -->
+<script type="text/plain" id="dsp">
+'use strict';
+/* =====================================================================================================
+   Motor FM de 6 operadores. As categorias (a) manual/firmware, (b) fonte secundária, (c) aproximação ou
+   escolha de projeto seguem docs/pesquisa/dx7.md. O núcleo roda a 49 096 Hz, passa por um filtro passa-baixas
+   e é reamostrado (Hermite) para a taxa do contexto de áudio.
+   ===================================================================================================== */
+const FC = 49096;               // taxa do núcleo (a partir do relógio: 4,71325 MHz / 96) (a)/(b)
+const N = 8;                    // tamanho do bloco de atualização (envelopes, pitch, LFO): 6137 Hz
+const MASK = 0xFFFFFF;          // acumulador de fase de 24 bits (a largura real é divergente nas fontes) (c)
+const LVMAX = 3840;             // nível máximo do envelope, em 1/256 de oitava (OL 99, L 99)
+const LVMIN = 16;
+const MODK = 4275.2;            // fase (24 bits) por unidade de saída de 14 bits: I = pi * 2^(33/16 - TL/8) (b)
+const FBK = 2137.6;             // idem, para a média de duas amostras da realimentação
+const G_SAIDA = 0.6;            // uma portadora no máximo dá pico de 0,6 (-4,4 dBFS)
+
+/* ---- ROMs de seno (log) e exponencial (3.2): fórmulas da pesquisa ---- */
+const LS = new Int32Array(1024), EXPM = new Int32Array(1024);
+for (let n = 0; n < 1024; n++) {
+  LS[n] = Math.round(-Math.log2(Math.sin((n + 0.5) / 1024 * Math.PI / 2)) * 1024);
+  EXPM[n] = Math.round(Math.pow(2, -n / 1024) * 4096);
+}
+
+/* ---- escalas de nível (5.2, 5.3) ---- */
+const TBL_OL = [0, 5, 9, 13, 17, 20, 23, 25, 27, 29, 31, 33, 35, 37, 39, 41, 42, 43, 45, 46];
+const escalaOL = ol => ol >= 20 ? 28 + ol : TBL_OL[ol];          // OL' (0..127), 1 unidade = 0,7526 dB
+const escalaL = l => escalaOL(l) >> 1;                            // nível do EG (0..63), 1 unidade = 1,505 dB
+
+/* ---- velocidade (5.4): tabelas do firmware (a). Atenuação em unidades de 0,7526 dB. ---- */
+const TMV = [0x6E, 0x64, 0x5A, 0x55, 0x50, 0x4B, 0x46, 0x41, 0x3A, 0x36, 0x32, 0x2E, 0x2A, 0x26, 0x22, 0x1E, 0x1C, 0x1A, 0x18, 0x16, 0x14, 0x12, 0x10, 0x0E, 0x0C, 0x0A, 0x08, 0x06, 0x04, 0x02, 0x01, 0x00];
+const TVS = [0x00, 0x04, 0x0C, 0x15, 0x1E, 0x28, 0x2E, 0x34, 0x3A, 0x40, 0x46, 0x4C, 0x52, 0x58, 0x5E, 0x64, 0x67, 0x6A, 0x6D, 0x70, 0x72, 0x74, 0x76, 0x78, 0x7A, 0x7C, 0x7E, 0x80, 0x82, 0x83, 0x84, 0x85];
+const velAtt = (vel, kvs) => (TVS[TMV[Math.min(31, vel >> 2)] >> 2] * kvs) >> 3;   // (a) para as tabelas; a combinação com KVS é leitura minha (b)
+
+/* ---- escala de teclado (5.5): tabelas do firmware (a) ---- */
+const KLS_EXP = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 14, 16, 19, 23, 28, 33, 39, 47, 57, 67, 80, 95, 113, 134, 160, 190, 224, 255];
+const KLS_LIN = [];
+for (let i = 0; i < 44; i++) { KLS_EXP[i] = i < KLS_EXP.length ? KLS_EXP[i] : 255; KLS_LIN[i] = Math.min(255, 8 * i); }
+KLS_LIN[22] = 178;                                                // o firmware tem 0xB2 onde o padrão daria 176
+/** unidades (de 0,7526 dB, com sinal) somadas a OL' na nota `nota` para um operador */
+function klsUnid(nota, op) {
+  const d = nota - (21 + op.bp); if (d === 0) return 0;
+  const esq = d < 0, curva = esq ? op.lc : op.rc, prof = esq ? op.ld : op.rd;
+  const g = Math.min(43, (Math.abs(d) + 1) / 3 | 0), tab = (curva === 0 || curva === 3) ? KLS_LIN : KLS_EXP;
+  const v = (tab[g] * prof * 329) >> 15;
+  return curva <= 1 ? -v : v;
+}
+
+/* ---- algoritmos (3.4), transcritos da tabela da pesquisa. mod: [fonte, destino]; fb: [destino, fonte] ---- */
+const ALG_TXT = [
+  [[1, 3], '2>1 4>3 5>4 6>5', [6, 6]], [[1, 3], '2>1 4>3 5>4 6>5', [2, 2]], [[1, 4], '2>1 3>2 5>4 6>5', [6, 6]], [[1, 4], '2>1 3>2 5>4 6>5', [6, 4]],
+  [[1, 3, 5], '2>1 4>3 6>5', [6, 6]], [[1, 3, 5], '2>1 4>3 6>5', [6, 5]], [[1, 3], '2>1 4>3 5>3 6>5', [6, 6]], [[1, 3], '2>1 4>3 5>3 6>5', [4, 4]],
+  [[1, 3], '2>1 4>3 5>3 6>5', [2, 2]], [[1, 4], '2>1 3>2 5>4 6>4', [3, 3]], [[1, 4], '2>1 3>2 5>4 6>4', [6, 6]], [[1, 3], '2>1 4>3 5>3 6>3', [2, 2]],
+  [[1, 3], '2>1 4>3 5>3 6>3', [6, 6]], [[1, 3], '2>1 4>3 5>4 6>4', [6, 6]], [[1, 3], '2>1 4>3 5>4 6>4', [2, 2]], [[1], '2>1 3>1 5>1 4>3 6>5', [6, 6]],
+  [[1], '2>1 3>1 5>1 4>3 6>5', [2, 2]], [[1], '2>1 3>1 4>1 5>4 6>5', [3, 3]], [[1, 4, 5], '2>1 3>2 6>4 6>5', [6, 6]], [[1, 2, 4], '3>1 3>2 5>4 6>4', [3, 3]],
+  [[1, 2, 4, 5], '3>1 3>2 6>4 6>5', [3, 3]], [[1, 3, 4, 5], '2>1 6>3 6>4 6>5', [6, 6]], [[1, 2, 4, 5], '3>2 6>4 6>5', [6, 6]], [[1, 2, 3, 4, 5], '6>3 6>4 6>5', [6, 6]],
+  [[1, 2, 3, 4, 5], '6>4 6>5', [6, 6]], [[1, 2, 4], '3>2 5>4 6>4', [6, 6]], [[1, 2, 4], '3>2 5>4 6>4', [3, 3]], [[1, 3, 6], '2>1 4>3 5>4', [5, 5]],
+  [[1, 2, 3, 5], '4>3 6>5', [6, 6]], [[1, 2, 3, 6], '4>3 5>4', [5, 5]], [[1, 2, 3, 4, 5], '6>5', [6, 6]], [[1, 2, 3, 4, 5, 6], '', [6, 6]]
+];
+/** ALG[a] (a = 0..31): car[6] (0/1), mods[o] = índices (0..5) dos operadores que modulam o operador o, fbDst, fbSrc (índices 0..5) */
+const ALG = ALG_TXT.map(([cars, mods, fb]) => {
+  const car = [0, 0, 0, 0, 0, 0], md = [[], [], [], [], [], []];
+  for (const c of cars) car[c - 1] = 1;
+  for (const m of mods.split(' ').filter(Boolean)) { const [s, d] = m.split('>').map(Number); md[d - 1].push(s - 1); }
+  return { car, mods: md, fbDst: fb[0] - 1, fbSrc: fb[1] - 1, ncar: cars.length };
+});
+const COMP = [1, 1, 2, Math.pow(2, 1.625), 4, Math.pow(2, 2.375), Math.pow(2, 2.625)];   // por número de portadoras (b)
+
+/* ---- pitch EG (4.6): tabela de níveis do firmware (a), 1 unidade = 1/32 de oitava ---- */
+const PE_NIV = [-128, -116, -104, -95, -85, -76, -68, -61, -56, -52, -49, -46, -43, -41, -39, -37, -35, -33, -32, -31];
+for (let i = -30; i <= 35; i++) PE_NIV.push(i);                    // -30 .. -1, 0 (nível 50), 1 .. 35
+PE_NIV.push(38, 40, 43, 46, 49, 53, 58, 65, 73, 82, 92, 103, 115, 127);
+/** taxas: a tabela do firmware tem 100 entradas de 1 a 255 que não foram lidas; reconstrução (c): R+1 até R=55, depois exponencial até 255 em R=99 */
+const PE_TAXA = []; for (let r = 0; r < 100; r++) PE_TAXA.push(r <= 55 ? r + 1 : Math.round(56 * Math.pow(255 / 56, (r - 55) / 44)));
+const peOit = l => PE_NIV[Math.max(0, Math.min(99, l))] / 32;       // oitavas
+const peVel = r => PE_TAXA[Math.max(0, Math.min(99, r))] / 21.3;    // oitavas por segundo (b)
+
+/* ---- LFO (6.1) ---- */
+const LFO_KN = [[0, 0.0625], [10, 1.56], [20, 3.19], [30, 4.81], [40, 6.43], [50, 7.99], [60, 9.61], [70, 16.4], [80, 25.7], [90, 38.2], [99, 49.3]];
+/** SPEED -> Hz: interpolação linear entre os 11 pontos medidos do Dexed (b); os valores entre eles são (c) */
+function lfoHz(s) { s = Math.max(0, Math.min(99, s)); for (let i = 1; i < LFO_KN.length; i++) if (s <= LFO_KN[i][0]) { const [a, fa] = LFO_KN[i - 1], [b, fb] = LFO_KN[i]; return fa + (fb - fa) * (s - a) / (b - a); } return 49.3; }
+const PMS_TAB = [0, 10, 20, 33, 55, 92, 153, 255];                  // (a)
+const AMS_FAT = [0, 0.259, 0.427, 1.0];                             // (b)
+const PM_OITAVAS = 1.0;         // pico de vibrato com PMS 7 e PMD 99: não encontrado; escolha de projeto de 1 oitava (c)
+const AM_DB = 24;               // pico de tremolo com AMS 3 e AMD 99: não confirmado (peso de bit de 24 dB no TA); escolha de projeto (c)
+const LFO_UNIT = 25190424;      // constante do Dexed para o tempo de DELAY (c)
+function lfoAtraso(d) {         // devolve [tempo até começar (s), tempo do fade-in (s)]
+  const a = 99 - d; if (a >= 99) return [0, 0];
+  const v = (16 + (a & 15)) << (1 + (a >> 4)), v2 = Math.max(0x80, v & 0xff80), un = 64 * LFO_UNIT / 44100 + 1;
+  return [Math.pow(2, 31) / (un * v) * 64 / 44100, Math.pow(2, 31) / (un * v2) * 64 / 44100];
+}
+const SENO64 = []; for (let i = 0; i < 64; i++) SENO64.push(Math.round(127 * Math.sin(Math.PI / 2 * (i + 0.5) / 64)));
+
+/* ---- patches ---- */
+const opPadrao = () => ({ r: [99, 99, 99, 99], l: [99, 99, 99, 0], bp: 39, ld: 0, rd: 0, lc: 0, rc: 0, rs: 0, ams: 0, kvs: 0, ol: 0, modo: 0, coarse: 1, fine: 0, det: 7 });
+/** VOICE INIT (2.3): algoritmo 1, só o operador 1 com nível 99, EGs "quadrados", razões 1,00. */
+function patchInit() {
+  const ops = []; for (let i = 0; i < 6; i++) ops.push(opPadrao());
+  ops[0].ol = 99;
+  return { nome: 'INIT VOICE', ops, pr: [99, 99, 99, 99], pl: [50, 50, 50, 50], alg: 0, fb: 0, sync: 1, lfoV: 35, lfoD: 0, lfoPmd: 0, lfoAmd: 0, lfoSync: 1, lfoW: 0, pms: 3, tr: 24 };
+}
+/** completa e limita um patch vindo de fora (memória, importação) */
+function norm(p) {
+  const b = patchInit(), q = p || {}, lim = (v, a, c, d) => { v = Math.round(+v); return isFinite(v) ? Math.max(a, Math.min(c, v)) : d; };
+  const ops = [];
+  for (let i = 0; i < 6; i++) {
+    const o = (q.ops && q.ops[i]) || {}, d = b.ops[i];
+    ops.push({ r: [0, 1, 2, 3].map(k => lim(o.r && o.r[k], 0, 99, d.r[k])), l: [0, 1, 2, 3].map(k => lim(o.l && o.l[k], 0, 99, d.l[k])),
+      bp: lim(o.bp, 0, 99, d.bp), ld: lim(o.ld, 0, 99, 0), rd: lim(o.rd, 0, 99, 0), lc: lim(o.lc, 0, 3, 0), rc: lim(o.rc, 0, 3, 0), rs: lim(o.rs, 0, 7, 0), ams: lim(o.ams, 0, 3, 0),
+      kvs: lim(o.kvs, 0, 7, 0), ol: lim(o.ol, 0, 99, d.ol), modo: lim(o.modo, 0, 1, 0), coarse: lim(o.coarse, 0, 31, 1), fine: lim(o.fine, 0, 99, 0), det: lim(o.det, 0, 14, 7) });
+  }
+  return { nome: String(q.nome == null ? b.nome : q.nome).slice(0, 10), ops, pr: [0, 1, 2, 3].map(k => lim(q.pr && q.pr[k], 0, 99, 99)), pl: [0, 1, 2, 3].map(k => lim(q.pl && q.pl[k], 0, 99, 50)),
+    alg: lim(q.alg, 0, 31, 0), fb: lim(q.fb, 0, 7, 0), sync: lim(q.sync, 0, 1, 1), lfoV: lim(q.lfoV, 0, 99, 35), lfoD: lim(q.lfoD, 0, 99, 0), lfoPmd: lim(q.lfoPmd, 0, 99, 0), lfoAmd: lim(q.lfoAmd, 0, 99, 0),
+    lfoSync: lim(q.lfoSync, 0, 1, 1), lfoW: lim(q.lfoW, 0, 5, 0), pms: lim(q.pms, 0, 7, 3), tr: lim(q.tr, 0, 48, 24) };
+}
+/** operador abreviado: c = COARSE, f = FINE, d = DETUNE (0..14), o = OUTPUT LEVEL, r/l = taxas e níveis do EG, k = KVS, s = rate scaling, a = AMS */
+const OPA = x => Object.assign(opPadrao(), { coarse: x.c == null ? 1 : x.c, fine: x.f || 0, det: x.d == null ? 7 : x.d, ol: x.o || 0, r: x.r || [99, 99, 99, 99], l: x.l || [99, 99, 99, 0], kvs: x.k || 0, rs: x.s || 0, ams: x.a || 0 });
+const mkPatch = (nome, alg, fb, ops, extra) => Object.assign(patchInit(), { nome, alg: alg - 1, fb, ops: ops.map(OPA) }, extra || {});
+/** Seis patches criados aqui, só para o instrumento soar logo. NÃO são os de fábrica (a lista não foi lida): (c) */
+const FAB = [
+  mkPatch('FM PIANO', 5, 6, [{ o: 99, r: [96, 25, 25, 67], l: [99, 75, 0, 0], k: 2, s: 3 }, { c: 14, o: 62, r: [95, 50, 35, 78], l: [99, 0, 0, 0], k: 4, s: 3 }, { o: 99, d: 10, r: [95, 20, 20, 60], l: [99, 80, 0, 0], k: 2, s: 3 }, { o: 78, r: [95, 29, 20, 50], l: [99, 95, 0, 0], k: 3 }, { o: 99, d: 4, r: [95, 20, 20, 60], l: [99, 80, 0, 0], k: 2, s: 3 }, { c: 1, o: 56, r: [95, 50, 35, 78], l: [99, 0, 0, 0], k: 4 }]),
+  mkPatch('FM BASS', 1, 5, [{ o: 99, r: [99, 60, 40, 70], l: [99, 90, 70, 0], k: 2 }, { o: 80, r: [99, 52, 35, 70], l: [99, 0, 0, 0], k: 4 }, { c: 0, o: 92, r: [99, 70, 60, 75], l: [99, 95, 85, 0], k: 2 }, { c: 2, o: 60, r: [99, 60, 40, 70], l: [99, 0, 0, 0], k: 3 }, { o: 0 }, { o: 0 }]),
+  mkPatch('FM BELL', 5, 3, [{ o: 99, r: [95, 35, 28, 40], l: [99, 85, 40, 0], k: 2, s: 2 }, { c: 3, f: 17, o: 80, r: [95, 40, 30, 45], l: [99, 60, 0, 0], k: 4 }, { o: 90, d: 9, r: [95, 30, 25, 40], l: [99, 80, 35, 0], k: 2, s: 2 }, { c: 5, f: 20, o: 70, r: [95, 45, 30, 50], l: [99, 55, 0, 0], k: 3 }, { o: 80, d: 5, r: [95, 28, 22, 35], l: [99, 75, 30, 0], k: 2, s: 2 }, { c: 7, f: 10, o: 62, r: [95, 50, 30, 50], l: [99, 50, 0, 0], k: 3 }]),
+  mkPatch('FM BRASS', 22, 5, [{ o: 92, r: [75, 70, 60, 60], l: [99, 96, 90, 0], k: 2 }, { c: 1, o: 70, r: [50, 62, 60, 65], l: [99, 88, 84, 0], k: 3 }, { o: 90, d: 8, r: [72, 70, 60, 60], l: [99, 96, 90, 0], k: 2 }, { o: 90, d: 6, r: [76, 70, 60, 60], l: [99, 96, 90, 0], k: 2 }, { o: 88, d: 7, r: [74, 70, 60, 60], l: [99, 96, 90, 0], k: 2 }, { c: 1, o: 78, r: [48, 60, 60, 65], l: [99, 90, 80, 0], k: 3 }]),
+  mkPatch('FM ORGAN', 32, 0, [{ c: 0, o: 90, r: [99, 99, 99, 80] }, { o: 99, r: [99, 99, 99, 80] }, { c: 2, o: 85, r: [99, 99, 99, 80] }, { c: 3, o: 78, r: [99, 99, 99, 80] }, { c: 4, o: 70, r: [99, 99, 99, 80] }, { c: 6, o: 62, r: [99, 99, 99, 80] }]),
+  mkPatch('FM MARIMBA', 1, 0, [{ o: 99, r: [99, 55, 45, 60], l: [99, 0, 0, 0], k: 3, s: 2 }, { c: 4, o: 74, r: [99, 70, 40, 70], l: [99, 0, 0, 0], k: 5, s: 3 }, { o: 0 }, { o: 0 }, { o: 0 }, { o: 0 }])
+];
+const GLOBAL0 = () => ({ tune: 0, vol: 1, mono: 0, bendRange: 2, bendStep: 0, portaModo: 0, gliss: 0, portaTime: 0, dac: 1,
+  ctl: { wheel: { range: 50, pitch: 1, amp: 0, bias: 0 }, foot: { range: 50, pitch: 0, amp: 0, bias: 0 }, breath: { range: 50, pitch: 0, amp: 0, bias: 0 }, at: { range: 50, pitch: 0, amp: 0, bias: 0 } } });
+
+/* ---- operador, voz ---- */
+class Voz {
+  constructor() {
+    this.ativa = false; this.nota = 60; this.vel = 100; this.desc = 0; this.baixo = 0; this.sus = false; this.sid = 0; this.gl = 0;
+    this.ph = new Int32Array(6); this.inc = new Int32Array(6); this.y1 = new Float64Array(6); this.y2 = new Float64Array(6); this.out = new Float64Array(6);
+    this.lvl = new Float64Array(6); this.tgt = new Float64Array(6); this.einc = new Float64Array(6); this.ix = new Int8Array(6); this.sobe = new Uint8Array(6); this.feito = new Uint8Array(6);
+    this.klsU = new Int32Array(6); this.vAtt = new Int32Array(6); this.rsAdd = new Int32Array(6); this.att = new Int32Array(6); this.lv = new Int32Array(6);
+    this.pl = 0; this.pix = 0; this.pinc = 0; this.pfeito = 1; this.tocando = false;
+  }
+}
+const lfoFase = p => p - Math.floor(p);
+
+class Motor {
+  constructor(fs) {
+    this.fs = fs || 48000; this.frame = 0; this.fila = []; this.g = GLOBAL0(); this.p = patchInit();
+    this.vozes = []; for (let i = 0; i < 16; i++) this.vozes.push(new Voz());
+    this.cont = 0; this.sust = false; this.pressas = []; this.ultima = -1;
+    this.bend = 0; this.cv = { wheel: 0, foot: 0, breath: 0, at: 0 };
+    this.lfoP = 0; this.lfoSH = 0.5; this.lfoDelay = [0, 0]; this.lfoT = 0; this.lfoVal = 0; this.lfoUni = 0; this.lfoAtivo = false; this.dp = 0; this.da = 0;
+    this.semente = 12345;
+    this.razao = FC / this.fs; this.rf = 0; this.y = [0, 0, 0, 0]; this.volS = 1;
+    this.bq = [0, 0, 0, 0, 0, 0, 0, 0]; this.fN = 0; this.ajustaFiltros();
+    this.sub = 0; this.nPresas = 0;
+  }
+  /** filtro de saída do DX7 (Sallen-Key, ~16 kHz; ordem desconhecida: 2 polos é escolha de projeto (c)) e, se a taxa do contexto for menor que a do núcleo, um anti-aliasing antes de reamostrar */
+  ajustaFiltros() {
+    const bi = (fc, q, fs) => { const w = 2 * Math.PI * fc / fs, c = Math.cos(w), a = Math.sin(w) / (2 * q), a0 = 1 + a; return [(1 - c) / 2 / a0, (1 - c) / a0, (1 - c) / 2 / a0, -2 * c / a0, (1 - a) / a0]; };
+    const fo = this.fs, lim = Math.min(0.46 * fo, 0.46 * FC);
+    this.usaF2 = fo < FC * 0.999; this.f2 = bi(lim, Math.SQRT1_2, FC);
+    // com o anti-aliasing no caminho, o 1º filtro sobe de frequência para o conjunto continuar em -3 dB a 16 kHz (|H|^2 = 1/(1+(f/fc)^4) em cada estágio)
+    let fc1 = 16000;
+    if (this.usaF2) { const x2 = Math.pow(16000 / lim, 4), v = 2 / (1 + x2) - 1; fc1 = v > 0 ? 16000 / Math.pow(v, 0.25) : 1e9; }
+    this.f1 = bi(Math.min(fc1, 0.49 * FC), Math.SQRT1_2, FC); this.sem1 = fc1 > 0.49 * FC;
+    this.z = new Float64Array(8);
+  }
+  rand() { this.semente ^= this.semente << 13; this.semente ^= this.semente >>> 17; this.semente ^= this.semente << 5; return ((this.semente >>> 0) / 4294967296); }
+
+  /* ---------------- mensagens ---------------- */
+  msg(d) {
+    if (d.at != null) {       // evento agendado: "at" é a hora do relógio do AudioContext (s); entra na fila e dispara na amostra certa
+      const e = Object.assign({}, d); e.f = Math.round(d.at * this.fs); delete e.at;
+      let i = this.fila.length; while (i > 0 && this.fila[i - 1].f > e.f) i--; this.fila.splice(i, 0, e); return;
+    }
+    switch (d.t) {
+      case 'patch': this.p = norm(d.p); break;
+      case 'g': { const g = this.g; if (d.k in g && d.k !== 'ctl') g[d.k] = d.v; break; }
+      case 'gs': { const g = this.g; for (const k in d.g) if (k === 'ctl') { for (const c in d.g.ctl) Object.assign(g.ctl[c], d.g.ctl[c]); } else if (k in g) g[k] = d.g[k]; break; }
+      case 'ctl': if (d.k === 'bend') this.bend = Math.max(-1, Math.min(1, d.v)); else if (d.k in this.cv) this.cv[d.k] = Math.max(0, Math.min(1, d.v)); break;
+      case 'on': this.noteOn(d.n | 0, d.v == null ? 100 : d.v | 0, d.seq); break;
+      case 'off': this.noteOff(d.n | 0, d.seq); break;
+      case 'seqpara': for (let i = this.fila.length - 1; i >= 0; i--) if (this.fila[i].seq) this.fila.splice(i, 1); for (const v of this.vozes) if (v.ativa && v.seq && v.baixo) { v.baixo = false; if (this.sust) v.sus = true; else this.solta(v); } break;
+      case 'sus': this.sust = !!d.on; if (!this.sust) for (const v of this.vozes) if (v.ativa && v.sus && !v.baixo) { v.sus = false; this.solta(v); } break;
+      case 'panico': for (const v of this.vozes) { v.ativa = false; v.sus = false; } this.pressas = []; break;
+      default: break;
+    }
+  }
+  noteOn(n, vel, seq) {
+    if (vel <= 0) return this.noteOff(n);
+    const p = this.p, g = this.g;
+    if (p.lfoSync) { this.lfoP = 0; }
+    this.lfoT = 0; this.lfoDelay = lfoAtraso(p.lfoD);
+    let v = null;
+    if (g.mono) {
+      v = this.vozes[0]; this.pressas = this.pressas.filter(x => x !== n); this.pressas.push(n);
+      const seg = v.ativa && v.baixo, pt = g.portaTime > 0;
+      const legato = seg && pt && g.portaModo === 0;                                   // FINGERED PORTA: só em notas ligadas, sem reiniciar o EG
+      const de = pt ? (g.portaModo === 0 ? (seg ? v.nota : -1) : (v.ativa ? v.nota : this.ultima)) : -1;   // FULL TIME: sempre desliza
+      this.inicia(v, n, vel, de, legato); v.seq = !!seq;
+    } else {
+      for (const x of this.vozes) if (!x.ativa) { v = x; break; }
+      if (!v) { let m = Infinity; for (const x of this.vozes) if (x.sid < m) { m = x.sid; v = x; } }
+      this.inicia(v, n, vel, this.sust ? this.ultima : -1, false); v.seq = !!seq;
+    }
+    this.ultima = n;
+  }
+  /** `de`: nota de partida do portamento (-1 = sem); `legato`: não reinicia os envelopes */
+  inicia(v, n, vel, de, legato) {
+    const p = this.p, g = this.g, tr = p.tr - 24;
+    const novo = !(v.ativa && legato);
+    v.ativa = true; v.baixo = true; v.sus = false; v.nota = n; v.vel = vel; v.sid = ++this.cont; v.sync = p.sync;
+    const gt = g.portaTime > 0 && de >= 0 && de !== n;
+    v.gl = gt ? (de - n) / 12 : 0;
+    for (let o = 0; o < 6; o++) {
+      const op = p.ops[o];
+      v.klsU[o] = klsUnid(n + tr, op); v.vAtt[o] = velAtt(vel, op.kvs);
+      const x = Math.max(0, Math.min(31, ((n + tr) / 3 | 0) - 7)); v.rsAdd[o] = (op.rs * x) >> 3;
+      if (novo) {
+        if (p.sync) v.ph[o] = 0; else v.ph[o] = Math.floor(this.rand() * 16777216);
+        v.y1[o] = 0; v.y2[o] = 0; if (!legato) { v.lvl[o] = LVMIN; }
+        this.avanca(v, o, 0);
+      }
+    }
+    if (novo) { v.pl = peOit(p.pl[3]); this.pAvanca(v, 0); }
+  }
+  noteOff(n, seq) {
+    this.pressas = this.pressas.filter(x => x !== n);
+    if (this.g.mono) {
+      const v = this.vozes[0];
+      if (v.ativa && v.nota === n) {
+        if (this.pressas.length) { const m = this.pressas[this.pressas.length - 1]; this.inicia(v, m, v.vel, v.nota, true); }
+        else { v.baixo = false; if (this.sust) v.sus = true; else this.solta(v); }
+      }
+      return;
+    }
+    for (const v of this.vozes) if (v.ativa && v.baixo && v.nota === n && !!v.seq === !!seq) { v.baixo = false; if (this.sust) v.sus = true; else this.solta(v); }
+  }
+  solta(v) { for (let o = 0; o < 6; o++) this.avanca(v, o, 3); this.pAvanca(v, 3); }
+
+  /* ---------------- envelopes ---------------- */
+  olBase(v, o) { const op = this.p.ops[o]; const e = Math.max(0, Math.min(127, escalaOL(op.ol) + v.klsU[o] - v.vAtt[o])); return e * 32; }
+  avanca(v, o, ix) {
+    const op = this.p.ops[o], L = op.l[ix], R = op.r[ix];
+    v.ix[o] = ix; v.feito[o] = 0;
+    const alvo = Math.max(LVMIN, Math.min(LVMAX, 64 * escalaL(L) + this.olBase(v, o) - 4256));
+    v.tgt[o] = alvo; v.sobe[o] = alvo > v.lvl[o] ? 1 : 0;
+    if (v.sobe[o] && v.lvl[o] < 1700) v.lvl[o] = 1700;              // salto no início do ataque (b)
+    const q = Math.min(63, ((R * 41) >> 6) + v.rsAdd[o]);
+    v.einc[o] = (4 + (q & 3)) * Math.pow(2, q >> 2) / 16384;        // unidades de 1/256 de oitava por amostra do núcleo (b)
+    if (alvo === v.lvl[o]) this.chegou(v, o);
+  }
+  chegou(v, o) { const ix = v.ix[o]; if (ix < 2) this.avanca(v, o, ix + 1); else v.feito[o] = 1; }
+  stepEnv(v) {
+    for (let o = 0; o < 6; o++) {
+      const ix = v.ix[o];
+      v.tgt[o] = Math.max(LVMIN, Math.min(LVMAX, 64 * escalaL(this.p.ops[o].l[ix]) + this.olBase(v, o) - 4256));   // acompanha edições de OL ao vivo
+      if (v.feito[o] && ix !== 3) { v.lvl[o] += (v.tgt[o] - v.lvl[o]); continue; }
+      if (v.feito[o] && ix === 3) { v.lvl[o] = v.tgt[o]; continue; }
+      let l = v.lvl[o];
+      if (v.sobe[o]) { l += v.einc[o] * N * (((4352 - l) >> 8) | 0); if (l >= v.tgt[o]) { v.lvl[o] = v.tgt[o]; this.chegou(v, o); continue; } }
+      else { l -= v.einc[o] * N; if (l <= v.tgt[o]) { v.lvl[o] = v.tgt[o]; if (ix < 2) this.chegou(v, o); else if (ix === 2) v.feito[o] = 1; else v.feito[o] = 1; continue; } }
+      v.lvl[o] = l;
+    }
+  }
+  pAvanca(v, ix) {
+    const p = this.p; v.pix = ix; v.pfeito = 0;
+    const alvo = peOit(p.pl[ix]); v.palvo = alvo; v.psobe = alvo > v.pl;
+    v.pinc = peVel(p.pr[ix]) * N / FC;
+    if (alvo === v.pl) this.pChegou(v);
+  }
+  pChegou(v) { if (v.pix < 2) this.pAvanca(v, v.pix + 1); else v.pfeito = 1; }
+  pStep(v) {
+    if (v.pfeito) return;
+    if (v.psobe) { v.pl += v.pinc; if (v.pl >= v.palvo) { v.pl = v.palvo; this.pChegou(v); } }
+    else { v.pl -= v.pinc; if (v.pl <= v.palvo) { v.pl = v.palvo; this.pChegou(v); } }
+  }
+
+  /* ---------------- bloco: LFO, controladores, pitch, nível ---------------- */
+  lfoOnda() {
+    const p = this.p, ph = lfoFase(this.lfoP);
+    switch (p.lfoW) {
+      case 0: return ph < 0.25 ? 4 * ph : ph < 0.75 ? 2 - 4 * ph : 4 * ph - 4;           // triângulo (começa no centro)
+      case 1: return 1 - 2 * ph;                                                            // serra descendente
+      case 2: return 2 * ph - 1;                                                            // serra ascendente
+      case 3: return ph < 0.5 ? 1 : -1;                                                     // quadrada
+      case 4: { const i = Math.floor(ph * 256), q = i >> 6, k = i & 63, s = SENO64[(q & 1) ? 63 - k : k]; return ((q & 2) ? -s : s) / 127; }   // seno de 8 bits
+      default: return this.lfoSH;                                                           // sample & hold
+    }
+  }
+  blocoGlobal() {
+    const p = this.p, g = this.g;
+    const hz = lfoHz(p.lfoV), f0 = lfoFase(this.lfoP);
+    this.lfoP += hz * N / FC;
+    if (p.lfoW === 5 && lfoFase(this.lfoP) < f0) { this.sh = (((this.sh == null ? 17 : this.sh) * 179 + 17) & 255); this.lfoSH = (this.sh - 127.5) / 127.5; }
+    this.lfoT += N / FC;
+    const [t1, t2] = this.lfoDelay; let fade = 1;
+    if (this.lfoT < t1) fade = 0; else if (t2 > 0 && this.lfoT < t1 + t2) fade = (this.lfoT - t1) / t2;
+    const w = this.lfoOnda(), u = (w + 1) / 2;
+    let dp = p.lfoPmd / 99, da = p.lfoAmd / 99, bias = -1;
+    for (const k of ['wheel', 'foot', 'breath', 'at']) {
+      const c = g.ctl[k], x = this.cv[k] * c.range / 99;
+      if (c.pitch) dp += x; if (c.amp) da += x; if (c.bias) bias = Math.max(bias, 0) + x;
+    }
+    this.dp = Math.min(1, dp) * (PMS_TAB[p.pms] / 255) * PM_OITAVAS * w * fade;
+    this.da = Math.min(1, da) * AM_DB * u * fade;
+    this.bias = bias < 0 ? -1 : Math.min(1, bias);
+    // pitch bend
+    const st = g.bendStep, ra = st > 0 ? 12 : g.bendRange;
+    this.bendOit = (st > 0 ? Math.round(this.bend * 12 / st) * st : this.bend * ra) / 12;
+    if (Math.abs(this.bendOit) > 1) this.bendOit = Math.sign(this.bendOit);
+  }
+  blocoVoz(v) {
+    const p = this.p, g = this.g, al = ALG[p.alg];
+    this.stepEnv(v); this.pStep(v);
+    // portamento: o desvio v.gl (oitavas) anda até zero em semitons/s
+    if (v.gl !== 0) {
+      const t = g.portaTime * 127 / 99, rate = 2100 * Math.pow(2, -0.062 * t) / 12 * N / FC;      // oitavas por bloco (c)
+      if (v.gl > 0) v.gl = Math.max(0, v.gl - rate); else v.gl = Math.min(0, v.gl + rate);
+    }
+    const gl = g.gliss && v.gl !== 0 ? Math.round(v.gl * 12) / 12 : v.gl;
+    const base = Math.log2(440) + (v.nota + (p.tr - 24) - 69) / 12 + g.tune / 1200 + this.bendOit + v.pl + this.dp + gl;
+    let ativo = false;
+    for (let o = 0; o < 6; o++) {
+      const op = p.ops[o];
+      let lf;
+      if (op.modo === 0) {
+        const razao = (op.coarse === 0 ? 0.5 : op.coarse) * (1 + op.fine / 100);
+        lf = base + Math.log2(razao);
+        if (op.det !== 7) lf += (op.det - 7) * 0.0209 * Math.exp(-0.396 * (Math.log2(440) + (v.nota - 69) / 12)) / 7;   // (c) fórmula do Dexed
+      } else lf = Math.log2(Math.pow(10, op.coarse & 3) * Math.pow(10, op.fine / 100));
+      lf = Math.round(lf * 1024) / 1024;                                   // passo de 1,17 cent (a)
+      let f = Math.pow(2, lf) / FC * 16777216;
+      const e = Math.floor(Math.log2(f)), m = Math.pow(2, e); f = Math.round(f / m * 4096) * m / 4096;   // ROM exponencial: mantissa de 12 bits (b)
+      v.inc[o] = Math.round(f);
+      // nível: envelope - modulação de amplitude (e EG bias) nos operadores com AMS > 0
+      let lv = v.lvl[o];
+      if (op.ams > 0) {
+        let at = this.da * AMS_FAT[op.ams];
+        if (this.bias >= 0) at += AM_DB * AMS_FAT[op.ams] * (1 - this.bias);
+        lv -= at / 6.0206 * 256;
+      }
+      lv = Math.round(lv); if (lv > LVMAX) lv = LVMAX; if (lv < 0) lv = 0;
+      v.att[o] = 4 * (LVMAX - lv); v.lv[o] = lv;
+    }
+    // fim da voz: tecla solta e todas as portadoras praticamente mudas
+    if (!v.baixo && !v.sus) { let mudo = true; for (let o = 0; o < 6; o++) if (al.car[o] && v.lv[o] > 60) { mudo = false; break; } if (mudo) v.ativa = false; }
+  }
+
+  /* ---------------- núcleo: uma amostra a 49 096 Hz ---------------- */
+  nucleo() {
+    if (this.sub === 0) { this.blocoGlobal(); for (const v of this.vozes) if (v.ativa) this.blocoVoz(v); }
+    if (++this.sub >= N) this.sub = 0;
+    const p = this.p, al = ALG[p.alg], fbk = p.fb > 0 ? FBK * Math.pow(2, p.fb - 8) : 0, dac = this.g.dac, comp = COMP[al.ncar];
+    let soma = 0;
+    for (let i = 0; i < 16; i++) {
+      const v = this.vozes[i]; if (!v.ativa) continue;
+      const out = v.out, ph = v.ph, inc = v.inc, att = v.att;
+      let s = 0;
+      for (let o = 5; o >= 0; o--) {
+        let pm = 0; const ms = al.mods[o];
+        for (let k = 0; k < ms.length; k++) pm += out[ms[k]];
+        pm *= MODK;
+        if (o === al.fbDst && fbk) pm += (v.y1[al.fbSrc] + v.y2[al.fbSrc]) * fbk;
+        const f = (ph[o] = (ph[o] + inc[o]) & MASK);
+        const idx = ((f + (pm | 0)) & MASK) >> 12, q = idx >> 10;
+        const a = LS[(q & 1) ? 1023 - (idx & 1023) : idx & 1023] + att[o], ip = a >> 10;
+        let y = ip >= 14 ? 0 : (EXPM[a & 1023] << 1) >> ip;
+        if (q & 2) y = -y;
+        v.y2[o] = v.y1[o]; v.y1[o] = y; out[o] = y;
+        if (al.car[o]) s += y;
+      }
+      s = s / (8192 * comp);
+      if (dac) { const a = s < 0 ? -s : s, k = a < 0.125 ? 16384 : a < 0.25 ? 8192 : a < 0.5 ? 4096 : 2048; s = Math.round(s * k) / k; }
+      soma += s;
+    }
+    // filtro de saída (2 polos a 16 kHz) e, se preciso, anti-aliasing
+    const z = this.z, f1 = this.f1;
+    let o = soma; if (!this.sem1) { o = f1[0] * soma + z[0]; z[0] = f1[1] * soma - f1[3] * o + z[1]; z[1] = f1[2] * soma - f1[4] * o; }
+    if (this.usaF2) { const f2 = this.f2, x = o; o = f2[0] * x + z[2]; z[2] = f2[1] * x - f2[3] * o + z[3]; z[3] = f2[2] * x - f2[4] * o; }
+    return o;
+  }
+
+  /* ---------------- saída ---------------- */
+  process(L, R, n) {
+    const g = this.g, y = this.y, fila = this.fila;
+    for (let j = 0; j < n; j++) {
+      while (fila.length && fila[0].f <= this.frame + j) this.msg(fila.shift());
+      this.volS += (g.vol - this.volS) * 0.002;
+      this.rf += this.razao;
+      while (this.rf >= 1) { this.rf -= 1; y[0] = y[1]; y[1] = y[2]; y[2] = y[3]; y[3] = this.nucleo(); }
+      const t = this.rf, a = y[0], b = y[1], c = y[2], d = y[3];       // reamostragem 49 096 Hz -> taxa do contexto (Catmull-Rom)
+      let x = b + 0.5 * t * (c - a + t * (2 * a - 5 * b + 4 * c - d + t * (3 * (b - c) + d - a)));
+      let s = x * G_SAIDA * this.volS;
+      if (s > 0.7) s = 0.7 + 0.3 * Math.tanh((s - 0.7) / 0.3); else if (s < -0.7) s = -0.7 - 0.3 * Math.tanh((-s - 0.7) / 0.3);
+      L[j] = s; if (R !== L) R[j] = s;
+    }
+    this.frame += n;
+  }
+}
+Motor.dados = { FAB, FC, N, LS, EXPM, escalaOL, escalaL, velAtt, TMV, TVS, KLS_EXP, KLS_LIN, klsUnid, ALG, COMP, PE_NIV, PE_TAXA, peOit, peVel, LFO_KN, lfoHz, lfoAtraso, PMS_TAB, AMS_FAT, PM_OITAVAS, AM_DB, patchInit, norm, GLOBAL0, G_SAIDA, MODK, FBK, LVMAX, LVMIN };
+
+if (typeof AudioWorkletProcessor !== 'undefined' && typeof registerProcessor === 'function') {
+  registerProcessor('motor-dx7', class extends AudioWorkletProcessor {
+    constructor() { super(); this.m = new Motor(sampleRate); this.port.onmessage = e => this.m.msg(e.data); }
+    process(_, saidas) { const o = saidas[0]; if (!o || !o[0]) return true; this.m.frame = currentFrame; this.m.process(o[0], o[1] || o[0], o[0].length); return true; }
+  });
+}
+</script>
+<script>
+(() => {
+'use strict';
+const ID = 'dx7';
+const $ = id => document.getElementById(id);
+const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+const lim = (v, a, b) => Math.max(a, Math.min(b, v));
+const FONTE_DSP = $('dsp').textContent;
+const Motor = new Function(FONTE_DSP + '\nreturn Motor;')();   // na página: tabelas, algoritmos e reserva sem AudioWorklet
+const DD = Motor.dados;
+const clone = t => JSON.parse(JSON.stringify(t));
+const SVGNS = 'http://www.w3.org/2000/svg';
+const P = $('painel');
+
+/* ====================================================== estado ====================================================== */
+const NOMES_ONDA = ['TRIANGL', 'SAW DWN', 'SAW UP', 'SQUARE', 'SINE', 'S/HOLD'];
+const CURVAS = ['-LIN', '-EXP', '+EXP', '+LIN'];
+const CHARS = '1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ -.';
+const NOTAS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+const nomeNota = n => NOTAS[((n % 12) + 12) % 12] + (Math.floor(n / 12) - 2);      // dó central = C3 = 60 (nomenclatura Yamaha)
+const FAB = DD.FAB.map(clone);
+const novoBanco = () => { const b = []; for (let i = 0; i < 32; i++) b.push(i < FAB.length ? clone(FAB[i]) : DD.patchInit()); return b; };
+let tSalva = 0; const CHAVE = 'sint-dx7-v1';
+const st = {
+  mem: novoBanco(), cart: novoBanco(), prot: { int: false, cart: false }, banco: 'int', cur: 0,
+  ed: null, editado: false, modo: 'play', op: 0, opOn: [1, 1, 1, 1, 1, 1], g: DD.GLOBAL0(), vol: 1,
+  param: null, sub: {}, pend: null, comp: false, nome: null, cursor: 0, transp: false, ultimoFunc: 2, tuneSlider: 0.5
+};
+const bancoAtual = () => st.banco === 'int' ? st.mem : st.cart;
+st.ed = clone(bancoAtual()[0]);
+
+/* ====================================================== áudio ====================================================== */
+let ctx = null, no = null, reserva = null, saida = null, pronto = false; const pendentes = [];
+const barra = $('audio-bar');
+const manda = m => { if (!pronto) { if (m.t !== 'patch' && m.t !== 'gs' && pendentes.length < 400) pendentes.push(m); return; } if (no) no.port.postMessage(m); else if (reserva) reserva.motor.msg(m); };
+const mascarado = () => { const p = clone(st.ed); for (let i = 0; i < 6; i++) if (!st.opOn[i]) p.ops[i].ol = 0; return p; };
+const enviaPatch = () => { manda({ t: 'patch', p: mascarado() }); salva(); };
+const enviaG = () => { salva(); const g = st.g; manda({ t: 'gs', g: { tune: g.tune, mono: g.mono, bendRange: g.bendRange, bendStep: g.bendStep, portaModo: g.portaModo, gliss: g.gliss, portaTime: g.portaTime, ctl: g.ctl, vol: st.vol } }); };
+function pintaBarra() { barra.hidden = !(ctx ? ctx.state !== 'running' : window.matchMedia('(pointer: coarse)').matches); }
+function ligaAudio() {
+  if (!ctx) {
+    ctx = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'interactive' });
+    ctx.onstatechange = pintaBarra;
+    saida = ctx.createGain(); saida.connect(ctx.destination);
+    if (window.__dxAnalisa) { const an = ctx.createAnalyser(); an.fftSize = 2048; saida.connect(an); window.__dxAn = an; }     // gancho só para a checagem em navegador
+    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}   // iPhone: toca mesmo com a chave de silêncio
+    const fim = () => { pronto = true; enviaPatch(); enviaG(); for (const m of pendentes.splice(0)) manda(m); };
+    const usaReserva = () => {
+      const sp = ctx.createScriptProcessor(1024, 0, 2); sp.motor = new Motor(ctx.sampleRate);
+      sp.onaudioprocess = e => { const o = e.outputBuffer; sp.motor.frame = Math.round(e.playbackTime * ctx.sampleRate); sp.motor.process(o.getChannelData(0), o.getChannelData(1), o.length); };
+      sp.connect(saida); reserva = sp; fim();
+    };
+    if (ctx.audioWorklet && window.AudioWorkletNode) {
+      // O módulo vem de um Blob feito do texto embutido. Em file:// (o app Electron) o Chromium recusa o Blob; a segunda tentativa usa o mesmo texto numa URL data:.
+      const url = URL.createObjectURL(new Blob([FONTE_DSP], { type: 'application/javascript' }));
+      const dataUrl = () => 'data:application/javascript;base64,' + btoa(unescape(encodeURIComponent(FONTE_DSP)));
+      ctx.audioWorklet.addModule(url).catch(() => ctx.audioWorklet.addModule(dataUrl())).then(() => {
+        no = new AudioWorkletNode(ctx, 'motor-dx7', { numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [2] });
+        no.connect(saida); URL.revokeObjectURL(url); fim();
+      }).catch(usaReserva);
+    } else usaReserva();
+  }
+  if (ctx.state !== 'running') { const r = ctx.resume(); if (r && r.catch) r.catch(() => {}); }
+}
+function desbloqueia() {
+  ligaAudio();
+  try { const b = ctx.createBuffer(1, 1, 22050), s = ctx.createBufferSource(); s.buffer = b; s.connect(ctx.destination); s.start(0); } catch (e) {}
+  pintaBarra();
+}
+for (const ev of ['touchend', 'pointerup', 'click', 'keydown']) document.addEventListener(ev, () => { if (!ctx || ctx.state !== 'running') desbloqueia(); }, { capture: true, passive: true });
+document.addEventListener('visibilitychange', () => { if (!document.hidden && ctx && ctx.state !== 'running') { const r = ctx.resume(); if (r && r.catch) r.catch(() => {}); } });
+window.addEventListener('pageshow', pintaBarra);
+barra.addEventListener('click', desbloqueia);
+pintaBarra();
+
+/* ====================================================== construção do painel (coordenadas em px, tiradas das fotos × 0,7) ====================================================== */
+const ab = (cls, x, y, w, h, tag) => { const e = el(tag || 'div', cls); e.style.left = x + 'px'; e.style.top = y + 'px'; if (w != null) e.style.width = w + 'px'; if (h != null) e.style.height = h + 'px'; P.append(e); return e; };
+const tx = (x, y, txt, cls) => { const e = ab('tx' + (cls ? ' ' + cls : ''), x, y); e.textContent = txt; return e; };
+const linha = (x1, x2, y, b) => ab('lin' + (b ? ' b' : ''), x1, y, x2 - x1, 1);
+ab('faixa-topo', 0, 0, 2125, 178); ab('faixa-ctl', 0, 178, 2125, 194);
+
+/* ---- título próprio da faixa superior (no lugar do logotipo do aparelho original) ---- */
+{ const t = ab('tit', 270, 40); t.textContent = 'Sintetizador FM'; t.style.fontSize = '22px'; t.style.letterSpacing = '.18em';
+  const t2 = ab('tit', 270, 66); t2.textContent = 'seis operadores · 32 algoritmos · 16 vozes'; t2.style.fontSize = '9px'; t2.style.color = 'var(--tinta-fraca)'; }
+
+/* ---- 32 diagramas de algoritmo (desenho próprio gerado dos dados do motor) ---- */
+function geomAlg(a) {
+  const al = DD.ALG[a], dests = [[], [], [], [], [], []];
+  for (let d = 0; d < 6; d++) for (const s of al.mods[d]) dests[s].push(d);
+  const lv = [0, 0, 0, 0, 0, 0];
+  for (let o = 0; o < 6; o++) lv[o] = al.car[o] ? 0 : 1 + Math.max(0, ...dests[o].map(d => lv[d]));
+  const x = [0, 0, 0, 0, 0, 0]; let c = 0;
+  for (let o = 0; o < 6; o++) if (al.car[o]) x[o] = c++;
+  const niveis = Math.max(...lv);
+  for (let L = 1; L <= niveis; L++) {
+    const ops = []; for (let o = 0; o < 6; o++) if (lv[o] === L) ops.push(o);
+    for (const o of ops) x[o] = dests[o].length ? dests[o].reduce((s, d) => s + x[d], 0) / dests[o].length : 0;
+    ops.sort((p, q) => x[p] - x[q]);
+    for (let i = 1; i < ops.length; i++) if (x[ops[i]] < x[ops[i - 1]] + 1) x[ops[i]] = x[ops[i - 1]] + 1;
+  }
+  const mn = Math.min(...x), mx = Math.max(...x);
+  return { al, lv, x: x.map(v => v - mn), cols: mx - mn + 1, niveis: niveis + 1, dests };
+}
+function svgAlg(a, w, h, destaque) {   // destaque: diagrama grande (caixas maiores)
+  const g = geomAlg(a), { al } = g, svg = document.createElementNS(SVGNS, 'svg');
+  svg.setAttribute('class', 'dg' + (destaque ? ' at' : '')); svg.setAttribute('width', w); svg.setAttribute('height', h); svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  const bw = Math.min(w / (g.cols + 0.35), h / (g.niveis + 0.4) * 1.3, destaque ? 28 : 14), bh = bw * 0.8, gap = Math.min((h - bh - 3) / Math.max(1, g.niveis - 1), bh * 2.4);
+  const px = o => (g.x[o] + 0.5 + (g.cols < 1.01 ? 0 : 0)) * (w / g.cols), py = o => (g.niveis - 1 - g.lv[o]) * gap + bh / 2 + 1 + (destaque ? ((h - bh - 3) - gap * (g.niveis - 1)) / 2 : 0);
+  const mk = (n, at) => { const e = document.createElementNS(SVGNS, n); for (const k in at) e.setAttribute(k, at[k]); svg.append(e); return e; };
+  for (let d = 0; d < 6; d++) for (const s of al.mods[d]) mk('line', { x1: px(s), y1: py(s) + bh / 2, x2: px(d), y2: py(d) - bh / 2 });
+  for (let o = 0; o < 6; o++) if (al.car[o]) mk('line', { x1: px(o), y1: py(o) + bh / 2, x2: px(o), y2: py(o) + bh / 2 + 2 });
+  const o0 = al.fbDst, s0 = al.fbSrc;
+  if (o0 === s0) mk('path', { d: `M${px(o0) + bw / 2},${py(o0)} h${bw * 0.4} v${-bh * 0.9} h${-bw * 0.9} v${bh * 0.4}` });
+  else mk('path', { d: `M${px(s0) + bw / 2},${py(s0)} h${bw * 0.5} V${py(o0)} h${-bw * 0.5}` });
+  for (let o = 0; o < 6; o++) { const gr = mk('g', { class: 'op' }); const r = document.createElementNS(SVGNS, 'rect'); for (const [k, v] of Object.entries({ x: px(o) - bw / 2, y: py(o) - bh / 2, width: bw, height: bh })) r.setAttribute(k, v); gr.append(r);
+    if (bw > 7) { const t = document.createElementNS(SVGNS, 'text'); t.setAttribute('x', px(o)); t.setAttribute('y', py(o) + 1.8); t.setAttribute('style', `font-size:${Math.max(4, bw * 0.55)}px`); t.textContent = o + 1; gr.append(t); } }
+  return svg;
+}
+const celAlg = [];
+{ // faixa 1: algoritmos 1 a 18; faixa 2: 19 a 32 (como no painel)
+  const grade = (inicio, n, x0, y0, w, h) => { for (let i = 0; i < n; i++) { const a = inicio + i, cx = x0 + i * w;
+    const cel = ab('alg-cel', cx, y0, w, h); cel.title = 'Algoritmo ' + (a + 1); cel.append(svgAlg(a, w - 4, h - 12, false)); cel.firstChild.style.margin = '0 2px';
+    const n_ = ab('alg-n', cx + w / 2, y0 + h - 11); n_.textContent = a + 1; celAlg[a] = cel;
+    cel.addEventListener('click', () => { if (st.modo === 'edit') { st.ed.alg = a; mudou(); mostraParam(E[7]); } }); } };
+  grade(0, 18, 1086, 56, 735 / 18, 50); grade(18, 14, 1086, 110, 735 / 14, 50);
+  linha(1086, 1821, 55); linha(1086, 1821, 160); linha(1086, 1086 + 1, 55);
+  tx(1128, 46, 'ALGORITHM', 'n');
+}
+function marcaAlg() { for (let a = 0; a < 32; a++) { const c = celAlg[a]; if (!c) continue; c.firstChild.setAttribute('class', 'dg' + (a === st.ed.alg ? ' at' : '')); } }
+/* diagrama grande do algoritmo atual (faixa do lado esquerdo) */
+const algGrande = ab('', 650, 22, 200, 140); algGrande.style.pointerEvents = 'none';
+function pintaAlgGrande() { algGrande.replaceChildren(svgAlg(st.ed.alg, 180, 130, true)); const s = algGrande.firstChild; s.querySelectorAll('text').forEach(t => { t.style.fontSize = '9px'; }); }
+
+/* ---- diagrama do EG/PITCH EG e da escala de teclado (estáticos, como no painel) ---- */
+{ const x0 = 1823, y0 = 60, w = 138, h = 100, s = document.createElementNS(SVGNS, 'svg'); s.setAttribute('class', 'dg'); s.setAttribute('width', w); s.setAttribute('height', h + 20);
+  s.style.left = x0 + 'px'; s.style.top = (y0 - 8) + 'px'; s.style.position = 'absolute';
+  const mk = (n, at, tt) => { const e = document.createElementNS(SVGNS, n); for (const k in at) e.setAttribute(k, at[k]); if (tt != null) e.textContent = tt; s.append(e); return e; };
+  mk('rect', { x: 0, y: 8, width: w, height: h - 8, style: 'fill:none;stroke:var(--tinta);stroke-width:.8' });
+  for (let i = 1; i < 5; i++) mk('line', { x1: i * w / 5, y1: 8, x2: i * w / 5, y2: h, style: 'stroke:var(--tinta-fraca);stroke-width:.4' });
+  for (let i = 1; i < 4; i++) mk('line', { x1: 0, y1: 8 + i * (h - 8) / 4, x2: w, y2: 8 + i * (h - 8) / 4, style: 'stroke:var(--tinta-fraca);stroke-width:.4' });
+  mk('path', { d: `M8,${h - 22} L34,14 L52,${h - 38} L74,${h - 42} L108,${h - 44} L124,${h - 24}`, style: 'stroke:var(--faixa);stroke-width:1.4;fill:none' });
+  [['L1', 34, 12], ['R1', 16, 54], ['R2', 44, 48], ['L2', 52, h - 40], ['R3', 62, h - 50], ['L3', 74, h - 46], ['R4', 114, h - 40], ['L4', 126, h - 20], ['L4', 6, h - 18]].forEach(([t, x, y]) => mk('text', { x, y, style: 'font-size:6px;fill:var(--tinta);font-family:var(--f-rot);text-anchor:middle' }, t));
+  P.append(s); tx(x0 + 38, 50, 'EG/PITCH EG', 'n'); tx(x0 + 20, h + 62, 'KEY ON', 'n'); tx(x0 + 110, h + 62, 'KEY OFF', 'n'); }
+{ const x0 = 1990, y0 = 60, w = 120, h = 100, s = document.createElementNS(SVGNS, 'svg'); s.setAttribute('class', 'dg'); s.setAttribute('width', w); s.setAttribute('height', h + 20);
+  s.style.left = x0 + 'px'; s.style.top = (y0 - 8) + 'px'; s.style.position = 'absolute';
+  const mk = (n, at, tt) => { const e = document.createElementNS(SVGNS, n); for (const k in at) e.setAttribute(k, at[k]); if (tt != null) e.textContent = tt; s.append(e); return e; };
+  mk('rect', { x: 0, y: 8, width: w, height: h - 8, style: 'fill:none;stroke:var(--tinta);stroke-width:.8' });
+  mk('line', { x1: w / 2, y1: 8, x2: w / 2, y2: h, style: 'stroke:var(--tinta-fraca);stroke-width:.6' });
+  mk('line', { x1: 0, y1: 8 + (h - 8) / 2, x2: w, y2: 8 + (h - 8) / 2, style: 'stroke:var(--tinta-fraca);stroke-width:.6' });
+  mk('path', { d: `M0,${h - 10} L${w / 2},${8 + (h - 8) / 2} L${w},${h - 10}`, style: 'stroke:var(--faixa);stroke-width:1.2;fill:none' });
+  mk('path', { d: `M0,12 L${w / 2},${8 + (h - 8) / 2} L${w},12`, style: 'stroke:var(--faixa);stroke-width:1.2;fill:none' });
+  mk('path', { d: `M0,${h - 10} Q${w * 0.35},${8 + (h - 8) / 2 + 6} ${w / 2},${8 + (h - 8) / 2}`, style: 'stroke:var(--tinta);stroke-width:.8;fill:none' });
+  P.append(s); tx(x0 + 60, 44, 'KEYBOARD LEVEL SCALING', 'n'); tx(x0 + 20, h + 62, 'LEFT CURVE', 'n'); tx(x0 + 98, h + 62, 'RIGHT CURVE', 'n'); tx(x0 + 60, h + 74, 'BREAK POINT', 'n'); }
+
+/* ---- botões ---- */
+const BT = {};      // id -> elemento
+function botao(id, x, y, cor, rot, num, ch) {
+  const w = ab('bw', x, y); const b = el('button', 'bt t-' + cor); b.type = 'button'; b.setAttribute('aria-label', rot); b.dataset.id = id;
+  if (num != null) { const n = el('span', 'nu', num); b.append(n); } if (ch) { const c = el('span', 'ch', ch); b.append(c); }
+  const led = el('span', 'ledp'); b.append(led); w.append(b); BT[id] = b; b._led = led;
+  const dn = e => { e.preventDefault(); b.classList.add('dn'); b.setPointerCapture && b.setPointerCapture(e.pointerId); };
+  const up = e => { if (!b.classList.contains('dn')) return; b.classList.remove('dn'); aperta(id); };
+  b.addEventListener('pointerdown', dn); b.addEventListener('pointerup', up); b.addEventListener('pointercancel', () => b.classList.remove('dn'));
+  b.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); aperta(id); } });
+  return b;
+}
+const LETRAS = '1234567890ABCDEFGHIJKLMNOPQRSTUV';
+const xb = n => n <= 16 ? 1108.8 + 45.85 * (n - 1) : 1106.7 + 45.4 * (n - 17), YB1 = 222, YB2 = 316;
+for (let n = 1; n <= 32; n++) botao('b' + n, xb(n), n <= 16 ? YB1 : YB2, 'areia', 'Botão ' + n, n, LETRAS[n - 1]);
+
+/* legendas de cima (edição) e de baixo (funções) */
+const TOPO = { 1: '1', 2: '2', 3: '3', 4: '4', 5: '5', 6: '6', 7: 'ALGORITHM', 8: 'FEEDBACK', 9: 'WAVE', 10: 'SPEED', 11: 'DELAY', 12: 'PMD', 13: 'AMD', 14: 'SYNC', 15: 'PITCH', 16: 'AMPLITUDE',
+  17: 'MODE/\nSYNC', 18: 'FREQUENCY\nCOARSE', 19: 'FREQUENCY\nFINE', 20: 'DETUNE', 21: 'RATE', 22: 'LEVEL', 23: 'BREAK\nPOINT', 24: 'CURVE', 25: 'DEPTH', 26: 'KEYBOARD\nRATE SCALING',
+  27: 'OUTPUT\nLEVEL', 28: 'KEY VELOCITY\nSENSITIVITY', 29: 'RATE', 30: 'LEVEL', 31: 'KEY\nTRANSPOSE', 32: 'VOICE\nNAME' };
+const BAIXO = { 1: 'MASTER\nTUNE ADJ', 2: 'POLY/MONO', 3: 'RANGE', 4: 'STEP', 5: 'MODE', 6: 'GLISSANDO', 7: 'TIME', 9: 'EDIT RECALL', 10: 'VOICE INIT', 14: 'BATTERY\nCHECK', 15: 'SAVE', 16: 'LOAD',
+  17: 'RANGE', 18: 'PITCH', 19: 'AMPLITUDE', 20: 'EG BIAS', 21: 'RANGE', 22: 'PITCH', 23: 'AMPLITUDE', 24: 'EG BIAS', 25: 'RANGE', 26: 'PITCH', 27: 'AMPLITUDE', 28: 'EG BIAS', 29: 'RANGE', 30: 'PITCH', 31: 'AMPLITUDE', 32: 'EG BIAS' };
+for (let n = 1; n <= 32; n++) {
+  const x = xb(n), r1 = n <= 16;
+  const longo = s => Math.max(...s.split('\n').map(l => l.length)) > 8 ? ' s8' : '', duas = s => s.includes('\n');
+  if (TOPO[n]) tx(x, r1 ? (duas(TOPO[n]) ? 200 : 205) : (duas(TOPO[n]) ? 293 : 297), TOPO[n], (n <= 6 && r1 ? 'n' : '') + longo(TOPO[n]));
+  if (BAIXO[n]) tx(x, r1 ? 246 : 340, BAIXO[n], 'b' + longo(BAIXO[n]));
+}
+const grupoTopo = (n0, n1, tit, r1) => { const xa = xb(n0) - 22, xz = xb(n1) + 22; linha(xa, xz, r1 ? 193 : 285); tx((xa + xz) / 2, r1 ? 185 : 277, tit); };
+const grupoBaixo = (n0, n1, tit, r1) => { const xa = xb(n0) - 22, xz = xb(n1) + 22; linha(xa, xz, r1 ? 256 : 351, true); tx((xa + xz) / 2, r1 ? 264 : 359, tit, 'b'); };
+grupoTopo(1, 6, 'OPERATOR ON-OFF/EG COPY', 1); grupoTopo(9, 14, 'LFO', 1); grupoTopo(15, 16, 'MOD SENSITIVITY', 1);
+grupoTopo(17, 20, 'OSCILLATOR', 0); grupoTopo(21, 22, 'EG', 0); grupoTopo(23, 25, 'KEYBOARD LEVEL SCALING', 0); grupoTopo(27, 28, 'OPERATOR', 0); grupoTopo(29, 30, 'PITCH EG', 0);
+grupoBaixo(3, 4, 'PITCH BEND', 1); grupoBaixo(5, 7, 'PORTAMENTO', 1); grupoBaixo(15, 16, 'CARTRIDGE', 1);
+grupoBaixo(17, 20, 'MODULATION WHEEL', 0); grupoBaixo(21, 24, 'FOOT CONTROL', 0); grupoBaixo(25, 28, 'BREATH CONTROL', 0); grupoBaixo(29, 32, 'AFTER TOUCH', 0);
+
+/* ---- sliders VOLUME e DATA ENTRY, botões NO/YES e de modo ---- */
+function vslider(cx, top, ini, mudaFn) {
+  const s = ab('vslider', cx, top), i = el('i'); s.append(i); let t = ini; s.style.setProperty('--t', t);
+  const set = (v, avisa) => { t = lim(v, 0, 1); s.style.setProperty('--t', t); if (avisa) mudaFn(t); };
+  const mv = e => { const r = s.getBoundingClientRect(); set(1 - (e.clientY - r.top - 14) / (r.height - 28), true); };
+  s.addEventListener('pointerdown', e => { e.preventDefault(); s.setPointerCapture(e.pointerId); mv(e); s.onpointermove = mv; });
+  s.addEventListener('pointerup', () => { s.onpointermove = null; }); s.addEventListener('pointercancel', () => { s.onpointermove = null; });
+  s.setAttribute('role', 'slider'); s.tabIndex = 0; s.addEventListener('keydown', e => { const d = { ArrowUp: 0.02, ArrowRight: 0.02, ArrowDown: -0.02, ArrowLeft: -0.02 }[e.key]; if (d) { e.preventDefault(); set(t + d, true); } });
+  return { s, set, get: () => t };
+}
+tx(205, 190, 'VOLUME', 'n'); tx(322, 190, 'DATA ENTRY', 'n'); linha(290, 372, 196);
+const sVol = vslider(205, 212, 1, t => { st.vol = t; enviaG(); sVol.s.setAttribute('aria-valuenow', Math.round(t * 99)); });
+const sDat = vslider(322, 212, 0, t => desliza(t));
+sVol.s.setAttribute('aria-label', 'Volume'); sDat.s.setAttribute('aria-label', 'Data entry');
+ab('escala', 239, 224, 12, 100); tx(262, 232, 'MAX', 'n'); tx(262, 322, 'MIN', 'n'); ab('escala', 356, 224, 12, 100);
+botao('no', 394, 302, 'oliva', 'NO / −1 / OFF', null, null); botao('si', 442, 302, 'oliva', 'YES / +1 / ON', null, null);
+tx(394, 280, 'NO', 'n'); tx(442, 280, 'YES', 'n'); tx(394, 326, 'OFF', 'n'); tx(442, 326, 'ON', 'n');
+for (const id of ['no', 'si']) { const sy = el('span', 'nu', id === 'no' ? '−1' : '+1'); sy.style.left = '0'; sy.style.right = '0'; BT[id].append(sy); }
+botao('store', 565, YB1, 'coral', 'Store'); tx(565, 205, 'STORE');
+botao('mpi', 611, YB1, 'oliva', 'Memory protect internal'); botao('mpc', 658, YB1, 'oliva', 'Memory protect cartridge'); tx(634, 192, 'MEMORY PROTECT'); linha(592, 678, 197);
+tx(611, 205, 'INTERNAL', 'n'); tx(658, 205, 'CARTRIDGE', 'n');
+botao('opsel', 705, YB1, 'pervinca', 'Operator select'); tx(705, 200, 'OPERATOR\nSELECT');
+botao('edit', 570, YB2, 'pervinca', 'Edit / Compare'); tx(570, 293, 'EDIT/\nCOMPARE');
+botao('msi', 617, YB2, 'oliva', 'Memory select internal'); botao('msc', 664, YB2, 'oliva', 'Memory select cartridge'); tx(641, 284, 'MEMORY SELECT'); linha(598, 684, 289);
+tx(617, 297, 'INTERNAL', 'n'); tx(664, 297, 'CARTRIDGE', 'n'); tx(640, 344, 'PLAY', 'b');
+botao('func', 711, YB2, 'tan', 'Function'); tx(711, 297, 'FUNCTION'); tx(711, 340, 'SPACE', 'b');
+
+/* ---- LED de 2 dígitos e visor LCD ---- */
+const SEG = { 0: 'abcdef', 1: 'bc', 2: 'abdeg', 3: 'abcdg', 4: 'bcfg', 5: 'acdfg', 6: 'acdefg', 7: 'abc', 8: 'abcdefg', 9: 'abcdfg' };
+const led7 = ab('led7', 786, 245, 64, 52); const l7 = document.createElementNS(SVGNS, 'svg'); l7.setAttribute('viewBox', '0 0 64 52'); led7.append(l7);
+const segs = [];
+for (let d = 0; d < 2; d++) { const ox = 6 + d * 28, g = {};
+  const poli = (k, pts) => { const p = document.createElementNS(SVGNS, 'polygon'); p.setAttribute('points', pts); p.setAttribute('class', 'sg'); l7.append(p); g[k] = p; };
+  poli('a', `${ox + 3},5 ${ox + 17},5 ${ox + 15},8 ${ox + 5},8`); poli('b', `${ox + 18},6 ${ox + 18},22 ${ox + 15},20 ${ox + 15},9`);
+  poli('c', `${ox + 18},26 ${ox + 18},42 ${ox + 15},39 ${ox + 15},28`); poli('d', `${ox + 3},43 ${ox + 17},43 ${ox + 15},40 ${ox + 5},40`);
+  poli('e', `${ox + 2},26 ${ox + 2},42 ${ox + 5},39 ${ox + 5},28`); poli('f', `${ox + 2},6 ${ox + 2},22 ${ox + 5},20 ${ox + 5},9`);
+  poli('g', `${ox + 3},24 ${ox + 6},22 ${ox + 14},22 ${ox + 17},24 ${ox + 14},26 ${ox + 6},26`); segs.push(g); }
+const dp = document.createElementNS(SVGNS, 'circle'); dp.setAttribute('cx', 60); dp.setAttribute('cy', 44); dp.setAttribute('r', 2); dp.setAttribute('class', 'sg'); l7.append(dp);
+function pintaLed() { const n = st.cur + 1, ds = [Math.floor(n / 10), n % 10]; for (let d = 0; d < 2; d++) for (const k of 'abcdefg') segs[d][k].setAttribute('class', 'sg' + (SEG[ds[d]].includes(k) ? ' on' : '')); dp.setAttribute('class', 'sg' + (st.editado ? ' on' : '')); }
+const lcdM = ab('lcd-m', 857, 239, 192, 64), lcd = el('div', 'lcd'); lcdM.append(lcd); lcd.setAttribute('role', 'status'); lcd.setAttribute('aria-live', 'polite');
+const ln1 = el('span', 'ln'), ln2 = el('span', 'ln'); lcd.append(ln1, ln2);
+const pad16 = s => (s + ' '.repeat(16)).slice(0, 16);
+function lcdMostra(l1, l2, cursor) {
+  ln1.textContent = pad16(l1); ln2.replaceChildren();
+  const s = pad16(l2);
+  if (cursor == null) ln2.textContent = s; else { ln2.append(document.createTextNode(s.slice(0, cursor))); const c = el('span', 'sel', s[cursor]); ln2.append(c, document.createTextNode(s.slice(cursor + 1))); }
+}
+
+/* ---- slot do cartucho (sem logotipo) ---- */
+ab('slot', 1937, 219, 124, 46); tx(1999, 205, 'CARTRIDGE', 'n');
+
+/* ---- rodas ---- */
+ab('bloco-rodas', 45, 410, 255, 310);
+tx(120, 478, 'PITCH', 'n'); tx(213, 478, 'MODULATION', 'n'); tx(143, 494, 'UP', 'n'); tx(143, 662, 'DOWN', 'n'); tx(143, 578, '0', 'n'); tx(236, 494, 'MAX', 'n'); tx(236, 662, 'MIN', 'n');
+function roda(cx, mod, mudaFn) {
+  const r = ab('roda' + (mod ? ' mod' : ''), cx, 500), b = el('b'); r.append(b); let x = 0; r.style.setProperty('--x', 0);
+  const set = (v, avisa) => { x = lim(v, mod ? 0 : -1, 1); r.style.setProperty('--x', x); if (avisa) mudaFn(x); };
+  const mv = e => { const q = r.getBoundingClientRect(); const v = 1 - 2 * ((e.clientY - q.top) / q.height); set(mod ? (v + 1) / 2 * 1.0 : v, true); };
+  r.addEventListener('pointerdown', e => { e.preventDefault(); r.setPointerCapture(e.pointerId); mv(e); r.onpointermove = mv; });
+  const fim = () => { r.onpointermove = null; if (!mod) set(0, true); };
+  r.addEventListener('pointerup', fim); r.addEventListener('pointercancel', fim); r.setAttribute('role', 'slider'); return { r, set };
+}
+const rPitch = roda(120, false, v => manda({ t: 'ctl', k: 'bend', v })); rPitch.r.setAttribute('aria-label', 'Pitch bend');
+const rMod = roda(213, true, v => manda({ t: 'ctl', k: 'wheel', v })); rMod.r.setAttribute('aria-label', 'Modulation');
+
+/* ---- teclado de 61 teclas (C1 a C6 na nomenclatura Yamaha: notas 36 a 96) ---- */
+const T = ab('teclado', 300, 410, 1810, 312), teclasEl = {};
+{ const brancas = [], N0 = 36, N1 = 96; for (let n = N0; n <= N1; n++) if (![1, 3, 6, 8, 10].includes(n % 12)) brancas.push(n);
+  const w = 1810 / brancas.length; brancas.forEach((n, i) => { const k = el('div', 'br'); k.style.left = i * w + 'px'; k.style.width = w + 'px'; k.dataset.n = n; if (n % 12 === 0) k.append(el('span', '', 'C' + (Math.floor(n / 12) - 2))); T.append(k); teclasEl[n] = k; });
+  for (let n = N0; n <= N1; n++) if ([1, 3, 6, 8, 10].includes(n % 12)) { const i = brancas.indexOf(n - 1), k = el('div', 'pr'); k.style.left = (i + 1) * w - w * 0.3 + 'px'; k.style.width = w * 0.6 + 'px'; k.dataset.n = n; T.append(k); teclasEl[n] = k; } }
+const tocando = {};
+function nota(n, on, vel) {
+  if (on) { if (tocando[n]) return; tocando[n] = 1; teclasEl[n] && teclasEl[n].classList.add('on'); if (st.transp) { st.ed.tr = lim(84 - n, 0, 48); mudou(); mostraParam(E[31]); st.transp = true; return; } manda({ t: 'on', n, v: vel || 100 }); }
+  else { if (!tocando[n]) return; delete tocando[n]; teclasEl[n] && teclasEl[n].classList.remove('on'); manda({ t: 'off', n }); }
+}
+{ const noteDe = e => { const q = document.elementFromPoint(e.clientX, e.clientY); if (!q || !q.dataset || q.dataset.n == null || !T.contains(q)) return null; return { n: +q.dataset.n, y: (e.clientY - q.getBoundingClientRect().top) / q.getBoundingClientRect().height }; };
+  const ativos = {};
+  T.addEventListener('pointerdown', e => { const r = noteDe(e); if (!r) return; e.preventDefault(); T.setPointerCapture(e.pointerId); ativos[e.pointerId] = r.n; nota(r.n, true, st.vel); });
+  T.addEventListener('pointermove', e => { if (!(e.pointerId in ativos)) return; const r = noteDe(e); if (r && r.n !== ativos[e.pointerId]) { nota(ativos[e.pointerId], false); ativos[e.pointerId] = r.n; nota(r.n, true, st.vel); } });
+  const fim = e => { if (e.pointerId in ativos) { nota(ativos[e.pointerId], false); delete ativos[e.pointerId]; } };
+  T.addEventListener('pointerup', fim); T.addEventListener('pointercancel', fim); }
+/* teclado do computador: uma oitava a partir do dó central */
+{ const mapa = { a: 0, w: 1, s: 2, e: 3, d: 4, f: 5, t: 6, g: 7, y: 8, h: 9, u: 10, j: 11, k: 12 }, soando = {};
+  const campo = e => /INPUT|SELECT|TEXTAREA/.test((e.target || {}).tagName || '');
+  document.addEventListener('keydown', e => { if (e.repeat || e.ctrlKey || e.metaKey || e.altKey || campo(e)) return; const k = e.key.toLowerCase();
+    if (k === 'z' || k === 'x') { st.oitava = lim(st.oitava + (k === 'x' ? 12 : -12), 24, 84); diz('Teclado do computador: A começa em ' + nomeNota(st.oitava) + '.'); salva(); return; }
+    if (!(k in mapa) || soando[k] != null) return; const n = st.oitava + mapa[k]; soando[k] = n; nota(n, true, st.vel); });
+  document.addEventListener('keyup', e => { const k = e.key.toLowerCase(); if (soando[k] != null) { nota(soando[k], false); delete soando[k]; } }); }
+
+/* ====================================================== parâmetros de edição (textos do LCD: pesquisa 2.2, coluna do firmware) ====================================================== */
+const onoff = v => v ? 'ON' : 'OFF';
+const opAtual = () => st.ed.ops[st.op];
+const E = {};
+const sub = (n, m) => (st.sub[n] || 0) % m;
+const def = (n, d) => { E[n] = d; };
+def(7, { l1: 'ALGORITHM SELECT', min: 1, max: 32, get: () => st.ed.alg + 1, set: v => { st.ed.alg = v - 1; }, f: v => 'ALG ' + v });
+def(8, { l1: 'FEEDBACK', min: 0, max: 7, get: () => st.ed.fb, set: v => { st.ed.fb = v; } });
+def(9, { l1: 'LFO WAVE=', min: 0, max: 5, get: () => st.ed.lfoW, set: v => { st.ed.lfoW = v; }, f: v => NOMES_ONDA[v] });
+def(10, { l1: 'LFO SPEED', min: 0, max: 99, get: () => st.ed.lfoV, set: v => { st.ed.lfoV = v; } });
+def(11, { l1: 'LFO DELAY', min: 0, max: 99, get: () => st.ed.lfoD, set: v => { st.ed.lfoD = v; } });
+def(12, { l1: 'LFO PM DEPTH', min: 0, max: 99, get: () => st.ed.lfoPmd, set: v => { st.ed.lfoPmd = v; } });
+def(13, { l1: 'LFO AM DEPTH', min: 0, max: 99, get: () => st.ed.lfoAmd, set: v => { st.ed.lfoAmd = v; } });
+def(14, { l1: 'LFO KEY SYNC=', min: 0, max: 1, get: () => st.ed.lfoSync, set: v => { st.ed.lfoSync = v; }, f: onoff });
+def(15, { l1: 'P MOD SENS.', min: 0, max: 7, get: () => st.ed.pms, set: v => { st.ed.pms = v; } });
+def(16, { l1: 'A MOD SENS.', min: 0, max: 3, op: true, get: () => opAtual().ams, set: v => { opAtual().ams = v; } });
+const ratioTxt = o => o.modo ? (Math.pow(10, o.coarse & 3) * Math.pow(10, o.fine / 100)).toFixed(3) + 'Hz' : ((o.coarse || 0.5) * (1 + o.fine / 100)).toFixed(2);
+def(17, { op: true, ciclo: 2,
+  l1: () => sub(17, 2) ? 'OSC KEY SYNC=' : (opAtual().modo ? 'FIXED FREQ.(Hz)' : 'FREQUENCY(RATIO)'), min: 0, max: 1,
+  get: () => sub(17, 2) ? st.ed.sync : opAtual().modo, set: v => { if (sub(17, 2)) st.ed.sync = v; else opAtual().modo = v; },
+  f: v => sub(17, 2) ? onoff(v) : ratioTxt(opAtual()) });
+def(18, { l1: 'F COARSE=', min: 0, max: 31, op: true, get: () => opAtual().coarse, set: v => { opAtual().coarse = v; }, f: v => String(v) });
+def(19, { l1: 'F FINE  =', min: 0, max: 99, op: true, get: () => opAtual().fine, set: v => { opAtual().fine = v; } });
+def(20, { l1: 'OSC DETUNE =', min: -7, max: 7, op: true, get: () => opAtual().det - 7, set: v => { opAtual().det = v + 7; }, f: v => (v > 0 ? '+' : '') + v });
+def(21, { l1: 'EG  RATE  ', min: 0, max: 99, op: true, ciclo: 4, get: () => opAtual().r[sub(21, 4)], set: v => { opAtual().r[sub(21, 4)] = v; }, f: v => 'R' + (sub(21, 4) + 1) + '=' + v });
+def(22, { l1: 'EG  LEVEL ', min: 0, max: 99, op: true, ciclo: 4, get: () => opAtual().l[sub(22, 4)], set: v => { opAtual().l[sub(22, 4)] = v; }, f: v => 'L' + (sub(22, 4) + 1) + '=' + v });
+def(23, { l1: 'BREAK POINT=', min: 0, max: 99, op: true, get: () => opAtual().bp, set: v => { opAtual().bp = v; }, f: v => nomeNota(21 + v) });
+def(24, { l1: () => sub(24, 2) ? 'R KEY SCALE=' : 'L KEY SCALE=', min: 0, max: 3, op: true, ciclo: 2, get: () => sub(24, 2) ? opAtual().rc : opAtual().lc, set: v => { if (sub(24, 2)) opAtual().rc = v; else opAtual().lc = v; }, f: v => CURVAS[v] });
+def(25, { l1: () => sub(25, 2) ? 'R SCALE DEPTH' : 'L SCALE DEPTH', min: 0, max: 99, op: true, ciclo: 2, get: () => sub(25, 2) ? opAtual().rd : opAtual().ld, set: v => { if (sub(25, 2)) opAtual().rd = v; else opAtual().ld = v; } });
+def(26, { l1: 'RATE SCALING ', min: 0, max: 7, op: true, get: () => opAtual().rs, set: v => { opAtual().rs = v; } });
+def(27, { l1: 'OUTPUT LEVEL', min: 0, max: 99, op: true, get: () => opAtual().ol, set: v => { opAtual().ol = v; } });
+def(28, { l1: 'KEY VELOCITY ', min: 0, max: 7, op: true, get: () => opAtual().kvs, set: v => { opAtual().kvs = v; } });
+def(29, { l1: 'P EG RATE  ', min: 0, max: 99, ciclo: 4, get: () => st.ed.pr[sub(29, 4)], set: v => { st.ed.pr[sub(29, 4)] = v; }, f: v => 'R' + (sub(29, 4) + 1) + '=' + v });
+def(30, { l1: 'P EG LEVEL ', min: 0, max: 99, ciclo: 4, get: () => st.ed.pl[sub(30, 4)], set: v => { st.ed.pl[sub(30, 4)] = v; }, f: v => 'L' + (sub(30, 4) + 1) + '=' + v });
+def(31, { l1: 'MIDDLE C = ', sem: true, min: 0, max: 0, get: () => 0, set: () => {}, f: () => nomeNota(60 + 24 - st.ed.tr + 0) });
+def(32, { l1: 'NAME= ', nome: true, min: 0, max: CHARS.length - 1, get: () => CHARS.indexOf(st.ed.nome[st.cursor] || ' '), set: v => { const a = pad10(st.ed.nome).split(''); a[st.cursor] = CHARS[v]; st.ed.nome = a.join('').replace(/\s+$/, ''); } });
+const pad10 = s => (s + ' '.repeat(10)).slice(0, 10);
+
+/* ---- funções (botões 1 a 32 com FUNCTION ligado) ---- */
+const F = {}; const defF = (n, d) => { F[n] = d; };
+const ctl = k => st.g.ctl[k], CTL = { 17: 'wheel', 21: 'foot', 25: 'breath', 29: 'at' }, NC = { wheel: 'MODULATION WHEEL', foot: 'FOOT CONTROL', breath: 'BREATH CONTROL', at: 'AFTER TOUCH' };
+defF(1, { l1: 'MASTER TUNE ADJ', min: -75, max: 75, get: () => st.g.tune, set: v => { st.g.tune = v; }, f: v => (v > 0 ? '+' : '') + v + ' cents', slider: true });
+defF(2, { l1: 'POLY/MONO', min: 0, max: 1, get: () => st.g.mono, set: v => { st.g.mono = v; }, f: v => v ? 'MONO MODE' : 'POLY MODE' });
+defF(3, { l1: 'PITCH BEND RANGE', min: 0, max: 12, get: () => st.g.bendRange, set: v => { if (st.g.bendStep === 0) st.g.bendRange = v; } });
+defF(4, { l1: 'PITCH BEND STEP', min: 0, max: 12, get: () => st.g.bendStep, set: v => { st.g.bendStep = v; if (v > 0) st.g.bendRange = 12; } });
+defF(5, { l1: 'PORTAMENTO MODE', min: 0, max: 1, get: () => st.g.portaModo, set: v => { st.g.portaModo = v; }, f: v => st.g.mono ? (v ? 'FULL TIME PORTA' : 'FINGERED PORTA') : (v ? 'SUS-KEY P FOLLOW' : 'SUS-KEY P RETAIN') });
+defF(6, { l1: 'GLISSANDO', min: 0, max: 1, get: () => st.g.gliss, set: v => { st.g.gliss = v; }, f: onoff });
+defF(7, { l1: 'PORTAMENTO TIME', min: 0, max: 99, get: () => st.g.portaTime, set: v => { st.g.portaTime = v; } });
+defF(8, { l1: 'MIDI CHANNEL', min: 0, max: 16, get: () => st.g.canal, set: v => { st.g.canal = v; const s = document.getElementById('midi-canal'); if (s) s.value = String(v); }, f: v => v ? 'CH=' + v : 'OMNI' });
+defF(9, { l1: 'EDIT RECALL', conf: () => { st.ed = clone(bancoAtual()[st.cur]); st.editado = false; } });
+defF(10, { l1: 'VOICE INIT', conf: () => { st.ed = DD.patchInit(); st.editado = true; } });
+defF(11, { l1: 'FUNCTION CONTROL', sem: true }); defF(12, { l1: 'FUNCTION CONTROL', sem: true }); defF(13, { l1: 'FUNCTION CONTROL', sem: true });
+defF(14, { l1: 'BATTERY CHECK', sem: true, f: () => 'BATTERY= 3.0V OK' });
+defF(15, { l1: 'CARTRIDGE SAVE', conf: () => { st.cart = clone(st.mem); } });
+defF(16, { l1: 'CARTRIDGE LOAD', conf: () => { st.mem = clone(st.cart); st.ed = clone(bancoAtual()[st.cur]); st.editado = false; } });
+for (const n0 of [17, 21, 25, 29]) { const k = CTL[n0], c = () => st.g.ctl[k];
+  defF(n0, { l1: NC[k] + ' RANGE', min: 0, max: 99, get: () => c().range, set: v => { c().range = v; } });
+  [['pitch', 'PITCH'], ['amp', 'AMPLITUDE'], ['bias', 'EG BIAS']].forEach(([f, nm], i) => defF(n0 + 1 + i, { l1: NC[k].slice(0, 13) + ' ' + nm, min: 0, max: 1, get: () => c()[f], set: v => { c()[f] = v; }, f: onoff })); }
+
+/* ====================================================== máquina de modos ====================================================== */
+function linhasParam(d, tabela) {
+  const l1 = typeof d.l1 === 'function' ? d.l1() : d.l1;
+  if (d.sem && !d.f) return [l1, ''];
+  const v = d.get ? d.get() : 0, txt = d.f ? d.f(v) : String(v);
+  let l2 = txt; if (d.op && tabela === 'E') l2 = txt.padEnd(12) + 'OP' + (st.op + 1);
+  return [l1, l2];
+}
+function mostraParam(d, tabela = 'E') {
+  st.param = { d, tabela };
+  if (d.nome) { const l1 = d.l1, nm = pad10(st.ed.nome); lcdMostra(l1, nm, st.cursor); }
+  else { const [a, b] = linhasParam(d, tabela); lcdMostra(a, b); }
+  posiciona(d);
+}
+function posiciona(d) { if (d.min != null && d.max > d.min && d.get) sDat.set((d.get() - d.min) / (d.max - d.min), false); }
+function mostraPlay() {
+  st.param = null; st.modo = 'play'; st.transp = false;
+  lcdMostra(st.banco === 'int' ? 'INTERNAL VOICE' : 'CARTRIDGE VOICE', (st.banco === 'int' ? 'INT' : 'CRT') + String(st.cur + 1).padStart(2, '0') + ' ' + st.ed.nome);
+  pintaLed(); luzes();
+}
+function luzes() {
+  const ac = { store: st.modo === 'store', edit: st.modo === 'edit' || st.modo === 'nome', func: st.modo === 'func', mpi: st.prot.int, mpc: st.prot.cart, msi: st.banco === 'int' && st.modo === 'play', msc: st.banco === 'cart' && st.modo === 'play', opsel: false };
+  for (const id in ac) BT[id].classList.toggle('ac', !!ac[id]);
+  for (let n = 1; n <= 6; n++) BT['b' + n]._led.classList.toggle('on', st.modo === 'edit' && !!st.opOn[n - 1]);
+}
+function mudou() { st.editado = true; enviaPatch(); enviaG(); marcaAlg(); pintaAlgGrande(); pintaLed(); }
+function carregaVoz(i) {
+  st.cur = i; st.ed = clone(bancoAtual()[i]); st.editado = false; st.comp = false; st.opOn = [1, 1, 1, 1, 1, 1];
+  enviaPatch(); marcaAlg(); pintaAlgGrande(); mostraPlay();
+}
+function nudge(d) {
+  const p = st.param; if (!p) return;
+  const def_ = p.d;
+  if (def_.nome) { st.cursor = lim(st.cursor + d, 0, 9); mostraParam(def_); return; }
+  if (def_.conf) { if (d > 0 && st.pend) executaPend(); else { st.pend = null; mostraParam(def_, 'F'); } return; }
+  if (def_.sem || def_.slider && false) return;
+  const v = lim(def_.get() + d, def_.min, def_.max);
+  aplica(def_, v);
+}
+function aplica(def_, v) {
+  v = lim(Math.round(v), def_.min, def_.max); def_.set(v);
+  if (st.param.tabela === 'E') mudou(); else { enviaG(); }
+  mostraParam(def_, st.param.tabela);
+}
+function desliza(t) {
+  const p = st.param; if (!p) return; const d = p.d; if (d.sem || d.conf) return;
+  if (d.nome) { aplica(d, d.min + t * (d.max - d.min)); return; }
+  aplica(d, d.min + t * (d.max - d.min));
+}
+function executaPend() { const f = st.pend; st.pend = null; f(); enviaPatch(); enviaG(); marcaAlg(); pintaAlgGrande(); pintaLed(); lcdMostra(st.param.d.l1, 'COMPLETED'); }
+function aperta(id) {
+  desbloqueia();
+  if (id === 'no') { if (st.param && st.param.d.min === 0 && st.param.d.max === 1 && !st.param.d.nome) aplica(st.param.d, 0); else if (st.pend) { st.pend = null; mostraParam(st.param.d, 'F'); } else nudge(-1); return; }
+  if (id === 'si') { if (st.param && st.param.d.min === 0 && st.param.d.max === 1 && !st.param.d.nome && !st.param.d.conf) aplica(st.param.d, 1); else nudge(1); return; }
+  if (id === 'store') { if (st.prot.int) { lcdMostra('MEMORY PROTECTED', 'INTERNAL'); return; } st.modo = st.modo === 'store' ? 'play' : 'store'; if (st.modo === 'store') lcdMostra('MEMORY STORE', 'SELECT 1-32'); else mostraPlay(); luzes(); return; }
+  if (id === 'mpi' || id === 'mpc') { const k = id === 'mpi' ? 'int' : 'cart'; st.prot[k] = !st.prot[k]; lcdMostra('MEMORY PROTECT', (k === 'int' ? 'INTERNAL=' : 'CARTRIDGE=') + onoff(st.prot[k])); luzes(); return; }
+  if (id === 'msi' || id === 'msc') { st.banco = id === 'msi' ? 'int' : 'cart'; st.pend = null; carregaVoz(st.cur); return; }
+  if (id === 'opsel') { for (let k = 1; k <= 6; k++) { const i = (st.op + k) % 6; if (st.opOn[i]) { st.op = i; break; } } if (st.modo === 'edit' && st.param && st.param.d.op) mostraParam(st.param.d, 'E'); else lcdMostra('OPERATOR SELECT', 'OP' + (st.op + 1)); return; }
+  if (id === 'edit') {
+    if (st.modo === 'nome') { st.modo = 'edit'; mostraParam(E[32]); luzes(); return; }
+    if (st.modo === 'play') { st.modo = 'edit'; mostraParam(st.param && st.param.tabela === 'E' ? st.param.d : E[7]); luzes(); return; }
+    if (st.modo === 'edit') { // COMPARE: alterna entre o que se edita e a voz guardada
+      if (!st.editado) { mostraPlay(); return; }
+      st.comp = !st.comp; manda({ t: 'patch', p: st.comp ? clone(bancoAtual()[st.cur]) : mascarado() }); lcdMostra(st.comp ? 'COMPARE' : 'EDIT', st.comp ? 'STORED VOICE' : 'EDIT BUFFER'); return;
+    }
+    st.modo = 'edit'; mostraParam(E[7]); luzes(); return;
+  }
+  if (id === 'func') { if (st.modo === 'func') { mostraPlay(); return; } st.modo = 'func'; st.pend = null; mostraParam(F[st.ultimoFunc] || F[2], 'F'); luzes(); return; }
+  const n = +id.slice(1);
+  if (st.modo === 'store') {
+    st.mem[n - 1] = clone(st.ed); salva(); st.editado = false; st.cur = n - 1; st.banco = 'int'; st.modo = 'play'; mostraPlay(); lcdMostra('MEMORY STORE', 'COMPLETED'); setTimeout(() => { if (st.modo === 'play') mostraPlay(); }, 900); return;
+  }
+  if (st.modo === 'play') { carregaVoz(n - 1); return; }
+  if (st.modo === 'func') {
+    st.ultimoFunc = n; const d = F[n]; if (!d) return; st.pend = null;
+    if (d.conf) { st.param = { d, tabela: 'F' }; lcdMostra(d.l1, 'ARE YOU SURE ?'); st.pend = d.conf; return; }
+    mostraParam(d, 'F'); return;
+  }
+  if (st.modo === 'nome') { if (n <= 32) { const a = pad10(st.ed.nome).split(''); a[st.cursor] = LETRAS[n - 1]; st.ed.nome = a.join('').replace(/\s+$/, ''); st.cursor = Math.min(9, st.cursor + 1); mudou(); mostraParam(E[32]); } return; }
+  // edição
+  if (n <= 6) { st.opOn[n - 1] = st.opOn[n - 1] ? 0 : 1; if (!st.opOn[st.op]) { const i = st.opOn.findIndex(x => x); st.op = i < 0 ? 0 : i; } enviaPatch(); lcdMostra('OP ON/OFF STATUS', st.opOn.join('')); st.param = null; luzes(); return; }
+  const d = E[n]; if (!d) return;
+  if (d.ciclo && st.param && st.param.d === d) st.sub[n] = ((st.sub[n] || 0) + 1) % d.ciclo; else if (!d.ciclo) st.sub[n] = 0;
+  st.transp = n === 31;
+  if (n === 32) { st.modo = 'nome'; st.cursor = 0; luzes(); }
+  mostraParam(d);
+}
+/* o texto do visor aceita a edição direta de operador pela chave de modo: teclas 1 a 6 acendem o LED do operador ligado */
+
+/* ====================================================== estado salvo, controles extras e acessórios ====================================================== */
+const ESCALAS = { maior: ['Maior', [0, 2, 4, 5, 7, 9, 11]], menor: ['Menor natural', [0, 2, 3, 5, 7, 8, 10]], pentamenor: ['Pentatônica menor', [0, 3, 5, 7, 10]],
+  pentamaior: ['Pentatônica maior', [0, 2, 4, 7, 9]], dorico: ['Dórico', [0, 2, 3, 5, 7, 9, 10]], blues: ['Blues', [0, 3, 5, 6, 7, 10]], cromatica: ['Cromática', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]] };
+const seqPadrao = () => ({ bpm: 120, tonica: 0, escala: 'maior', passos: [48, 55, 60, 64, 67, 64, 60, 55, 48, 55, 60, 64, 72, 67, 64, 60].map(n => ({ n: n + 12, m: 'n' })) });
+st.seq = seqPadrao(); st.hold = false; st.vel = 100; st.oitava = 60; st.cc = { foot: 0, breath: 0, at: 0 }; st.g.canal = 0;
+let selPasso = -1;
+function salva() {
+  clearTimeout(tSalva);
+  tSalva = setTimeout(() => { try { localStorage.setItem(CHAVE + ':estado', JSON.stringify({ banco: st.banco, cur: st.cur, mem: st.mem, cart: st.cart, ed: st.ed, editado: st.editado, prot: st.prot, g: st.g, vol: st.vol, vel: st.vel, oitava: st.oitava, seq: st.seq, cc: st.cc })); } catch (e) {} }, 250);
+}
+function carregaSalvo() {
+  let s = null; try { s = JSON.parse(localStorage.getItem(CHAVE + ':estado') || 'null'); } catch (e) {}
+  if (!s || typeof s !== 'object') return;
+  try {
+    const num = (v, a, b, d) => { v = Math.round(+v); return isFinite(v) ? lim(v, a, b) : d; };
+    for (const k of ['mem', 'cart']) if (Array.isArray(s[k]) && s[k].length === 32) st[k] = s[k].map(p => DD.norm(p));
+    if (s.banco === 'int' || s.banco === 'cart') st.banco = s.banco;
+    st.cur = num(s.cur, 0, 31, 0); st.ed = s.ed ? DD.norm(s.ed) : clone(bancoAtual()[st.cur]); st.editado = !!s.editado;
+    if (s.prot) { st.prot.int = !!s.prot.int; st.prot.cart = !!s.prot.cart; }
+    const G = { tune: [-75, 75], mono: [0, 1], bendRange: [0, 12], bendStep: [0, 12], portaModo: [0, 1], gliss: [0, 1], portaTime: [0, 99], canal: [0, 16] };
+    if (s.g) { for (const k in G) if (s.g[k] != null) st.g[k] = num(s.g[k], G[k][0], G[k][1], st.g[k]);
+      if (s.g.ctl) for (const c of ['wheel', 'foot', 'breath', 'at']) { const o = s.g.ctl[c]; if (!o) continue; st.g.ctl[c].range = num(o.range, 0, 99, st.g.ctl[c].range); for (const f of ['pitch', 'amp', 'bias']) st.g.ctl[c][f] = num(o[f], 0, 1, st.g.ctl[c][f]); } }
+    if (typeof s.vol === 'number' && isFinite(s.vol)) st.vol = lim(s.vol, 0, 1);
+    st.vel = num(s.vel, 1, 127, 100); st.oitava = num(s.oitava, 24, 96, 60);
+    if (s.cc) for (const c of ['foot', 'breath', 'at']) if (typeof s.cc[c] === 'number' && isFinite(s.cc[c])) st.cc[c] = lim(s.cc[c], 0, 1);
+    if (s.seq && Array.isArray(s.seq.passos) && s.seq.passos.length === 16) {
+      st.seq.bpm = num(s.seq.bpm, 30, 300, 120); st.seq.tonica = num(s.seq.tonica, 0, 11, 0); if (ESCALAS[s.seq.escala]) st.seq.escala = s.seq.escala;
+      st.seq.passos = s.seq.passos.map(x => ({ n: num(x && x.n, 24, 96, 60), m: x && 'npl'.includes(x.m) && x.m ? x.m : 'n' }));
+    }
+  } catch (e) { /* estado salvo corrompido: segue com o padrão */ }
+}
+carregaSalvo();
+
+function diz(t) { $('estado').textContent = t; }
+function setCtl(k, v) {
+  st.cc[k] = lim(v, 0, 1); manda({ t: 'ctl', k, v: st.cc[k] }); const i = $('ctl-' + k); if (i) i.value = Math.round(st.cc[k] * 99); salva();
+}
+function setHold(b) { st.hold = !!b; $('hold').setAttribute('aria-pressed', st.hold); manda({ t: 'sus', on: st.hold }); }
+$('hold').addEventListener('click', () => setHold(!st.hold));
+for (const k of ['foot', 'breath', 'at']) { const i = $('ctl-' + k); i.value = Math.round(st.cc[k] * 99); i.dataset.alvo = k; i.addEventListener('input', () => setCtl(k, +i.value / 99)); }
+{ const v = $('vel-tecla'); v.value = st.vel; v.addEventListener('input', () => { st.vel = +v.value; $('vel-n').textContent = st.vel; salva(); }); $('vel-n').textContent = st.vel; }
+
+/* ---------- sequenciador de 16 passos (acessório) ---------- */
+let seqTocando = false, seqProx = 0, seqI = 0, seqRel = 0; const seqFila = [];
+const PASSOS = $('passos'), cel = [], MODOS = { n: 'Nota', p: 'Pausa', l: 'Liga' };
+for (let i = 0; i < 16; i++) {
+  const c = el('div', 'passo'); c.append(el('small', '', String(i + 1)));
+  const nt = el('button', 'bp nota'); nt.type = 'button'; nt.addEventListener('click', () => { selPasso = selPasso === i ? -1 : i; pintaSeq(); });
+  const par = el('div', 'par'), mais = el('button', 'bp', '+'), menos = el('button', 'bp', '−'); menos.type = mais.type = 'button';
+  menos.setAttribute('aria-label', `Passo ${i + 1}: um semitom abaixo`); mais.setAttribute('aria-label', `Passo ${i + 1}: um semitom acima`);
+  const muda = d => { const p = st.seq.passos[i]; p.n = lim(p.n + d, 36, 96); pintaSeq(); salva(); };
+  menos.addEventListener('click', () => muda(-1)); mais.addEventListener('click', () => muda(1)); par.append(mais, menos);
+  const md = el('button', 'bp'); md.type = 'button'; md.addEventListener('click', () => { const p = st.seq.passos[i]; p.m = { n: 'p', p: 'l', l: 'n' }[p.m]; pintaSeq(); salva(); });
+  c.append(nt, par, md); PASSOS.append(c); cel.push({ c, nt, md });
+}
+function pintaSeq() {
+  st.seq.passos.forEach((p, i) => { const x = cel[i];
+    x.nt.textContent = p.m === 'n' ? nomeNota(p.n) : p.m === 'p' ? '·' : '—';
+    x.nt.setAttribute('aria-label', `Passo ${i + 1}: ${p.m === 'n' ? nomeNota(p.n) : MODOS[p.m]}. Selecionar para gravar pelo teclado`);
+    x.nt.setAttribute('aria-pressed', selPasso === i); x.md.textContent = MODOS[p.m]; x.c.classList.toggle('sel', selPasso === i); });
+  $('seq-bpm').value = st.seq.bpm; $('seq-tonica').value = st.seq.tonica; $('seq-escala').value = st.seq.escala;
+}
+NOTAS.forEach((n, i) => { const o = el('option', '', n); o.value = i; $('seq-tonica').append(o); });
+for (const k in ESCALAS) { const o = el('option', '', ESCALAS[k][0]); o.value = k; $('seq-escala').append(o); }
+$('seq-bpm').addEventListener('change', e => { st.seq.bpm = lim(Math.round(+e.target.value) || 120, 30, 300); e.target.value = st.seq.bpm; salva(); });
+$('seq-tonica').addEventListener('change', e => { st.seq.tonica = +e.target.value; salva(); });
+$('seq-escala').addEventListener('change', e => { st.seq.escala = e.target.value; salva(); });
+$('seq-aleat').addEventListener('click', () => {
+  const graus = ESCALAS[st.seq.escala][1], base = 36 + st.seq.tonica, notas = [];
+  for (let o = 0; o < 4; o++) for (const g of graus) notas.push(base + 12 * o + g);
+  st.seq.passos = Array.from({ length: 16 }, (_, i) => {
+    const r = Math.random(), n = notas[Math.floor(Math.random() * notas.length)];
+    return i === 0 ? { n: base + 12, m: 'n' } : r < 0.14 ? { n, m: 'p' } : r < 0.28 ? { n, m: 'l' } : { n, m: 'n' };
+  });
+  st.seq.passos.forEach((p, i) => { if (p.m === 'l' && st.seq.passos[i - 1].m === 'p') p.m = 'n'; });
+  pintaSeq(); salva();
+});
+/* Agendamento: um temporizador curto olha 150 ms à frente e manda os eventos com a hora do relógio do AudioContext;
+   o motor dispara cada evento na amostra certa. O setInterval só decide quando agendar, não quando soa. */
+const durPasso = () => 60 / st.seq.bpm / 4;
+function seqAgenda() {
+  if (!seqTocando || !ctx) return;
+  const agora = ctx.currentTime;
+  if (seqProx < agora - 0.25) seqProx = agora + 0.03;     // a aba ficou em segundo plano
+  while (seqProx < agora + 0.15) {
+    const i = seqI, p = st.seq.passos[i], d = durPasso();
+    if (p.m === 'n') {
+      let lig = 0; while (i + 1 + lig < 16 && st.seq.passos[i + 1 + lig].m === 'l') lig++;
+      manda({ t: 'on', n: p.n, v: st.vel, at: seqProx, seq: 1 }); manda({ t: 'off', n: p.n, at: seqProx + d * (lig + 0.6), seq: 1 });
+    }
+    seqFila.push({ i, t: seqProx }); seqProx += d; seqI = (seqI + 1) % 16;
+  }
+}
+function seqToca() {
+  if (seqTocando) return;
+  ligaAudio(); seqTocando = true; seqI = 0; seqFila.length = 0; seqProx = (ctx ? ctx.currentTime : 0) + 0.08;
+  seqRel = setInterval(seqAgenda, 25); seqAgenda(); requestAnimationFrame(seqDesenha);
+  $('seq-play').setAttribute('aria-pressed', 'true'); $('seq-play').textContent = 'Stop';
+}
+function seqPara() {
+  if (!seqTocando) return;
+  seqTocando = false; clearInterval(seqRel); seqFila.length = 0; manda({ t: 'seqpara' });
+  cel.forEach(x => x.c.classList.remove('agora')); $('seq-play').setAttribute('aria-pressed', 'false'); $('seq-play').textContent = 'Play';
+}
+function seqDesenha() {
+  if (!seqTocando) return;
+  const agora = ctx.currentTime; let cur = -1;
+  while (seqFila.length && seqFila[0].t <= agora) cur = seqFila.shift().i;
+  if (cur >= 0) cel.forEach((x, i) => x.c.classList.toggle('agora', i === cur));
+  requestAnimationFrame(seqDesenha);
+}
+$('seq-play').addEventListener('click', () => seqTocando ? seqPara() : seqToca());
+
+/* ---------- Zerar: painel, voz em edição, controles e sequência voltam ao padrão. Não apaga as memórias INTERNAL e CARTRIDGE (são vozes do usuário)
+   nem as ligações MIDI, que têm botão próprio. Dois toques para confirmar (sem window.confirm, que alguns PWAs bloqueiam). ---------- */
+function confirma(id, rotulo, pergunta, acao) {
+  const b = $(id), nao = $(id + '-nao'); let t = 0;
+  const desarma = () => { clearTimeout(t); b.dataset.armado = ''; b.textContent = rotulo; nao.hidden = true; };
+  b.addEventListener('click', () => { if (b.dataset.armado) { desarma(); acao(); } else { b.dataset.armado = '1'; b.textContent = pergunta; nao.hidden = false; t = setTimeout(desarma, 6000); } });
+  nao.addEventListener('click', desarma);
+}
+function zera() {
+  seqPara(); manda({ t: 'panico' }); for (const n in tocando) nota(+n, false); selPasso = -1;
+  st.g = DD.GLOBAL0(); st.g.canal = 0; st.vol = 1; st.vel = 100; st.oitava = 60; st.cc = { foot: 0, breath: 0, at: 0 }; st.seq = seqPadrao(); st.sub = {}; st.pend = null; st.transp = false; st.opOn = [1, 1, 1, 1, 1, 1]; st.op = 0;
+  st.ed = clone(bancoAtual()[st.cur]); st.editado = false; st.comp = false; setHold(false);
+  sVol.set(1, false); rPitch.set(0, false); rMod.set(0, false); manda({ t: 'ctl', k: 'bend', v: 0 }); manda({ t: 'ctl', k: 'wheel', v: 0 });
+  for (const k of ['foot', 'breath', 'at']) { $('ctl-' + k).value = 0; manda({ t: 'ctl', k, v: 0 }); }
+  $('vel-tecla').value = 100; $('vel-n').textContent = 100; $('midi-canal').value = '0';
+  enviaPatch(); enviaG(); marcaAlg(); pintaAlgGrande(); mostraPlay(); pintaSeq(); salva();
+  diz('Painel, controles e sequência voltaram ao padrão. As memórias INTERNAL e CARTRIDGE e as ligações MIDI foram mantidas.');
+}
+confirma('zerar', 'Zerar', 'Confirmar: zerar painel e sequência', zera);
+
+/* ===================== MIDI ===================== */
+/* ===================== MÓDULO MIDI (reutilizável: só depende dos ganchos de `o`) =====================
+   Web MIDI com escolha de entrada e de canal (0 = todos), notas com velocity, pitch bend, program change e MIDI learn.
+   O mapa guarda "canal:cc" -> id do controle e é salvo por instrumento em `${chave}:midi`.
+   Tipos de controle (`o.alvo(id)`): 'continuo' recebe 0..1 (faixa inteira), 'passos' recebe o índice (n posições iguais),
+   'liga' recebe true com valor >= 64, 'gatilho' age ao cruzar 64 para cima. */
+function criaMidi(o) {
+  const M = { aprendendo: false, sel: null, mapa: {}, disp: '', ativo: false, acesso: null }, K = o.chave + ':midi', ult = {}, U = o.ui;
+  try { const s = JSON.parse(localStorage.getItem(K) || 'null');
+    if (s) { if (s.mapa && typeof s.mapa === 'object') for (const k in s.mapa) if (/^\d{1,2}:\d{1,3}$/.test(k) && typeof s.mapa[k] === 'string') M.mapa[k] = s.mapa[k]; M.disp = typeof s.disp === 'string' ? s.disp : ''; M.ativo = !!s.ativo; } } catch (e) {}
+  const salvaM = () => { try { localStorage.setItem(K, JSON.stringify({ mapa: M.mapa, disp: M.disp, ativo: M.ativo })); } catch (e) {} };
+  function lista() {
+    U.lista.replaceChildren();
+    for (const k of Object.keys(M.mapa).sort((a, b) => { const [c1, n1] = a.split(':').map(Number), [c2, n2] = b.split(':').map(Number); return n1 - n2 || c1 - c2; })) {
+      const [ch, n] = k.split(':'), li = el('li', null, `CC ${n} · canal ${ch} → ${o.nome(M.mapa[k])}`), x = el('button', null, '×'); x.type = 'button';
+      x.setAttribute('aria-label', `Desfazer a ligação do CC ${n} no canal ${ch}`); x.addEventListener('click', () => { delete M.mapa[k]; salvaM(); lista(); o.diz('Ligação desfeita.'); });
+      li.append(x); U.lista.append(li);
+    }
+    U.desfaz.disabled = !M.sel;
+  }
+  function liga(key, id) {
+    for (const k of Object.keys(M.mapa)) if (M.mapa[k] === id || k === key) delete M.mapa[k];
+    M.mapa[key] = id; salvaM(); const [ch, n] = key.split(':'); o.diz(`CC ${n} (canal ${ch}) ligado a ${o.nome(id)}.`); M.sel = null; o.destaca(null); lista();
+  }
+  function aplica(key, id, v) {
+    const al = o.alvo(id); if (!al) return;
+    if (al.tipo === 'continuo') al.aplica(v / 127);
+    else if (al.tipo === 'passos') al.aplica(Math.min(al.n - 1, Math.floor(v / 128 * al.n)));
+    else if (al.tipo === 'liga') al.aplica(v >= 64);
+    else if (v >= 64 && !(ult[key] >= 64)) al.aplica();
+    ult[key] = v;
+  }
+  function cc(ch, n, v) {
+    const key = ch + ':' + n;
+    if (M.aprendendo) { if (M.sel) liga(key, M.sel); else o.diz('MIDI learn: toque num controle do painel e depois mexa no controlador.'); return; }
+    if (M.mapa[key]) aplica(key, M.mapa[key], v); else o.ccFixo(n, v, ch);
+  }
+  function msg(e, inp) {
+    if (M.disp && inp.id !== M.disp) return;
+    const d = e.data; if (!d || !d.length || d[0] >= 0xF0) return;
+    const t = d[0] & 0xF0, ch = (d[0] & 15) + 1, a = d[1] | 0, b = d[2] | 0, c = o.canal();
+    if (c && ch !== c) return;
+    if (t === 0x90 && b > 0) o.nota(a, true, b); else if (t === 0x80 || t === 0x90) o.nota(a, false, 0);
+    else if (t === 0xE0) o.bend(((b << 7 | a) - 8192) / 8192); else if (t === 0xC0) o.program(a); else if (t === 0xD0 && o.toque) o.toque(a / 127); else if (t === 0xB0) cc(ch, a, b);
+  }
+  function atualiza() {
+    const ins = [...M.acesso.inputs.values()], sel = U.entrada.value || M.disp;
+    U.entrada.replaceChildren(new Option('Todas', '')); for (const i of ins) U.entrada.append(new Option(i.name || i.id, i.id));
+    U.entrada.value = ins.some(i => i.id === sel) ? sel : ''; M.disp = U.entrada.value;
+    for (const i of ins) i.onmidimessage = e => msg(e, i);
+    o.diz(ins.length ? `MIDI ativo: ${ins.length} entrada(s).` : 'MIDI ativo, mas nenhuma entrada encontrada. Ligue o aparelho.');
+  }
+  function ativa(silencioso) {
+    if (!navigator.requestMIDIAccess) { if (!silencioso) o.diz('Este navegador não oferece Web MIDI (o Safari do iPhone não oferece).'); return Promise.resolve(false); }
+    return navigator.requestMIDIAccess().then(ac => { M.acesso = ac; M.ativo = true; ac.onstatechange = atualiza; atualiza(); U.ativar.setAttribute('aria-pressed', 'true'); salvaM(); return true; },
+      () => { if (!silencioso) o.diz('Acesso ao MIDI negado.'); return false; });
+  }
+  M.seleciona = id => { if (!M.aprendendo) return; M.sel = id; o.destaca(id); U.desfaz.disabled = false; o.diz(`Controle escolhido: ${o.nome(id)}. Mexa no botão ou knob do controlador.`); };
+  U.ativar.addEventListener('click', () => ativa(false));
+  U.entrada.addEventListener('change', () => { M.disp = U.entrada.value; salvaM(); });
+  U.aprende.addEventListener('click', () => { M.aprendendo = !M.aprendendo; M.sel = null; o.destaca(null); U.aprende.setAttribute('aria-pressed', M.aprendendo); o.modoAprende(M.aprendendo);
+    o.diz(M.aprendendo ? 'MIDI learn ligado: toque num controle do painel.' : 'MIDI learn desligado.'); lista(); });
+  U.desfaz.addEventListener('click', () => { if (!M.sel) return; for (const k of Object.keys(M.mapa)) if (M.mapa[k] === M.sel) delete M.mapa[k]; salvaM(); M.sel = null; o.destaca(null); o.diz('Ligação do controle desfeita.'); lista(); });
+  U.apaga.addEventListener('click', () => { M.mapa = {}; salvaM(); lista(); o.diz('Todas as ligações MIDI foram apagadas.'); });
+  lista(); if (M.ativo) ativa(true);
+  M.mensagem = msg; return M;     // `mensagem` serve às verificações sem aparelho
+}
+function alvoMidi(id) {
+  if (id === 'vol') return { tipo: 'continuo', aplica: v => { st.vol = v; sVol.set(v, false); enviaG(); } };
+  if (id === 'dat') return { tipo: 'continuo', aplica: v => { sDat.set(v, false); desliza(v); } };
+  if (id === 'roda') return { tipo: 'continuo', aplica: v => { const x = v * 2 - 1; rPitch.set(Math.abs(x) < 0.04 ? 0 : x, true); } };
+  if (id === 'mod') return { tipo: 'continuo', aplica: v => rMod.set(v, true) };
+  if (id === 'foot' || id === 'breath' || id === 'at') return { tipo: 'continuo', aplica: v => setCtl(id, v) };
+  if (id === 'hold') return { tipo: 'liga', aplica: b => setHold(b) };
+  if (BT[id]) return { tipo: 'gatilho', aplica: () => aperta(id) };
+  return null;
+}
+const NOMES_ALVO = { vol: 'VOLUME', dat: 'DATA ENTRY', roda: 'PITCH BEND', mod: 'MODULATION WHEEL', foot: 'FOOT CONTROL', breath: 'BREATH CONTROL', at: 'AFTER TOUCH', hold: 'HOLD' };
+const nomeAlvo = id => NOMES_ALVO[id] || (BT[id] ? BT[id].getAttribute('aria-label') : id);
+function idDoAlvo(t) {      // o que foi tocado, durante o MIDI learn
+  if (!t.closest) return null; const b = t.closest('.bt'); if (b) return b.dataset.id;
+  const a = t.closest('[data-alvo]'); if (a) return a.dataset.alvo; if (t.closest('.lcd-m')) return 'dat'; return null;
+}
+sVol.s.dataset.alvo = 'vol'; sDat.s.dataset.alvo = 'dat'; rPitch.r.dataset.alvo = 'roda'; rMod.r.dataset.alvo = 'mod'; $('hold').dataset.alvo = 'hold';
+let destacados = [];
+const midi = criaMidi({
+  chave: CHAVE, diz, nome: nomeAlvo, alvo: alvoMidi, canal: () => st.g.canal,
+  ui: { ativar: $('midi-ativar'), entrada: $('midi-entrada'), canal: $('midi-canal'), aprende: $('midi-aprende'), desfaz: $('midi-desfaz'), apaga: $('midi-apaga'), lista: $('midi-lista') },
+  nota: (n, on, vel) => nota(n, on, vel),
+  bend: v => rPitch.set(Math.abs(v) < 0.01 ? 0 : v, true),
+  program: p => { if (p < 32) { st.banco = 'int'; carregaVoz(p); } },
+  toque: v => setCtl('at', v),
+  ccFixo: (n, v) => {
+    if (n === 64) manda({ t: 'sus', on: v >= 64 });
+    else if (n === 1) rMod.set(v / 127, true); else if (n === 2) setCtl('breath', v / 127); else if (n === 4) setCtl('foot', v / 127);
+    else if (n === 7) { st.vol = v / 127; sVol.set(st.vol, false); enviaG(); }
+    else if (n === 5) { st.g.portaTime = Math.round(v / 127 * 99); enviaG(); }
+    else if (n === 120 || n === 123) { manda({ t: 'panico' }); for (const k in tocando) nota(+k, false); }
+  },
+  destaca: id => {
+    destacados.forEach(x => x.classList.remove('alvo-midi')); destacados = [];
+    if (!id) return;
+    const alvo = id === 'dat' ? [sDat.s, lcdM] : BT[id] ? [BT[id]] : [document.querySelector(`[data-alvo="${id}"]`)];
+    alvo.filter(Boolean).forEach(x => { x.classList.add('alvo-midi'); destacados.push(x); });
+  },
+  modoAprende: v => P.classList.toggle('aprende', v)
+});
+for (const ev of ['pointerdown', 'click']) document.addEventListener(ev, e => {      // em modo aprendizado, tocar num controle só o escolhe
+  if (!midi.aprendendo || !e.target.closest || !e.target.closest('#painel, [data-alvo]')) return;
+  const id = idDoAlvo(e.target); if (!id) return; e.preventDefault(); e.stopPropagation(); if (ev === 'pointerdown') midi.seleciona(id);
+}, true);
+{ const sc = $('midi-canal'); sc.append(new Option('Todos', '0')); for (let i = 1; i <= 16; i++) sc.append(new Option(String(i), String(i))); sc.value = String(st.g.canal); sc.addEventListener('change', () => { st.g.canal = +sc.value; salva(); }); }
+
+/* ====================================================== arranque ====================================================== */
+sVol.set(st.vol, false); rPitch.set(0, false);
+marcaAlg(); pintaAlgGrande(); mostraPlay(); luzes(); pintaSeq(); diz('');
+window.__dx = { midi, zera, salva, carregaSalvo, setCtl, setHold, seqToca, seqPara, seqAgenda, audio: () => ({ ctx, no, saida, pronto }), st, E, F, aperta, nudge, desliza, nota, BT, lcd: () => [ln1.textContent, ln2.textContent], carregaVoz };
+})();
+</script>
+<script src="../voltar.js"></script>
+</body>
+</html>
