@@ -64,5 +64,11 @@
     "name": "Korg MS-20",
     "description": "Sintetizador semimodular monofônico com filtros passa-altas e passa-baixas e patch por cabos",
     "path": "ms20/index.html"
+  },
+  {
+    "id": "cz101",
+    "name": "Casio CZ-101",
+    "description": "Sintetizador digital de distorção de fase, 8 vozes, envelopes de 8 passos e memória de timbres",
+    "path": "cz101/index.html"
   }
 ]

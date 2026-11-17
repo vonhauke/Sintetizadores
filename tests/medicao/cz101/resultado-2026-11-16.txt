@@ -1,0 +1,142 @@
+| Grupo | Medição | Esperado (pesquisa) | Medido | | Fonte |
+|---|---|---|---|---|---|
+| Frequência | Lá4, onda 1, DCW 0 (referência 440 Hz, decisão do usuário) | 440 Hz ±0,5 cent | 440,000 Hz (0,00 cents) | ok | decisão (c); 442 Hz no MAME (b) |
+| Frequência | as 49 teclas (nota 36 a 84), temperamento igual | ±1 cent | pior: 0,14 cents (nota 37) | ok | (a) |
+| Frequência | OCTAVE −1 | ÷2 (±1 cent) | 0,07 cents | ok | (a) |
+| Frequência | OCTAVE +1 | ×2 (±1 cent) | -0,02 cents | ok | (a) |
+| Frequência | DETUNE NOTE 1 | semitons e oitavas exatos (±1 cent) | -0,02 cents de erro | ok | (a) |
+| Frequência | DETUNE NOTE 7 | semitons e oitavas exatos (±1 cent) | 0,02 cents de erro | ok | (a) |
+| Frequência | DETUNE NOTE 11 | semitons e oitavas exatos (±1 cent) | -0,02 cents de erro | ok | (a) |
+| Frequência | DETUNE OCT 1 | semitons e oitavas exatos (±1 cent) | -0,02 cents de erro | ok | (a) |
+| Frequência | DETUNE OCT 2 | semitons e oitavas exatos (±1 cent) | -0,01 cents de erro | ok | (a) |
+| Frequência | DETUNE OCT 3 | semitons e oitavas exatos (±1 cent) | 0,00 cents de erro | ok | (a) |
+| Frequência | DETUNE sinal −, NOTE 5 | semitons e oitavas exatos (±1 cent) | 0,05 cents de erro | ok | (a) |
+| Frequência | DETUNE OCT 1 + NOTE 11 | semitons e oitavas exatos (±1 cent) | 0,01 cents de erro | ok | (a) |
+| Frequência | DETUNE FINE 15 | ≈ 23 cents (±3) | 24,6 cents | ok | (c) 60 ≈ 63/64 de semitom (a) |
+| Frequência | DETUNE FINE 30 | ≈ 48 cents (±3) | 49,2 cents | ok | (c) 60 ≈ 63/64 de semitom (a) |
+| Frequência | DETUNE FINE 45 | ≈ 73 cents (±3) | 73,8 cents | ok | (c) 60 ≈ 63/64 de semitom (a) |
+| Frequência | DETUNE FINE 60 | ≈ 98 cents (±3) | 98,5 cents | ok | (c) 60 ≈ 63/64 de semitom (a) |
+| Frequência | BEND RANGE 1, roda no extremo para cima | 1 semitons (±3 cents) | -0,02 cents de erro | ok | (a); curva da roda linear (c) |
+| Frequência | BEND RANGE 1, roda no extremo para baixo | -1 semitons (±3 cents) | 0,04 cents de erro | ok | (a); curva da roda linear (c) |
+| Frequência | BEND RANGE 2, roda no extremo para cima | 2 semitons (±3 cents) | -0,02 cents de erro | ok | (a); curva da roda linear (c) |
+| Frequência | BEND RANGE 2, roda no extremo para baixo | -2 semitons (±3 cents) | 0,01 cents de erro | ok | (a); curva da roda linear (c) |
+| Frequência | BEND RANGE 7, roda no extremo para cima | 7 semitons (±3 cents) | 0,02 cents de erro | ok | (a); curva da roda linear (c) |
+| Frequência | BEND RANGE 7, roda no extremo para baixo | -7 semitons (±3 cents) | -0,05 cents de erro | ok | (a); curva da roda linear (c) |
+| Frequência | BEND RANGE 12, roda no extremo para cima | 12 semitons (±3 cents) | -0,02 cents de erro | ok | (a); curva da roda linear (c) |
+| Frequência | BEND RANGE 12, roda no extremo para baixo | -12 semitons (±3 cents) | 0,07 cents de erro | ok | (a); curva da roda linear (c) |
+| Frequência | MASTER TUNE -100 cents | ±100 cents (±3) | 0,04 cents de erro | ok | (a) |
+| Frequência | MASTER TUNE +100 cents | ±100 cents (±3) | -0,02 cents de erro | ok | (a) |
+| Frequência | KEY TRANSPOSE -5 | -5 semitons (±1 cent) | 0,05 cents de erro | ok | (a) |
+| Frequência | KEY TRANSPOSE +6 | 6 semitons (±1 cent) | 0,03 cents de erro | ok | (a) |
+| Frequência | duas formas alternadas (1+2): componente em f/2 (a fonte do MAME diz que a onda alterna a cada ciclo) | registrar | -18,7 dB em relação à fundamental | ok | (b): código do chip |
+| Onda | onda 1, DCW 0 (seno) | maior outra componente abaixo de −55 dB (o piso da tabela de 12 bits com fase de 11 bits é −60 dB; limite ajustado com a sua aprovação) | -60,0 dB | ok | (a) manual: nível 00 = senoide |
+| Onda | onda 2, DCW 0 (seno) | maior outra componente abaixo de −55 dB (o piso da tabela de 12 bits com fase de 11 bits é −60 dB; limite ajustado com a sua aprovação) | -60,0 dB | ok | (a) manual: nível 00 = senoide |
+| Onda | onda 3, DCW 0 (seno) | maior outra componente abaixo de −55 dB (o piso da tabela de 12 bits com fase de 11 bits é −60 dB; limite ajustado com a sua aprovação) | -60,0 dB | ok | (a) manual: nível 00 = senoide |
+| Onda | onda 4, DCW 0 (seno; no seno duplo o chip lê o cosseno com o dobro da frequência) | maior outra componente abaixo de −55 dB (o piso da tabela de 12 bits com fase de 11 bits é −60 dB; limite ajustado com a sua aprovação) | -59,3 dB | ok | (b) código do MAME |
+| Onda | onda 5, DCW 0 (seno) | maior outra componente abaixo de −55 dB (o piso da tabela de 12 bits com fase de 11 bits é −60 dB; limite ajustado com a sua aprovação) | -60,0 dB | ok | (a) manual: nível 00 = senoide |
+| Onda | onda 1, DCW 99, nota grave: espectro contra o ciclo exato da fórmula do chip (a serra do chip cai em cosseno: 2,5 dB abaixo de 1/k) | ±1 dB nos 10 primeiros harmônicos (ajustado com a sua aprovação) | pior desvio 0,87 dB | ok | (b) |
+| Onda | onda 2, DCW 99: harmônicos pares | abaixo de −30 dB | -96,5 dB | ok | (b) |
+| Onda | onda 1 serra, DCW 25/50/75: um ciclo contra as fórmulas da pesquisa | erro ≤ 1 LSB de 12 bits | 0 LSB | ok | (b) seção 4.2 |
+| Onda | onda 2 quadrada, DCW 25/50/75: um ciclo contra as fórmulas da pesquisa | erro ≤ 1 LSB de 12 bits | 0 LSB | ok | (b) seção 4.2 |
+| Onda | onda 3 pulso, DCW 25/50/75: um ciclo contra as fórmulas da pesquisa | erro ≤ 1 LSB de 12 bits | 0 LSB | ok | (b) seção 4.2 |
+| Onda | onda 4 seno duplo, DCW 25/50/75: um ciclo contra as fórmulas da pesquisa | erro ≤ 1 LSB de 12 bits | 0 LSB | ok | (b) seção 4.2 |
+| Onda | onda 5 serra-pulso, DCW 25/50/75: um ciclo contra as fórmulas da pesquisa | erro ≤ 1 LSB de 12 bits | 0 LSB | ok | (b) seção 4.2 |
+| Onda | onda I (serra): janela dentro do ciclo e formato | erro ≤ 1 LSB | 0 LSB | ok | (b) seção 4.2 |
+| Onda | onda I (serra): pico espectral em (1 + dcw/64) × f (nota 36; DCW 25, 50, 99) | ±1 harmônico | DCW 25: harmônico 5 (esperado 5,0); DCW 50: harmônico 9 (esperado 9,0); DCW 99: harmônico 17 (esperado 16,8) | ok | (b) |
+| Onda | onda II (triângulo): janela dentro do ciclo e formato | erro ≤ 1 LSB | 0 LSB | ok | (b) seção 4.2 |
+| Onda | onda II (triângulo): pico espectral em (1 + dcw/64) × f (nota 36; DCW 25, 50, 99) | ±1 harmônico | DCW 25: harmônico 5 (esperado 5,0); DCW 50: harmônico 9 (esperado 9,0); DCW 99: harmônico 17 (esperado 16,8) | ok | (b) |
+| Onda | onda III (trapézio): janela dentro do ciclo e formato | erro ≤ 1 LSB | 0 LSB | ok | (b) seção 4.2 |
+| Onda | onda III (trapézio): pico espectral em (1 + dcw/64) × f (nota 36; DCW 25, 50, 99) | ±1 harmônico | DCW 25: harmônico 5 (esperado 5,0); DCW 50: harmônico 9 (esperado 9,0); DCW 99: harmônico 17 (esperado 16,8) | ok | (b) |
+| Onda | limite do DCW por nota: trecho rápido (nota 24 a 108) | ≥ 4 amostras (truncamento inteiro: até 1 pos. a menos) | 3,52 amostras na nota 27 | ok | (b) código do MAME; (c) o "4 amostras" é derivado |
+| Onda | DCW 99 na nota 48: DCW efetivo | 998 | 998 | ok | (b) |
+| Onda | DCW 99 na nota 72: DCW efetivo | 917 | 917 | ok | (b) |
+| Onda | DCW 99 na nota 96: DCW efetivo | 596 | 596 | ok | (b) |
+| Onda | aliasing: energia acima de 10 kHz em Dó6, onda 1, DCW 99 | registrar | -33,4 dB do total | ok | (b) |
+| Onda | aliasing: energia acima de 10 kHz em Dó6, onda 3, DCW 99 | registrar | -36,1 dB do total | ok | (b) |
+| Onda | aliasing: energia acima de 10 kHz em Dó6, onda 6, DCW 99 | registrar | -4,4 dB do total | ok | (b) |
+| Onda | aliasing: energia acima de 10 kHz em Dó7, onda 1, DCW 99 | registrar | -29,1 dB do total | ok | (b) |
+| Onda | aliasing: energia acima de 10 kHz em Dó7, onda 3, DCW 99 | registrar | -34,2 dB do total | ok | (b) |
+| Onda | aliasing: energia acima de 10 kHz em Dó7, onda 6, DCW 99 | registrar | -7,6 dB do total | ok | (b) |
+| Onda | filtro de saída: resposta em 10, 15, 17, 20 kHz | aproximação; só registrar | 10 kHz -0,0 dB; 15 kHz -0,6 dB; 17 kHz -1,8 dB; 20 kHz -8,3 dB | ok | (c) o service manual não foi lido |
+| Envelope | DCA 0→99 com RATE 99 | 3,40 ms (±5 % ou 1 amostra) | 3,40 ms | ok | (b) tempos derivados do contador do chip (c) |
+| Envelope | DCA 0→99 com RATE 80 | 25,00 ms (±5 % ou 1 amostra) | 25,40 ms | ok | (b) tempos derivados do contador do chip (c) |
+| Envelope | DCA 0→99 com RATE 60 | 0,203 s (±5 % ou 1 amostra) | 0,203 s | ok | (b) tempos derivados do contador do chip (c) |
+| Envelope | DCA 0→99 com RATE 50 | 0,542 s (±5 % ou 1 amostra) | 0,542 s | ok | (b) tempos derivados do contador do chip (c) |
+| Envelope | DCA 0→99 com RATE 40 | 1,630 s (±5 % ou 1 amostra) | 1,626 s | ok | (b) tempos derivados do contador do chip (c) |
+| Envelope | DCA 0→99 com RATE 20 | 13,000 s (±5 % ou 1 amostra) | 13,005 s | ok | (b) tempos derivados do contador do chip (c) |
+| Envelope | DCW 0→99 com RATE 99 | 3,40 ms (±5 % ou 1 amostra) | 3,40 ms | ok | (b) tempos derivados do contador do chip (c) |
+| Envelope | DCW 0→99 com RATE 80 | 25,00 ms (±5 % ou 1 amostra) | 25,40 ms | ok | (b) tempos derivados do contador do chip (c) |
+| Envelope | DCW 0→99 com RATE 60 | 0,203 s (±5 % ou 1 amostra) | 0,203 s | ok | (b) tempos derivados do contador do chip (c) |
+| Envelope | DCW 0→99 com RATE 50 | 0,542 s (±5 % ou 1 amostra) | 0,542 s | ok | (b) tempos derivados do contador do chip (c) |
+| Envelope | DCW 0→99 com RATE 40 | 1,630 s (±5 % ou 1 amostra) | 1,626 s | ok | (b) tempos derivados do contador do chip (c) |
+| Envelope | DCW 0→99 com RATE 20 | 13,000 s (±5 % ou 1 amostra) | 13,005 s | ok | (b) tempos derivados do contador do chip (c) |
+| Envelope | DCO 0→66 (1 oitava; no RATE 99 o esperado é 0,64 ms pela conta do contador, o 0,6 ms do documento é arredondado) com RATE 99 | 0,64 ms (±5 % ou 1 amostra) | 0,65 ms | ok | (b) tempos derivados do contador do chip (c) |
+| Envelope | DCO 0→66 (1 oitava; no RATE 99 o esperado é 0,64 ms pela conta do contador, o 0,6 ms do documento é arredondado) com RATE 70 | 17,00 ms (±5 % ou 1 amostra) | 17,07 ms | ok | (b) tempos derivados do contador do chip (c) |
+| Envelope | DCO 0→66 (1 oitava; no RATE 99 o esperado é 0,64 ms pela conta do contador, o 0,6 ms do documento é arredondado) com RATE 50 | 0,154 s (±5 % ou 1 amostra) | 0,154 s | ok | (b) tempos derivados do contador do chip (c) |
+| Envelope | DCO 0→66 (1 oitava; no RATE 99 o esperado é 0,64 ms pela conta do contador, o 0,6 ms do documento é arredondado) com RATE 30 | 1,400 s (±5 % ou 1 amostra) | 1,404 s | ok | (b) tempos derivados do contador do chip (c) |
+| Envelope | proporcionalidade: DCW até o nível 50 em relação ao 99 | 0,504 do tempo (±5 %) | 0,504 | ok | (b) |
+| Envelope | dobra de velocidade a cada 8 unidades do byte de rate | ±3 % | 0,00 % | ok | (b) |
+| Envelope | sustain: com a tecla presa para no nível do passo; ao soltar segue até o END | funcional | parou em o nível 40; segurou 4000 amostras: true; terminou em 0 | ok | (a) |
+| Envelope | END: o nível do último passo é forçado a 0, mesmo gravado como 70 | nível final 0, sem passar do END | terminou em 0 depois de 273 amostras | ok | (a) |
+| Envelope | sem ponto de sustain: percorre até o END com a tecla presa | funcional | terminou | ok | (c) o manual não descreve |
+| Envelope | 8 passos com níveis alternados: todos os alvos atingidos, na ordem | ±1 nível | 8 alvos; ordem correta | ok | (a) |
+| Envelope | DCO LEVEL 63 | 393,75 cents (±3) | 393,75 cents | ok | (a) especificação MIDI; (b) chip |
+| Envelope | DCO LEVEL 64 | 800,00 cents (±3) | 800,00 cents | ok | (a) especificação MIDI; (b) chip |
+| Envelope | DCO LEVEL 66 | 1200,00 cents (±3) | 1200,00 cents | ok | (a) especificação MIDI; (b) chip |
+| Envelope | DCO LEVEL 72 | 2400,00 cents (±3) | 2400,00 cents | ok | (a) especificação MIDI; (b) chip |
+| Envelope | DCO LEVEL 99 | 7800,00 cents (±3) | 7800,00 cents | ok | (a) especificação MIDI; (b) chip |
+| Envelope | rampa do DCA: linear em dB (índice 100 a 508) | desvio ≤ 1 dB | 0,35 dB | ok | (b) |
+| Envelope | dentro da voz: DCA 0→99 com RATE 99 | 3,4 ms (±5 % ou 1 amostra) | 3,40 ms | ok | (b) |
+| Nível | DCA LEVEL 99 → 89 | −6,1 dB (±0,5) | -6,13 dB | ok | (b) 0,61 dB por unidade (c) |
+| Nível | DCA LEVEL 89 → 79 | −6,1 dB (±0,5) | -6,13 dB | ok | (b) 0,61 dB por unidade (c) |
+| Nível | DCA LEVEL 79 → 69 | −6,1 dB (±0,5) | -6,13 dB | ok | (b) 0,61 dB por unidade (c) |
+| Nível | DCA LEVEL 69 → 59 | −6,1 dB (±0,5) | -6,13 dB | ok | (b) 0,61 dB por unidade (c) |
+| Nível | DCA LEVEL 59 → 49 | −6,1 dB (±0,5) | -6,14 dB | ok | (b) 0,61 dB por unidade (c) |
+| Nível | DCA LEVEL 49 → 39 | −6,1 dB (±0,5) | -6,18 dB | ok | (b) 0,61 dB por unidade (c) |
+| Nível | DCA LEVEL 39 → 29 | −6,1 dB (±0,5) | -6,19 dB | ok | (b) 0,61 dB por unidade (c) |
+| Nível | DCA LEVEL 1 em relação ao 99 | ≈ −60 dB (±2) | -61,4 dB | ok | (b) |
+| Nível | DCA LEVEL 0 | silêncio (< −90 dBFS) | -240,0 dBFS | ok | (b) |
+| Nível | 1 voz, DCA 99, DCW 99: pico antes do ganho de saída | −18 dBFS (±0,5): 1/8 do fundo de escala | -18,19 dBFS | ok | (b) |
+| Nível | 8 vozes em uníssono, volume no máximo | sem clipping: pico ≤ 0 dBFS | 0,00 dBFS | ok | (b); limitador suave (c) |
+| Nível | linhas 1+1' sem detune em relação a uma linha | +6 dB (±0,5), se em fase | 6,02 dB | ok | (b) |
+| Nível | TONE MIX nível 9: o segundo timbre soa igual ao primeiro | ±0,5 dB | 0,00 dB | ok | (a) |
+| Nível | TONE MIX níveis 1 a 8: curva adotada | sem referência; registrar (dB em relação ao nível 9) | -24,0, -21,0, -18,0, -15,0, -12,0, -9,0, -6,0, -3,0 | ok | (c) 3 dB por passo |
+| Nível | VOLUME 0,2 / 0,5 / 0,8 / 1: curva do slider | aproximação; registrar (dBFS) | -34,4, -18,5, -10,4, -6,5 | ok | (c) ganho = vol² |
+| Vibrato | onda 1: triângulo | forma | sobe 49 %, desce 51 %, nos extremos 5 % | ok | (a) foto |
+| Vibrato | onda 2: rampa subindo | forma | sobe 100 %, desce 0 %, nos extremos 5 % | ok | (a) foto |
+| Vibrato | onda 3: rampa descendo | forma | sobe 0 %, desce 100 %, nos extremos 5 % | ok | (a) foto |
+| Vibrato | onda 4: quadrada | forma | sobe 46 %, desce 54 %, nos extremos 100 % | ok | (a) foto |
+| Vibrato | RATE 63 em relação ao 31 | 4,094× (±3 %) | 4,094× (1,60 Hz e 6,55 Hz) | ok | (a) valores internos; Hz são (c) |
+| Vibrato | RATE 99 em relação ao 31 | 20,969× (±3 %) | 20,969× (33,55 Hz) | ok | (a) |
+| Vibrato | razões internas RATE 0, 31, 63, 99 | 1 : 32 : 131 : 671 (±3 %) | 1,0 : 32,0 : 131,0 : 671,0 | ok | (a) |
+| Vibrato | DEPTH 0: o vibrato desliga | funcional | maior desvio 0,000 cents | ok | (a) |
+| Vibrato | DELAY 63 e DEPTH 99 | valores absolutos são aproximação; registrar | começa em 0,64 s (modelo 0,64 s); pico 150 cents | ok | (c) |
+| Portamento | tempo igual para a quinta e para a oitava | ±5 % | 0,251 s e 0,251 s | ok | (a) |
+| Portamento | TIME 50: valor absoluto | aproximação; registrar | 0,251 s (modelo 0,251 s) | ok | (c) |
+| Portamento | PORTAMENTO desligado: segunda nota sem deslize | funcional | instâncias: 1 | ok | (a) |
+| Modulação | RING (1+2'): somas e diferenças das duas linhas | picos em f2−f1 e f1+f2; f2 sozinha ausente | f2−f1 -25,0 dB, f1+f2 -25,2 dB, f2 -80,2 dB | ok | (a) manual; (b) produto do chip; seco/modulado (c) |
+| Modulação | NOISE: a afinação da linha 2' salta entre f e f × 2^(32/12), sorteio a cada 8 amostras | valores {0, 32 semitons}; trocas só a cada 8 amostras | valores: 0, 16384; trocas fora da grade: 0 | ok | (b) MAME; gerador aleatório (c) |
+| Modulação | RING e NOISE: excludentes entre si; inativos com uma linha | funcional | duas linhas: ring 1, noise 0; uma linha: ring 0, noise 0 | ok | (a) |
+| Modulação | DCW KEY FOLLOW 0 e 9 (DCW efetivo nas notas 48 e 72) | 0 = sem efeito; 9 = agudos mais senoidais | 0: 512 e 512; 9: 384 e 128 | ok | (a); curva (c) |
+| Modulação | DCA KEY FOLLOW 0 e 9 (velocidade do envelope nas notas 48 e 72) | 0 = sem efeito; 9 = envelope mais curto nos agudos | 0: 4096 e 4096; 9: 6144 e 12288 | ok | (a); curva (c) |
+| Polifonia | LINE SELECT 1: 9 notas | 8 vozes; a 9ª rouba a mais antiga | 8 vozes; sobrou a nota 48? false; a 57? true | ok | (a) manual; rodízio (a) ROM |
+| Polifonia | LINE SELECT 1+1': 5 notas | 4 notas (8 vozes); a 5ª rouba | 4 notas, 8 vozes; primeira nota ainda soa? false | ok | (a) |
+| Polifonia | SOLO: 3 teclas | 1 nota, a última tem prioridade | 1 nota(s), nota 62 | ok | (a) |
+| Polifonia | TONE MIX: 1 tecla | 1 nota, dois timbres | 1 nota, 2 vozes | ok | (a) |
+| Polifonia | disparo: a fase zera no início de cada nota | posição 0 no primeiro instante | 0 | ok | (b) MAME: o CZ-101 zera o contador de fase |
+| Calibração | painel inicial (BRASS ENS.1), nota 36: pico | −12 a −3 dBFS | -11,2 dBFS | ok | (c) |
+| Calibração | painel inicial (BRASS ENS.1), nota 48: pico | −12 a −3 dBFS | -10,9 dBFS | ok | (c) |
+| Calibração | painel inicial (BRASS ENS.1), nota 60: pico | −12 a −3 dBFS | -10,9 dBFS | ok | (c) |
+| Calibração | painel inicial (BRASS ENS.1), nota 72: pico | −12 a −3 dBFS | -10,9 dBFS | ok | (c) |
+| Calibração | painel inicial (BRASS ENS.1), nota 84: pico | −12 a −3 dBFS | -10,8 dBFS | ok | (c) |
+| Calibração | pior caso: 8 vozes, tudo no máximo, volume 1 | pico finito e ≤ 1 | 1,000 | ok | (c) |
+| Calibração | sem tecla | silêncio (< −80 dBFS) | -240,0 dBFS | ok |  |
+| Calibração | depois de soltar (envelope termina no END) | silêncio (< −80 dBFS) | -240,0 dBFS | ok |  |
+| Calibração | evento agendado: começo do som | 0,250 s (até +3 ms) | 0,2517 s | ok |  |
+| Calibração | "seqpara" solta só as notas do sequenciador e cancela as agendadas | a nota tocada à mão continua; a do sequenciador solta; a agendada some | notas ativas: 60 | ok |  |
+| Custo | 10 s de áudio, 8 vozes (neste computador, Node) | bem abaixo de 100 % do tempo real | 1,5 % do tempo real | ok |  |
+| Timbres | timbres de fábrica recriados | 16, com os nomes do LCD | 16: BRASS ENS.1, TRUMPET, VIOLIN, STRING ENS.1, ELEC.PIANO, ELEC.ORGAN, FLUTE, SYNTH.BASS, BRASS ENS.2, VIBRAPHONE, CRISPY XYLOPHONE, SYNTH.STRINGS, FAIRY TALE, ACCORDION, WHISTLE, PERCUSSION | ok | (a) nomes da ROM; parâmetros (c) |
+| Timbres | todos os 16 timbres soam (pico acima de −40 dBFS na nota 60) | sem timbre mudo | todos soam | ok | (c) |
+| Timbres | pico de cada timbre na nota 60, volume padrão | entre −20 e −3 dBFS | 1: -3,6, 2: -8,5, 3: -8,5, 4: -7,8, 5: -6,4, 6: -7,3, 7: -8,5, 8: -8,7, 9: -6,9, 10: -7,4, 11: -8,3, 12: -7,8, 13: -6,6, 14: -3,3, 15: -8,5, 16: -5,0 | ok | (c) |
+
+138 medições, 0 fora da tolerância.
