@@ -1,0 +1,63 @@
+
+— bumbo: frequência (DECAY no máximo) —
+ok    f0 com DECAY longo (0,6 a 1,6 s)                                        esperado: 49,5 Hz ±0,5 (decisão do usuário; tol. minha)                           medido: 49,50 Hz
+ok    f0 pelo pico do espectro (0,6 a 1,9 s)                                  esperado: 49,5 Hz ±0,5                                                            medido: 49,50 Hz
+ok    varredura: 20 a 120 ms contra o final                                   esperado: > 1 semitom e ≤ 3,3 (Werner 48 a 58 Hz; tol. minha)                     medido: 1,49 semitons (53,9 Hz)
+ok    frequência instantânea nos primeiros 0,4 s dentro de 48 a 58 Hz         esperado: 48 a 58 Hz (S4, Fig. 11)                                                medido: 49,8 a 53,9 Hz
+ok    o topo da varredura chega perto de 58 Hz (janela de 100 ms)             esperado: ≥ 53 Hz (tol. minha)                                                    medido: 53,9 Hz
+
+— bumbo: ataque (subida de >1 oitava em ~6 ms, em toda nota) —
+ok    sem accent: 1º semiciclo completo                                       esperado: ≤ metade do estável (10,1 ms): freq ≥ 2× (tol. minha)                   medido: 3,43 ms (146 Hz)
+ok    com accent: 1º semiciclo completo                                       esperado: ≤ metade do estável (10,1 ms): freq ≥ 2× (tol. minha)                   medido: 3,43 ms (146 Hz)
+
+— bumbo: decay a −20 dB (DECAY mínimo, 12 h, máximo) —
+ok    DECAY = mínimo                                                          esperado: 50 ms ±10 % (tol. minha; tabela p.14)                                   medido: 54 ms
+ok    DECAY = 12 h                                                            esperado: 300 ms ±10 % (tol. minha; tabela p.14)                                  medido: 304 ms
+ok    DECAY = máximo                                                          esperado: 800 ms ±10 % (tol. minha; tabela p.14)                                  medido: 805 ms
+
+— bumbo: amplitude no MULTI OUT (LEVEL no máximo, TONE e DECAY a 12 h) —
+ok    normal                                                                  esperado: 3,5 Vpp ±5 % (tabela p.14)                                              medido: 3,50 Vpp
+ok    accent no máximo                                                        esperado: 10 Vpp ±5 %                                                             medido: 9,99 Vpp
+ok    razão accent/normal                                                     esperado: 2,86 (10/3,5)                                                           medido: 2,86
+ok    accent com ACCENT LEVEL no mínimo = normal (procedimento da p.14)       esperado: 3,5 Vpp ±5 %                                                            medido: 3,50 Vpp
+ok    accent muda o timbre (energia 1 a 6 kHz / total, 170 ms iniciais)       esperado: |diferença| ≥ 0,5 dB (tol. minha; texto da Roland e S4)                 medido: 0,93 dB
+
+— bumbo: ressonador excitado por pulso, sem oscilador livre —
+ok    silêncio exato antes do disparo                                         esperado: 0                                                                       medido: 0,000000000000
+ok    decai a < −60 dB em 7 s (DECAY máximo)                                  esperado: < −60 dB                                                                medido: -185,2 dB
+ok    3 disparos a 90 ms: sem "machine gun" nem salto (S4, Fig. 12)           esperado: Vpp ≤ 2× o de um disparo (tol. minha)                                   medido: 1,00×
+
+— bumbo: TONE (passa-baixas), LEVEL e mix —
+ok    TONE máximo contra mínimo em 2 kHz                                      esperado: 16,1 dB ±4 (filtro RC de 1 polo, valores lidos; lei do pot. é (c))      medido: 15,9 dB
+ok    LEVEL no mínimo: mudo                                                   esperado: 0 V                                                                     medido: 0,000000000
+ok    mix: BD com ganho 1,5 (Parte C, seção 10)                               esperado: 0,524 Vpp digital ±3 %                                                  medido: 0,524
+
+— caixa: osciladores (bridged-T revisados) —
+ok    oscilador grave (TONE mínimo, SNAPPY 0)                                 esperado: 173,3 Hz ±1 (Parte B 3.2, versão revisada)                              medido: 173,3 Hz
+ok    oscilador agudo (TONE máximo, SNAPPY 0)                                 esperado: 336,0 Hz ±1                                                             medido: 336,0 Hz
+ok    decay a −20 dB do grave, Q = 16,3                                       esperado: 68,9 ms ±10 % (T = ln10·2Q/ω)                                           medido: 72,3 ms
+ok    decay a −20 dB do agudo, Q = 9,9                                        esperado: 21,6 ms ±10 %                                                           medido: 23,6 ms
+ok    TONE mínimo: agudo some (linha em 336 Hz relativa à de 173 Hz)          esperado: < −40 dB                                                                medido: -81,7 dB
+ok    TONE máximo: grave some (linha em 173 Hz relativa à de 336 Hz)          esperado: < −40 dB                                                                medido: -54,1 dB
+ok    TONE 12 h: osciladores com peso igual (mistura linear do pot. B)        esperado: razão grave/agudo 0 dB ±2 (o sinc do pulso de 1 ms dá ~1 dB)            medido: 1,0 dB
+ok    TONE: pesos 1−θ e θ (θ = 0,25: grave/agudo = +9,5 dB)                   esperado: 9,5 dB ±2                                                               medido: 8,2 dB
+
+— caixa: ruído (branco, VCA, passa-altas 2750 Hz Q 0,73) —
+ok    espectro do ruído em 700 a 900 Hz, relativo a 4 a 5 kHz                 esperado: -26,8 dB ±2,5 (HP 2750/Q 0,73 e polo de 7,23 kHz)                       medido: -26,1 dB
+ok    espectro do ruído em 1400 a 1800 Hz, relativo a 4 a 5 kHz               esperado: -12,2 dB ±2,5 (HP 2750/Q 0,73 e polo de 7,23 kHz)                       medido: -12,1 dB
+ok    espectro do ruído em 2400 a 3000 Hz, relativo a 4 a 5 kHz               esperado: -3,9 dB ±2,5 (HP 2750/Q 0,73 e polo de 7,23 kHz)                        medido: -4,5 dB
+ok    espectro do ruído em 5500 a 7000 Hz, relativo a 4 a 5 kHz               esperado: 1,1 dB ±2,5 (HP 2750/Q 0,73 e polo de 7,23 kHz)                         medido: 1,1 dB
+ok    SNAPPY no mínimo: sem ruído                                             esperado: < −50 dB contra SNAPPY máximo                                           medido: -110,0 dB
+ok    SNAPPY a 12 h: amplitude do ruído pela metade (pot. B linear)           esperado: −6 dB ±1,5                                                              medido: -6,0 dB
+
+— caixa: decay, amplitude, accent e mix (LEVEL máx.; TONE, SNAPPY a 12 h) —
+ok    decay a −20 dB (envelope RMS de 4 ms)                                   esperado: 60 ms ±20 % (tabela p.14; tol. minha: tabela é "typical and variable")  medido: 63,7 ms
+ok    normal                                                                  esperado: 3 Vpp ±5 % (tabela p.14)                                                medido: 3,00 Vpp
+ok    accent no máximo                                                        esperado: 10 Vpp ±5 %                                                             medido: 10,00 Vpp
+ok    accent com ACCENT LEVEL no mínimo = normal                              esperado: 3 Vpp ±5 %                                                              medido: 3,00 Vpp
+ok    accent muda o timbre (energia 3 a 8 kHz contra 100 a 500 Hz)            esperado: |diferença| ≥ 0,5 dB (tol. minha)                                       medido: 1,28 dB
+ok    silêncio exato antes do disparo                                         esperado: 0                                                                       medido: 0,000000000000
+ok    decai a zero (sem oscilador livre)                                      esperado: < −80 dB                                                                medido: -240,0 dB
+ok    mix: SD com ganho 1,0 (Parte C, seção 10)                               esperado: 0,299 Vpp digital ±3 %                                                  medido: 0,299
+
+43 medições, 43 ok, 0 fora

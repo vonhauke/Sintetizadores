@@ -25,6 +25,7 @@ export function renderVoz(m, voz, seg, disparos = [{ t: 0.01, ac: false }]) {
   const n = Math.round(seg * m.fs), y = new Float64Array(n), ds = disparos.map(d => ({ i: Math.round(d.t * m.fs), ac: d.ac }));
   for (let i = 0; i < n; i++) {
     for (const d of ds) if (d.i === i) m.msg({ t: 'trig', v: voz, ac: d.ac });
+    if (m.tick) m.tick();   // fonte de ruído compartilhada, uma amostra por passo
     y[i] = m[voz].amostra(m.p[voz]);
   }
   return { y, t0: ds[0].i / m.fs };
@@ -80,5 +81,19 @@ export function tempoAte(x, fs, t0, fracao = 0.1) {
   let k = 0; for (let i = 1; i < e.length; i++) if (e[i].v > e[k].v) k = i;
   const alvo = e[k].v * fracao;
   for (let i = k + 1; i < e.length; i++) if (e[i].v <= alvo) { const a = e[i - 1], b = e[i], u = (Math.log(alvo) - Math.log(a.v)) / (Math.log(b.v) - Math.log(a.v)); return a.t + u * (b.t - a.t) - t0; }
+  return Infinity;
+}
+/** Amplitude inicial de um componente senoidal amortecido (f, decay a −20 dB = T20) em x, por filtro casado em [t0, t0+dur]. */
+export function ampDecai(x, fs, t0, f, T20, dur = 0.12) {
+  const al = Math.LN10 / T20, a = Math.round(t0 * fs), n = Math.round(dur * fs); let re = 0, im = 0, e2 = 0;
+  for (let i = 0; i < n; i++) { const t = i / fs, e = Math.exp(-al * t), ph = 2 * Math.PI * f * t; re += x[a + i] * e * Math.cos(ph); im += x[a + i] * e * Math.sin(ph); e2 += e * e; }
+  return 2 * Math.hypot(re, im) / e2;
+}
+/** Como tempoAte, mas pelo envelope RMS (janela `jan` s, passo de 1 amostra): serve com ruído, onde os picos são aleatórios. */
+export function tempoAteRms(x, fs, t0, fracao = 0.1, jan = 0.004) {
+  const a = Math.round(t0 * fs), w = Math.round(jan * fs), n = x.length - a - w; if (n <= 0) return NaN; const e = new Float64Array(n); let s = 0;
+  for (let i = 0; i < w; i++) s += x[a + i] ** 2; for (let i = 0; i < n; i++) { e[i] = Math.sqrt(s / w); s += x[a + i + w] ** 2 - x[a + i] ** 2; }
+  let k = 0; for (let i = 1; i < n; i++) if (e[i] > e[k]) k = i; const alvo = e[k] * fracao;
+  for (let i = k; i < n; i++) if (e[i] <= alvo) return (i + w / 2) / fs;   // desde o disparo (t0 = início da janela 0)
   return Infinity;
 }
