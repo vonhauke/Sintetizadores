@@ -30,7 +30,7 @@ button.liga[aria-pressed=true]{background:var(--acento);color:#111;border-color:
 <body>
 <div class="wrap">
 <h1>Rhythm Composer, em construção</h1>
-<p class="aviso">Etapa 8 de 10: as 16 vozes estão no motor. Faltam o mixer/master completo, o painel final e o sequenciador. Controles e sequenciador completos vêm depois das vozes. Página provisória, ainda fora do menu.</p>
+<p class="aviso">Etapa 9 de 10: as 16 vozes e o master estão no motor. Faltam o painel final e o sequenciador. Controles e sequenciador completos vêm depois das vozes. Página provisória, ainda fora do menu.</p>
 <div class="painel" id="painel"></div>
 <p id="barra" role="status"></p>
 </div>
@@ -380,17 +380,45 @@ class Maracas {
   }
 }
 
+/* ===== Mixer e master (Parte C, seção 10): IC4A soma (R75 33k ∥ C18 220 pF), VR1 MASTER VOLUME (50k A), IC4B ganho 1,5 (R76 33k / R77 22k, ∥ C22 220 pF),
+   polos em 21,9 kHz nos dois estágios, grampeamento nos trilhos (D9/D10), saída HI e saída LO (R13 27k / R12 3,3k). */
+const MASTER = {
+  g2: 1.5,                    // (c sobre a) R76 / R77
+  vRef: 15,                   // (c) 1,0 digital = 15 V de pico na saída HI. Só define o nível digital; o valor dos trilhos (B5) não foi encontrado, o grampeamento é em ±1,0
+  lo: 3.3 / (27 + 3.3),       // (c sobre a) saída LO = −19,26 dB contra HI
+  polo: 21900                 // (c sobre a) 1 / (2π · 33k · 220 pF) em cada estágio
+};
+/** Dois polos analógicos de 21,9 kHz em cascata, em forma digital. Com fs = 48 kHz o polo cai colado em Nyquist, e a bilinear com pré-distorção no corte erra até 3,6 dB;
+    por isso o parâmetro Ω (tan(πf/fs) / Ω) é escolhido para minimizar o erro máximo da cascata de 100 Hz a 18 kHz (erro ≈ 1,05 dB a 48 kHz; 0,2 dB a 96 kHz). Acima de 18 kHz
+    o erro cresce (≈ 2,5 dB em 20 kHz a 48 kHz). (c) aproximação inevitável com polo de 1ª ordem tão perto de Nyquist. */
+const omegaPolos = fs => {
+  const fmax = Math.min(18000, 0.45 * fs), ana = f => -10 * Math.log10(1 + Math.pow(f / MASTER.polo, 2)), dig = (f, om) => -10 * Math.log10(1 + Math.pow(Math.tan(Math.PI * f / fs) / om, 2));
+  const err = om => { let m = 0; for (let f = 100; f < fmax; f *= 1.03) m = Math.max(m, Math.abs(2 * (dig(f, om) - ana(f)))); return Math.max(m, Math.abs(2 * (dig(fmax, om) - ana(fmax)))); };
+  let lo = 0.2, hi = 40; for (let i = 0; i < 60; i++) { const a = lo + (hi - lo) / 3, b = hi - (hi - lo) / 3; if (err(a) < err(b)) hi = b; else lo = a; } return (lo + hi) / 2;
+};
+class Polo1 { constructor(om) { const den = 1 + 1 / om; this.b = 1 / den; this.a1 = (1 - 1 / om) / den; this.x1 = 0; this.y1 = 0; } process(x) { const y = this.b * (x + this.x1) - this.a1 * this.y1; this.x1 = x; this.y1 = y; return y; } }
+const mkMasterPolos = fs => { const om = omegaPolos(fs), a = new Polo1(om), b = new Polo1(om); return { process: x => b.process(a.process(x)) }; };
+class Master {
+  constructor(fs) { const om = omegaPolos(fs); this.p1 = new Polo1(om); this.p2 = new Polo1(om); }
+  /** v: soma das vozes em volts (já com o ganho de cada resistor de mistura); th: MASTER VOLUME de 0 a 1 (lei θ², (c)); lo: saída LO. Devolve a amostra digital. */
+  processa(v, th, lo) {
+    const s1 = this.p1.process(v), s2 = MASTER.g2 * th * th * s1, s3 = this.p2.process(s2);
+    let y = s3 / MASTER.vRef; if (y > 1) y = 1; else if (y < -1) y = -1;   // grampeamento
+    return lo ? y * MASTER.lo : y;
+  }
+}
+
 class Motor {
   constructor(fs) {
-    this.fs = fs; this.p = { acLevel: 1, master: 1, bd: { level: 1, tone: 0.5, decay: 0.5 }, sd: { level: 1, tone: 0.5, snappy: 0.5 },
+    this.fs = fs; this.p = { acLevel: 1, master: 1, on: 1, saida: 0, bd: { level: 1, tone: 0.5, decay: 0.5 }, sd: { level: 1, tone: 0.5, snappy: 0.5 },
       lt: { level: 1, tuning: 0.5, modo: 0 }, mt: { level: 1, tuning: 0.5, modo: 0 }, ht: { level: 1, tuning: 0.5, modo: 0 },
       cy: { level: 1, tone: 0.5, decay: 0.5 }, oh: { level: 1, decay: 0.5 }, ch: { level: 1 }, cb: { level: 1 }, cp: { level: 1, modo: 0 }, rs: { level: 1, modo: 0 } }; this.p.ma = this.p.cp;   // o par MA/CP tem um LEVEL e uma chave só
     this.fonte = new Ruido(fs); this.bd = new Bumbo(fs); this.sd = new Caixa(fs, this.fonte);
     for (const c of ['lt', 'mt', 'ht']) this[c] = new Tom(fs, this.fonte, c);
-    this.metal = new Metal(fs); this.cy = new Prato(fs, this.metal); this.oh = new Hat(fs, this.metal, 'oh'); this.ch = new Hat(fs, this.metal, 'ch'); this.cb = new Cowbell(fs, this.metal); this.cp = new Clap(fs, this.fonte); this.ma = new Maracas(fs, this.fonte); this.rs = new RimClaves(fs); this.saida = null;
+    this.metal = new Metal(fs); this.cy = new Prato(fs, this.metal); this.oh = new Hat(fs, this.metal, 'oh'); this.ch = new Hat(fs, this.metal, 'ch'); this.cb = new Cowbell(fs, this.metal); this.cp = new Clap(fs, this.fonte); this.ma = new Maracas(fs, this.fonte); this.rs = new RimClaves(fs); this.master = new Master(fs); this.saida = null;
   }
   msg(m) {
-    if (m.t === 'p') { const q = m.p; for (const v of ['bd', 'sd', 'lt', 'mt', 'ht', 'cy', 'oh', 'ch', 'cb', 'cp', 'ma', 'rs']) if (q[v]) Object.assign(this.p[v], q[v]); for (const k of ['acLevel', 'master']) if (k in q) this.p[k] = q[k]; }
+    if (m.t === 'p') { const q = m.p; for (const v of ['bd', 'sd', 'lt', 'mt', 'ht', 'cy', 'oh', 'ch', 'cb', 'cp', 'ma', 'rs']) if (q[v]) Object.assign(this.p[v], q[v]); for (const k of ['acLevel', 'master', 'on', 'saida']) if (k in q) this.p[k] = q[k]; }
     else if (m.t === 'trig' && (m.v === 'cp' || m.v === 'ma')) (this.p.cp.modo === 1 ? this.ma : this.cp).trig(m.ac ? V_NORMAL + (V_ACC_MAX - V_NORMAL) * this.p.acLevel : V_NORMAL);   // a chave MA/CP escolhe a voz
     else if (m.t === 'trig' && this[m.v] && this[m.v].trig) { if (m.v === 'ch') this.oh.choke(); this[m.v].trig(m.ac ? V_NORMAL + (V_ACC_MAX - V_NORMAL) * this.p.acLevel : V_NORMAL); }
   }
@@ -399,12 +427,13 @@ class Motor {
   mixVolts() { return this.bd.amostra(this.p.bd) * GANHO_MIX.bd + this.sd.amostra(this.p.sd) * GANHO_MIX.sd
     + this.lt.amostra(this.p.lt) * GANHO_MIX.lt + this.mt.amostra(this.p.mt) * GANHO_MIX.mt + this.ht.amostra(this.p.ht) * GANHO_MIX.ht
     + this.cy.amostra(this.p.cy) * GANHO_MIX.cy + this.oh.amostra(this.p.oh) * GANHO_MIX.oh + this.ch.amostra(this.p.ch) * GANHO_MIX.ch + this.cb.amostra(this.p.cb) * GANHO_MIX.cb + this.cp.amostra(this.p.cp) * GANHO_MIX.cp + this.ma.amostra(this.p.ma) * GANHO_MIX.ma + this.rs.amostra(this.p.rs) * GANHO_MIX.rs; }
+  /** L e R recebem a mesma saída mono: HI (padrão) ou LO (p.saida = 1). p.on = 0 desliga (POWER: o muting por Q13). */
   process(L, R, n) {
-    const g = this.p.master * this.p.master * V_POR_UNIDADE;
-    for (let i = 0; i < n; i++) { this.tick(); const v = this.mixVolts() * g; L[i] = v; R[i] = v; }
+    const lo = this.p.saida === 1, mudo = this.p.on === 0;
+    for (let i = 0; i < n; i++) { this.tick(); const y = this.master.processa(this.mixVolts(), this.p.master, lo), v = mudo ? 0 : y; L[i] = v; R[i] = v; }
   }
 }
-Motor.dados = { T_TRIG, V_NORMAL, V_ACC_MAX, V_POR_UNIDADE, BD, GANHO_MIX, T20, fcTone, pulsoBd, RC_TONE, Bumbo, SD, Caixa, Ruido, TOM, TOM_RUIDO_DECAY, TOM_QUEDA, Tom, fTom, TOM_PULSO, TOM_RUIDO_EXP, METAL, Metal, CY, HAT, Prato, Hat, mkBP, mkHP, Hp1, MET_TRIG, T_DECAY, CB, Cowbell, CP, Clap, RS, RimClaves, MA, Maracas };
+Motor.dados = { T_TRIG, V_NORMAL, V_ACC_MAX, V_POR_UNIDADE, BD, GANHO_MIX, T20, fcTone, pulsoBd, RC_TONE, Bumbo, SD, Caixa, Ruido, TOM, TOM_RUIDO_DECAY, TOM_QUEDA, Tom, fTom, TOM_PULSO, TOM_RUIDO_EXP, METAL, Metal, CY, HAT, Prato, Hat, mkBP, mkHP, Hp1, MET_TRIG, T_DECAY, CB, Cowbell, CP, Clap, RS, RimClaves, MA, Maracas, MASTER, Master, mkMasterPolos };
 
 if (typeof AudioWorkletProcessor !== 'undefined' && typeof registerProcessor === 'function') {
   registerProcessor('motor-tr808', class extends AudioWorkletProcessor {
@@ -420,9 +449,9 @@ if (typeof AudioWorkletProcessor !== 'undefined' && typeof registerProcessor ===
 const $ = id => document.getElementById(id);
 const FONTE_DSP = $('dsp').textContent;
 const Motor = new Function(FONTE_DSP + '\nreturn Motor;')();
-const estado = { acLevel: 1, master: 0.8, bd: { level: 0.85, tone: 0.5, decay: 0.5 }, sd: { level: 0.85, tone: 0.5, snappy: 0.5 }, lt: { level: 0.85, tuning: 0.5, modo: 0 }, mt: { level: 0.85, tuning: 0.5, modo: 0 }, ht: { level: 0.85, tuning: 0.5, modo: 0 }, cy: { level: 0.85, tone: 0.5, decay: 0.5 }, oh: { level: 0.85, decay: 0.5 }, ch: { level: 0.85 }, cb: { level: 0.85 }, cp: { level: 0.85, modo: 0 }, rs: { level: 0.85, modo: 0 }, acc: false };
+const estado = { acLevel: 1, master: 0.8, bd: { level: 0.85, tone: 0.5, decay: 0.5 }, sd: { level: 0.85, tone: 0.5, snappy: 0.5 }, lt: { level: 0.85, tuning: 0.5, modo: 0 }, mt: { level: 0.85, tuning: 0.5, modo: 0 }, ht: { level: 0.85, tuning: 0.5, modo: 0 }, cy: { level: 0.85, tone: 0.5, decay: 0.5 }, oh: { level: 0.85, decay: 0.5 }, ch: { level: 0.85 }, cb: { level: 0.85 }, cp: { level: 0.85, modo: 0 }, rs: { level: 0.85, modo: 0 }, on: 1, saida: 0, acc: false };
 const CHAVE = 'sint-tr808-v1:estado';
-try { const s = JSON.parse(localStorage.getItem(CHAVE) || 'null'); if (s) { Object.assign(estado, s); estado.bd = Object.assign({ level: 0.85, tone: 0.5, decay: 0.5 }, s.bd); estado.sd = Object.assign({ level: 0.85, tone: 0.5, snappy: 0.5 }, s.sd); for (const c of ['lt', 'mt', 'ht']) estado[c] = Object.assign({ level: 0.85, tuning: 0.5, modo: 0 }, s[c]); estado.cy = Object.assign({ level: 0.85, tone: 0.5, decay: 0.5 }, s.cy); estado.oh = Object.assign({ level: 0.85, decay: 0.5 }, s.oh); estado.ch = Object.assign({ level: 0.85 }, s.ch); estado.cb = Object.assign({ level: 0.85 }, s.cb); estado.cp = Object.assign({ level: 0.85, modo: 0 }, s.cp); estado.rs = Object.assign({ level: 0.85, modo: 0 }, s.rs); } } catch (e) {}
+try { const s = JSON.parse(localStorage.getItem(CHAVE) || 'null'); if (s) { Object.assign(estado, s); estado.bd = Object.assign({ level: 0.85, tone: 0.5, decay: 0.5 }, s.bd); estado.sd = Object.assign({ level: 0.85, tone: 0.5, snappy: 0.5 }, s.sd); for (const c of ['lt', 'mt', 'ht']) estado[c] = Object.assign({ level: 0.85, tuning: 0.5, modo: 0 }, s[c]); estado.cy = Object.assign({ level: 0.85, tone: 0.5, decay: 0.5 }, s.cy); estado.oh = Object.assign({ level: 0.85, decay: 0.5 }, s.oh); estado.ch = Object.assign({ level: 0.85 }, s.ch); estado.cb = Object.assign({ level: 0.85 }, s.cb); estado.cp = Object.assign({ level: 0.85, modo: 0 }, s.cp); estado.rs = Object.assign({ level: 0.85, modo: 0 }, s.rs); estado.on = s.on === 0 ? 0 : 1; estado.saida = s.saida === 1 ? 1 : 0; } } catch (e) {}
 const salva = () => { try { localStorage.setItem(CHAVE, JSON.stringify(estado)); } catch (e) {} };
 let ctx = null, no = null, reserva = null, pronto = false; const pend = [];
 const manda = m => { if (!pronto) { pend.push(m); return; } if (no) no.port.postMessage(m); else if (reserva) reserva.motor.msg(m); };
@@ -484,6 +513,10 @@ knob('RS/CL level', () => estado.rs.level, v => { estado.rs.level = v; manda({ t
   const b = ch.querySelector('button'), pinta = () => { b.textContent = estado.rs.modo ? 'Claves' : 'Rim shot'; b.setAttribute('aria-pressed', String(!!estado.rs.modo)); };
   pinta(); b.addEventListener('click', () => { estado.rs.modo = estado.rs.modo ? 0 : 1; pinta(); manda({ t: 'p', p: { rs: { modo: estado.rs.modo } } }); salva(); }); P.appendChild(ch); }
 knob('Accent level', () => estado.acLevel, v => { estado.acLevel = v; manda({ t: 'p', p: { acLevel: v } }); });
+{ const ch = document.createElement('div'); ch.innerHTML = '<label>Power / saída</label><button class="liga" id="pw" type="button"></button> <button class="liga" id="so" type="button"></button>';
+  const pw = ch.querySelector('#pw'), so = ch.querySelector('#so'), pinta = () => { pw.textContent = estado.on ? 'On' : 'Off'; pw.setAttribute('aria-pressed', String(!!estado.on)); so.textContent = estado.saida ? 'LO (−19 dB)' : 'HI'; so.setAttribute('aria-pressed', String(!!estado.saida)); };
+  pinta(); pw.addEventListener('click', () => { estado.on = estado.on ? 0 : 1; pinta(); manda({ t: 'p', p: { on: estado.on } }); salva(); });
+  so.addEventListener('click', () => { estado.saida = estado.saida ? 0 : 1; pinta(); manda({ t: 'p', p: { saida: estado.saida } }); salva(); }); P.appendChild(ch); }
 knob('Master volume', () => estado.master, v => { estado.master = v; manda({ t: 'p', p: { master: v } }); });
 const pad = document.createElement('div'); pad.className = 'pad';
 pad.innerHTML = '<button class="bd" id="bd" type="button">BASS DRUM</button><button class="bd" id="sd" type="button">SNARE DRUM</button><button class="bd" id="lt" type="button">LOW TOM/CONGA</button><button class="bd" id="mt" type="button">MID TOM/CONGA</button><button class="bd" id="ht" type="button">HI TOM/CONGA</button><button class="bd" id="cy" type="button">CYMBAL</button><button class="bd" id="oh" type="button">OPEN HI-HAT</button><button class="bd" id="ch" type="button">CLOSED HI-HAT</button><button class="bd" id="cb" type="button">COW BELL</button><button class="bd" id="cp" type="button">HAND CLAP / MARACAS</button><button class="bd" id="rs" type="button">RIM SHOT / CLAVES</button><button class="liga" id="acc" type="button" aria-pressed="false">Accent</button>';

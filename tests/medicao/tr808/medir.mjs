@@ -11,6 +11,8 @@ function confere(nome, esperado, medido, ok) { if (!ok) fora++; linhas.push([ok 
 function info(nome, esperado, medido) { linhas.push(['info', nome, esperado, medido]); }
 const perto = (a, b, tol) => Math.abs(a - b) <= tol;
 const titulo = t => linhas.push(['', '— ' + t + ' —', '', '']);
+/** Vpp digital esperado de uma voz no mix: o sinal da voz (volts, MULTI OUT) passa pelos dois polos do master e leva o ganho do resistor de mistura, o ×1,5 do 2º estágio e a referência de 15 V. */
+const vppMix = (y, g) => { const p = D.mkMasterPolos(FS), z = Float64Array.from(y, v => p.process(v)); return vpp(z) * g * D.MASTER.g2 / D.MASTER.vRef; };
 const semitons = (a, b) => 12 * Math.log2(a / b);
 const freqEm = (x, t0, a, b) => { const c = cruzamentos(x, FS, Math.round((t0 + a) * FS), Math.round((t0 + b) * FS), 1).filter(t => t > 0); return c.length < 2 ? NaN : (c.length - 1) / (c[c.length - 1] - c[0]); };
 
@@ -83,8 +85,8 @@ titulo('bumbo: TONE (passa-baixas), LEVEL e mix');
   const teor = dB(1 / Math.hypot(1, 2000 / 7234)) - dB(1 / Math.hypot(1, 2000 / 305));
   confere('TONE máximo contra mínimo em 2 kHz', f(teor, 1) + ' dB ±4 (filtro RC de 1 polo, valores lidos; lei do pot. é (c))', f(d, 1) + ' dB', perto(d, teor, 4));
   const z = bd({ level: 0 }, false, 1); confere('LEVEL no mínimo: mudo', '0 V', f(pico(z.y), 9), pico(z.y) === 0);
-  const m = novo(Motor, FS, { master: 1, acLevel: 1, bd: { level: 1, tone: 0.5, decay: 0.5 } }), v = vpp(renderVoz(novo(Motor, FS, { acLevel: 1, bd: { level: 1, tone: 0.5, decay: 0.5 } }), 'bd', 1).y);
-  const d2 = render(m, 1, [{ t: 0.01, v: 'bd', ac: false }]), esperado = v * D.GANHO_MIX.bd * D.V_POR_UNIDADE;
+  const m = novo(Motor, FS, { master: 1, acLevel: 1, bd: { level: 1, tone: 0.5, decay: 0.5 } }), vy = renderVoz(novo(Motor, FS, { acLevel: 1, bd: { level: 1, tone: 0.5, decay: 0.5 } }), 'bd', 1).y;
+  const d2 = render(m, 1, [{ t: 0.01, v: 'bd', ac: false }]), esperado = vppMix(vy, D.GANHO_MIX.bd);
   confere('mix: BD com ganho 1,5 (Parte C, seção 10)', f(esperado, 3) + ' Vpp digital ±3 %', f(vpp(d2), 3), perto(vpp(d2), esperado, esperado * 0.03));
 }
 
@@ -136,7 +138,7 @@ if (D.SD) {
   const fim = rms(sd({}, false, 3).y, Math.round(2 * FS), Math.round(3 * FS)); confere('decai a zero (sem oscilador livre)', '< −80 dB', f(dB(fim / pico(n.y)), 1) + ' dB', dB(fim / pico(n.y)) < -80);
   const T512 = 512 / FS;   // disparo no início de um bloco de 128 amostras, para a mesma realização do ruído nas duas medidas
   const ref = renderVoz(novo(Motor, FS, { acLevel: 1, sd: { level: 1, tone: 0.5, snappy: 0.5 } }), 'sd', 1, [{ t: T512, ac: false }]);
-  const m = novo(Motor, FS, { master: 1, acLevel: 1, sd: { level: 1, tone: 0.5, snappy: 0.5 } }), d2 = render(m, 1, [{ t: T512, v: 'sd', ac: false }]), esp = vpp(ref.y) * D.GANHO_MIX.sd * D.V_POR_UNIDADE;
+  const m = novo(Motor, FS, { master: 1, acLevel: 1, sd: { level: 1, tone: 0.5, snappy: 0.5 } }), d2 = render(m, 1, [{ t: T512, v: 'sd', ac: false }]), esp = vppMix(ref.y, D.GANHO_MIX.sd);
   confere('mix: SD com ganho 1,0 (Parte C, seção 10)', f(esp, 3) + ' Vpp digital ±3 %', f(vpp(d2), 3), perto(vpp(d2), esp, esp * 0.03));
 }
 
@@ -187,7 +189,7 @@ if (!D.TOM) { fora++; linhas.push(['FORA', 'toms e congas: motor ainda não tem 
   // mix: ganho 1,0 para os três circuitos (Parte C, seção 10), com o disparo alinhado ao bloco de 128 amostras
   for (const c of ['lt', 'mt', 'ht']) {
     const T512 = 512 / FS, ref = renderVoz(novo(Motor, FS, { acLevel: 1, [c]: { level: 1, tuning: 0.5, modo: 0 } }), c, 1, [{ t: T512, ac: false }]);
-    const d2 = render(novo(Motor, FS, { master: 1, acLevel: 1, [c]: { level: 1, tuning: 0.5, modo: 0 } }), 1, [{ t: T512, v: c, ac: false }]), esp = vpp(ref.y) * D.GANHO_MIX[c] * D.V_POR_UNIDADE;
+    const d2 = render(novo(Motor, FS, { master: 1, acLevel: 1, [c]: { level: 1, tuning: 0.5, modo: 0 } }), 1, [{ t: T512, v: c, ac: false }]), esp = vppMix(ref.y, D.GANHO_MIX[c]);
     confere(`mix: ${c.toUpperCase()} com ganho 1,0`, f(esp, 3) + ' Vpp digital ±3 %', f(vpp(d2), 3), perto(vpp(d2), esp, esp * 0.03));
   }
   // exclusividade: cada par é um único circuito; um 2º disparo durante o som reexcita o mesmo ressonador, nunca soma duas vozes
@@ -247,7 +249,7 @@ if (D.METAL) {
   // mix: OH 0,59; CH, CY 0,70 (Parte C, seção 10), disparo alinhado ao bloco de 128 amostras
   for (const [c, g] of [['oh', 0.59], ['ch', 0.70], ['cy', 0.70]]) {
     const T512 = 512 / FS, ref = renderVoz(novo(Motor, FS, { acLevel: 1, [c]: { level: 1, tone: 0.5, decay: 0.5 } }), c, 1, [{ t: T512, ac: false }]);
-    const d2 = render(novo(Motor, FS, { master: 1, acLevel: 1, [c]: { level: 1, tone: 0.5, decay: 0.5 } }), 1, [{ t: T512, v: c, ac: false }]), esp = vpp(ref.y) * g * D.V_POR_UNIDADE;
+    const d2 = render(novo(Motor, FS, { master: 1, acLevel: 1, [c]: { level: 1, tone: 0.5, decay: 0.5 } }), 1, [{ t: T512, v: c, ac: false }]), esp = vppMix(ref.y, g);
     confere(`mix: ${c.toUpperCase()} com ganho ${g} (Parte C, seção 10)`, f(esp, 3) + ' Vpp digital ±3 %', f(vpp(d2), 3), perto(vpp(d2), esp, esp * 0.03)); }
 }
 
@@ -279,7 +281,7 @@ if (!D.CB) { fora++; linhas.push(['FORA', 'cowbell: motor ainda não tem a voz C
   confere('decai a zero', '< −80 dB', f(dB(fim / pico(n.y)), 1) + ' dB', dB(fim / pico(n.y)) < -80);
   confere('LEVEL no mínimo: mudo', '0 V', f(pico(cb({ level: 0 }).y), 9), pico(cb({ level: 0 }).y) === 0);
   const T512 = 512 / FS, ref = renderVoz(novo(Motor, FS, { acLevel: 1, cb: { level: 1 } }), 'cb', 1, [{ t: T512, ac: false }]);
-  const d2 = render(novo(Motor, FS, { master: 1, acLevel: 1, cb: { level: 1 } }), 1, [{ t: T512, v: 'cb', ac: false }]), esp = vpp(ref.y) * D.GANHO_MIX.cb * D.V_POR_UNIDADE;
+  const d2 = render(novo(Motor, FS, { master: 1, acLevel: 1, cb: { level: 1 } }), 1, [{ t: T512, v: 'cb', ac: false }]), esp = vppMix(ref.y, D.GANHO_MIX.cb);
   confere('mix: CB com ganho 0,70 (Parte C, seção 10)', f(esp, 3) + ' Vpp digital ±3 %', f(vpp(d2), 3), perto(vpp(d2), esp, esp * 0.03));
   const um = vpp(n.y), r2 = cb({}, false, 1, {}, [{ t: 0.01, ac: false }, { t: 0.04, ac: false }]);
   confere('2 disparos a 30 ms: sem soma de vozes (um circuito só)', 'Vpp ≤ 2× o de um disparo', f(vpp(r2.y) / um) + '×', vpp(r2.y) <= 2 * um);
@@ -322,7 +324,7 @@ if (!D.CP) { fora++; linhas.push(['FORA', 'clap: motor ainda não tem a voz CP',
     confere('silêncio exato antes do disparo e decai a zero', '0 e < −80 dB', f(pico(n.y, 0, i0 - 1), 12) + ' e ' + f(dB(fim / pico(n.y)), 1) + ' dB', pico(n.y, 0, i0 - 1) === 0 && dB(fim / pico(n.y)) < -80);
     confere('LEVEL no mínimo: mudo', '0 V', f(pico(cp({ level: 0 }).y), 9), pico(cp({ level: 0 }).y) === 0);
     const T512 = 512 / FS, ref = renderVoz(novo(Motor, FS, { acLevel: 1, cp: { level: 1 } }), 'cp', 1, [{ t: T512, ac: false }]);
-    const d2 = render(novo(Motor, FS, { master: 1, acLevel: 1, cp: { level: 1 } }), 1, [{ t: T512, v: 'cp', ac: false }]), esp = vpp(ref.y) * D.GANHO_MIX.cp * D.V_POR_UNIDADE;
+    const d2 = render(novo(Motor, FS, { master: 1, acLevel: 1, cp: { level: 1 } }), 1, [{ t: T512, v: 'cp', ac: false }]), esp = vppMix(ref.y, D.GANHO_MIX.cp);
     confere('mix: CP com ganho 1,0 (Parte C, seção 10)', f(esp, 3) + ' Vpp digital ±3 %', f(vpp(d2), 3), perto(vpp(d2), esp, esp * 0.03)); }
 }
 
@@ -356,7 +358,7 @@ if (!D.RS) { fora++; linhas.push(['FORA', 'rim shot e claves: motor ainda não t
   // chave: o par é um circuito só; o 2º disparo não soma vozes
   { const um = vpp(rr.y), r2 = rs(RS, {}, false, 0.5, {}, [{ t: 0.01, ac: false }, { t: 0.02, ac: false }]); confere('RS/CL: par exclusivo (2º disparo a 10 ms não soma vozes)', 'Vpp ≤ 2× o de um disparo', f(vpp(r2.y) / um) + '×', vpp(r2.y) <= 2 * um); }
   for (const [nome, modo] of [['RS', 0], ['CL', 1]]) { const T512 = 512 / FS, ref = renderVoz(novo(Motor, FS, { acLevel: 1, rs: { level: 1, modo } }), 'rs', 1, [{ t: T512, ac: false }]);
-    const d2 = render(novo(Motor, FS, { master: 1, acLevel: 1, rs: { level: 1, modo } }), 1, [{ t: T512, v: 'rs', ac: false }]), e = vpp(ref.y) * D.GANHO_MIX.rs * D.V_POR_UNIDADE;
+    const d2 = render(novo(Motor, FS, { master: 1, acLevel: 1, rs: { level: 1, modo } }), 1, [{ t: T512, v: 'rs', ac: false }]), e = vppMix(ref.y, D.GANHO_MIX.rs);
     confere(`mix: ${nome} com ganho 1,0 (Parte C, seção 10)`, f(e, 3) + ' Vpp digital ±3 %', f(vpp(d2), 3), perto(vpp(d2), e, e * 0.03)); }
 }
 
@@ -387,7 +389,7 @@ if (!D.MA) { fora++; linhas.push(['FORA', 'maracas: motor ainda não tem a voz M
     confere('silêncio exato antes do disparo e decai a zero', '0 e < −80 dB', f(pico(n.y, 0, i0 - 1), 12) + ' e ' + f(dB(fim / pico(n.y)), 1) + ' dB', pico(n.y, 0, i0 - 1) === 0 && dB(fim / pico(n.y)) < -80);
     confere('LEVEL no mínimo: mudo', '0 V', f(pico(ma({ level: 0 }).y), 9), pico(ma({ level: 0 }).y) === 0);
     const T512 = 512 / FS, ref = renderVoz(novo(Motor, FS, { acLevel: 1, cp: { level: 1, modo: 1 } }), 'ma', 1, [{ t: T512, ac: false }]);
-    const d2 = render(novo(Motor, FS, { master: 1, acLevel: 1, cp: { level: 1, modo: 1 } }), 1, [{ t: T512, v: 'cp', ac: false }]), e = vpp(ref.y) * D.GANHO_MIX.cp * D.V_POR_UNIDADE;
+    const d2 = render(novo(Motor, FS, { master: 1, acLevel: 1, cp: { level: 1, modo: 1 } }), 1, [{ t: T512, v: 'cp', ac: false }]), e = vppMix(ref.y, D.GANHO_MIX.cp);
     confere('mix: MA com ganho 1,0 (Parte C, seção 10), disparada pelo canal CP/MA', f(e, 3) + ' Vpp digital ±3 %', f(vpp(d2), 3), perto(vpp(d2), e, e * 0.03)); }
   // chave MA/CP: um circuito só; o disparo vai para a voz escolhida e a outra fica muda
   { const m1 = novo(Motor, FS, { acLevel: 1, cp: { level: 1, modo: 1 } }), r1 = render(m1, 0.5, [{ t: 0.01, v: 'cp', ac: false }]);
@@ -401,6 +403,46 @@ if (!D.MA) { fora++; linhas.push(['FORA', 'maracas: motor ainda não tem a voz M
     mt.msg({ t: 'trig', v: 'cp', ac: false }); const a1 = proc(24064); mt.msg({ t: 'p', p: { cp: { modo: 0 } } }); mt.msg({ t: 'trig', v: 'cp', ac: false }); const a2 = proc(24064);
     const d1 = hf(a1) - lo(a1), d2 = hf(a2) - lo(a2);
     confere('trocar a chave de MA para CP com o aparelho ligado: 1º disparo maracas, 2º disparo clap', 'HF − BF > 0 dB e < −10 dB', f(d1, 1) + ' dB e ' + f(d2, 1) + ' dB', d1 > 0 && d2 < -10); }
+}
+
+// ===== 14. mixer e master (Parte C, seção 10): somador, MASTER VOLUME, 2º estágio ×1,5, polos em 21,9 kHz, grampeamento, HI e LO, POWER =====
+titulo('mixer e master: ganhos dos resistores de mistura, volume, polos, grampeamento, saídas HI e LO');
+// ganhos relativos pelos resistores (a): R75 33k sobre o resistor de mistura de cada voz
+{ const R = { bd: 22e3, sd: 33e3, lt: 33e3, mt: 33e3, ht: 33e3, rs: 33e3, cp: 33e3, ma: 33e3, oh: 56e3, ch: 47e3, cb: 47e3, cy: 47e3 }; let pior = 0, quem = '';
+  for (const v in R) { const g = D.GANHO_MIX[v] === undefined ? (v === 'ma' ? D.GANHO_MIX.cp : NaN) : D.GANHO_MIX[v], teo = 33e3 / R[v], e = Math.abs(g / teo - 1); if (!(e <= pior)) { pior = e; quem = v; } }
+  confere('ganhos de mistura das 12 vozes/pares = R75 / R de mistura (BD 1,5; OH 0,59; CH, CB, CY 0,70; demais 1,0)', 'erro ≤ 0,5 % (0,59 e 0,70 são arredondados de 0,589 e 0,702)', f(pior * 100, 2) + ' % (pior: ' + quem + ')', pior <= 0.005); }
+if (!D.MASTER) { fora++; linhas.push(['FORA', 'master: motor ainda não tem o estágio master', 'D.MASTER', 'ausente']); } else {
+  const M = D.MASTER;
+  // polos: 2 × passa-baixas de 1 polo em 21,9 kHz (33 kΩ × 220 pF), um em cada estágio
+  const hp = resposta(D.mkMasterPolos(FS), FS), analog = fq => -20 * Math.log10(1 + (fq / 21900) ** 2);   // dois polos: 2 × (−10·log10(1 + x²))
+  let pior = 0, em = 0; for (let fq = 100; fq <= 18000; fq *= 1.05) { const e = Math.abs(hp.db(fq) - analog(fq)); if (e > pior) { pior = e; em = fq; } }
+  const e20 = hp.db(20000) - analog(20000);
+  confere('polos em 21,9 kHz (2 estágios): resposta digital contra a analógica, 100 Hz a 18 kHz', 'erro ≤ 1,2 dB (aproximação: o polo está colado em Nyquist a 48 kHz; (c))', f(pior, 2) + ' dB (em ' + f(em, 0) + ' Hz)', FS !== 48000 || pior <= 1.2);
+  info('polos: erro em 20 kHz (fora da banda otimizada)', 'cresce perto de Nyquist; não é critério', f(e20, 2) + ' dB');
+  confere('polos: ganho em 1 kHz', '0 dB ±0,05 (−0,004 dB analógico)', f(hp.db(1000), 3) + ' dB', perto(hp.db(1000), 0, 0.05));
+  // ganho em DC do master completo: 1,5 do 2º estágio sobre a referência digital de 15 V
+  { const ms = new D.Master(FS); let y = 0; for (let i = 0; i < 4000; i++) y = ms.processa(1, 1, false);
+    confere('ganho em DC (MASTER VOLUME no máximo, saída HI): ×1,5 do 2º estágio (R76/R77) sobre 15 V = 1,0', f(1.5 / M.vRef, 4) + ' ±0,1 %', f(y, 4), perto(y / (1.5 / M.vRef), 1, 0.001));
+    const ys = new D.Master(FS); let y2 = 0; for (let i = 0; i < 4000; i++) y2 = ys.processa(1, 0.5, false);
+    confere('MASTER VOLUME a meio curso: −12,04 dB (potenciômetro A, 50 kΩ; lei θ² é (c))', '−12,04 dB ±0,1', f(dB(y2 / y), 2) + ' dB', perto(dB(y2 / y), -12.04, 0.1));
+    const yz = new D.Master(FS); let y3 = 1; for (let i = 0; i < 100; i++) y3 = yz.processa(5, 0, false);
+    confere('MASTER VOLUME no mínimo: mudo', '0', f(y3, 9), y3 === 0);
+    const yl = new D.Master(FS); let y4 = 0; for (let i = 0; i < 4000; i++) y4 = yl.processa(1, 1, true);
+    confere('saída LO contra HI: divisor R13 27k / R12 3,3k', '−19,26 dB ±0,1 (−19,3 dB na Parte C, c sobre a)', f(dB(y4 / y), 2) + ' dB', perto(dB(y4 / y), -19.26, 0.1));
+    const yc = new D.Master(FS); let y5 = 0; for (let i = 0; i < 4000; i++) y5 = yc.processa(500, 1, false);
+    confere('grampeamento (D9/D10 nos trilhos): entrada de 500 V satura', 'exatamente 1,0 (o valor dos trilhos B5 não foi encontrado: (c))', f(y5, 6), y5 === 1);
+    const yn = new D.Master(FS); let y6 = 0; for (let i = 0; i < 4000; i++) y6 = yn.processa(-500, 1, false); confere('grampeamento negativo', 'exatamente −1,0', f(y6, 6), y6 === -1);
+  }
+  // POWER (muting por Q13, Q10 a Q12): desligado, a saída é zero
+  { const m = novo(Motor, FS, { acLevel: 1, on: 0 }), r = render(m, 0.3, [{ t: 0.01, v: 'bd', ac: true }]); confere('POWER desligado: saída zero (o motor para de soar)', '0', f(pico(r), 9), pico(r) === 0); }
+  // aditividade do mixer: BD e SD disparados juntos = BD sozinho + SD sozinho (mesma realização de ruído)
+  { const um = (v) => render(novo(Motor, FS, { master: 1, acLevel: 1 }), 0.3, [{ t: 512 / FS, v, ac: false }]), a = um('bd'), b = um('sd'), ab = render(novo(Motor, FS, { master: 1, acLevel: 1 }), 0.3, [{ t: 512 / FS, v: 'bd', ac: false }, { t: 512 / FS, v: 'sd', ac: false }]);
+    let e = 0; for (let i = 0; i < ab.length; i++) e = Math.max(e, Math.abs(ab[i] - a[i] - b[i]));
+    confere('somador: BD + SD juntos = BD sozinho + SD sozinho', 'diferença < 1e-6 (linear)', e.toExponential(1), e < 1e-6); }
+  // pior caso: todas as 16 vozes com accent no máximo, master no máximo, ao mesmo tempo
+  { const todas = ['bd', 'sd', 'lt', 'mt', 'ht', 'cy', 'oh', 'ch', 'cb', 'cp', 'rs'].map(v => ({ t: 512 / FS, v, ac: true })), r = render(novo(Motor, FS, { master: 1, acLevel: 1 }), 1, todas);
+    let fin = true; for (const v of r) if (!Number.isFinite(v)) fin = false;
+    confere('pior caso: 11 canais com accent no máximo ao mesmo tempo, master no máximo', 'finito, pico ≤ 1,0 (sem estourar o conversor)', f(pico(r), 3) + (fin ? '' : ' (NaN!)'), fin && pico(r) <= 1.0); }
 }
 
 // ===== relatório =====

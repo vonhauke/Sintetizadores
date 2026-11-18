@@ -58,7 +58,7 @@ ok    accent com ACCENT LEVEL no mínimo = normal                              e
 ok    accent muda o timbre (energia 3 a 8 kHz contra 100 a 500 Hz)            esperado: |diferença| ≥ 0,5 dB (tol. minha)                                       medido: 1,28 dB
 ok    silêncio exato antes do disparo                                         esperado: 0                                                                       medido: 0,000000000000
 ok    decai a zero (sem oscilador livre)                                      esperado: < −80 dB                                                                medido: -240,0 dB
-ok    mix: SD com ganho 1,0 (Parte C, seção 10)                               esperado: 0,299 Vpp digital ±3 %                                                  medido: 0,299
+ok    mix: SD com ganho 1,0 (Parte C, seção 10)                               esperado: 0,271 Vpp digital ±3 %                                                  medido: 0,271
 
 — toms e congas: 3 circuitos com chave tom/conga (frequência, decay, nível, queda de pitch, ruído) —
 ok    LT (tom): TUNING mínimo / 12 h / máximo                                 esperado: 80 / 90 / 100 Hz ±3 % (tabela p.14; tol. minha)                         medido: 80,2 / 90,0 / 99,8 Hz
@@ -158,9 +158,9 @@ ok    CH: LEVEL no mínimo: mudo                                               e
 ok    prato: TONE máximo contra mínimo (energia 9 a 16 kHz contra 2 a 8 kHz)  esperado: > +3 dB (tol. minha; sentido (c))                                       medido: 3,63 dB
 ok    choke: CH disparado em 100 ms; OH (DECAY máx.) entre 400 e 500 ms contra o OH livre  esperado: < −20 dB (a, p.6: "decay do OH termina")                                medido: -117,5 dB
 ok    choke: antes do CH o OH é igual ao livre                                esperado: diferença = 0                                                           medido: 0,000000000
-ok    mix: OH com ganho 0.59 (Parte C, seção 10)                              esperado: 0,207 Vpp digital ±3 %                                                  medido: 0,207
-ok    mix: CH com ganho 0.7 (Parte C, seção 10)                               esperado: 0,216 Vpp digital ±3 %                                                  medido: 0,216
-ok    mix: CY com ganho 0.7 (Parte C, seção 10)                               esperado: 0,247 Vpp digital ±3 %                                                  medido: 0,247
+ok    mix: OH com ganho 0.59 (Parte C, seção 10)                              esperado: 0,201 Vpp digital ±3 %                                                  medido: 0,201
+ok    mix: CH com ganho 0.7 (Parte C, seção 10)                               esperado: 0,192 Vpp digital ±3 %                                                  medido: 0,192
+ok    mix: CY com ganho 0.7 (Parte C, seção 10)                               esperado: 0,221 Vpp digital ±3 %                                                  medido: 0,221
 
 — cowbell: osciladores, filtro, envelope em dois estágios, nível, accent, mix —
 ok    oscilador do TM1 (TP-6) no som                                          esperado: 540 Hz ±2 (decaimento alarga a linha; tabela p.14 e Parte C)            medido: 540,0 Hz
@@ -218,7 +218,7 @@ ok    RS: LEVEL no mínimo: mudo                                               e
 ok    IC21 só no RS: linha de 452 Hz no CL relativa à de 2526 Hz              esperado: < −40 dB                                                                medido: -129,9 dB
 ok    RS/CL: par exclusivo (2º disparo a 10 ms não soma vozes)                esperado: Vpp ≤ 2× o de um disparo                                                medido: 1,09×
 ok    mix: RS com ganho 1,0 (Parte C, seção 10)                               esperado: 0,300 Vpp digital ±3 %                                                  medido: 0,300
-ok    mix: CL com ganho 1,0 (Parte C, seção 10)                               esperado: 0,250 Vpp digital ±3 %                                                  medido: 0,250
+ok    mix: CL com ganho 1,0 (Parte C, seção 10)                               esperado: 0,260 Vpp digital ±3 %                                                  medido: 0,260
 
 — maracas: passa-altas, envelope assimétrico, decay 25/35 ms (origem desconhecida), nível, chave MA/CP, mix —
 ok    passa-altas do Q68 (10,6 kHz, Q 2,27): pico                             esperado: +7,3 dB ±0,4 perto de 11,2 kHz ±2 % (Parte C, seção 7)                  medido: 7,3 dB em 10985 Hz
@@ -234,9 +234,24 @@ ok    amplitude normal / accent                                               es
 ok    accent com ACCENT LEVEL no mínimo = normal                              esperado: 3,00 Vpp ±5 %                                                           medido: 3,00 Vpp
 ok    silêncio exato antes do disparo e decai a zero                          esperado: 0 e < −80 dB                                                            medido: 0,000000000000 e -240,0 dB
 ok    LEVEL no mínimo: mudo                                                   esperado: 0 V                                                                     medido: 0,000000000
-ok    mix: MA com ganho 1,0 (Parte C, seção 10), disparada pelo canal CP/MA   esperado: 0,296 Vpp digital ±3 %                                                  medido: 0,296
-ok    chave em MA: o disparo toca as maracas (energia acima de 10 kHz domina)  esperado: HF − BF > 0 dB                                                          medido: 35,6 dB
-ok    chave em CP: o mesmo disparo toca o clap (energia de 300 Hz a 3 kHz domina)  esperado: HF − BF < −10 dB                                                        medido: -25,7 dB
-ok    trocar a chave de MA para CP com o aparelho ligado: 1º disparo maracas, 2º disparo clap  esperado: HF − BF > 0 dB e < −10 dB                                               medido: 35,6 dB e -25,2 dB
+ok    mix: MA com ganho 1,0 (Parte C, seção 10), disparada pelo canal CP/MA   esperado: 0,259 Vpp digital ±3 %                                                  medido: 0,259
+ok    chave em MA: o disparo toca as maracas (energia acima de 10 kHz domina)  esperado: HF − BF > 0 dB                                                          medido: 33,9 dB
+ok    chave em CP: o mesmo disparo toca o clap (energia de 300 Hz a 3 kHz domina)  esperado: HF − BF < −10 dB                                                        medido: -27,2 dB
+ok    trocar a chave de MA para CP com o aparelho ligado: 1º disparo maracas, 2º disparo clap  esperado: HF − BF > 0 dB e < −10 dB                                               medido: 33,9 dB e -26,7 dB
 
-207 medições, 203 ok, 4 fora
+— mixer e master: ganhos dos resistores de mistura, volume, polos, grampeamento, saídas HI e LO —
+ok    ganhos de mistura das 12 vozes/pares = R75 / R de mistura (BD 1,5; OH 0,59; CH, CB, CY 0,70; demais 1,0)  esperado: erro ≤ 0,5 % (0,59 e 0,70 são arredondados de 0,589 e 0,702)            medido: 0,30 % (pior: ch)
+ok    polos em 21,9 kHz (2 estágios): resposta digital contra a analógica, 100 Hz a 18 kHz  esperado: erro ≤ 1,2 dB (aproximação: o polo está colado em Nyquist a 48 kHz; (c))  medido: 1,05 dB (em 12524 Hz)
+info  polos: erro em 20 kHz (fora da banda otimizada)                         esperado: cresce perto de Nyquist; não é critério                                 medido: -4,64 dB
+ok    polos: ganho em 1 kHz                                                   esperado: 0 dB ±0,05 (−0,004 dB analógico)                                        medido: -0,006 dB
+ok    ganho em DC (MASTER VOLUME no máximo, saída HI): ×1,5 do 2º estágio (R76/R77) sobre 15 V = 1,0  esperado: 0,1000 ±0,1 %                                                           medido: 0,1000
+ok    MASTER VOLUME a meio curso: −12,04 dB (potenciômetro A, 50 kΩ; lei θ² é (c))  esperado: −12,04 dB ±0,1                                                          medido: -12,04 dB
+ok    MASTER VOLUME no mínimo: mudo                                           esperado: 0                                                                       medido: 0,000000000
+ok    saída LO contra HI: divisor R13 27k / R12 3,3k                          esperado: −19,26 dB ±0,1 (−19,3 dB na Parte C, c sobre a)                         medido: -19,26 dB
+ok    grampeamento (D9/D10 nos trilhos): entrada de 500 V satura              esperado: exatamente 1,0 (o valor dos trilhos B5 não foi encontrado: (c))         medido: 1,000000
+ok    grampeamento negativo                                                   esperado: exatamente −1,0                                                         medido: -1,000000
+ok    POWER desligado: saída zero (o motor para de soar)                      esperado: 0                                                                       medido: 0,000000000
+ok    somador: BD + SD juntos = BD sozinho + SD sozinho                       esperado: diferença < 1e-6 (linear)                                               medido: 2.8e-8
+ok    pior caso: 11 canais com accent no máximo ao mesmo tempo, master no máximo  esperado: finito, pico ≤ 1,0 (sem estourar o conversor)                           medido: 1,000
+
+219 medições, 215 ok, 4 fora
