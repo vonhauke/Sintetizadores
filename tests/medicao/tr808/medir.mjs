@@ -324,6 +324,40 @@ if (!D.CP) { fora++; linhas.push(['FORA', 'clap: motor ainda não tem a voz CP',
     confere('mix: CP com ganho 1,0 (Parte C, seção 10)', f(esp, 3) + ' Vpp digital ±3 %', f(vpp(d2), 3), perto(vpp(d2), esp, esp * 0.03)); }
 }
 
+// ===== 12. rim shot (RS) e claves (CL): um circuito só (IC20, IC21, Q62), chave SW11 =====
+titulo('rim shot e claves: frequências, decay, nível, accent, chave, mix');
+if (!D.RS) { fora++; linhas.push(['FORA', 'rim shot e claves: motor ainda não tem a voz RS/CL', 'D.RS', 'ausente']); } else {
+  const rs = (modo, p = {}, ac = false, seg = 0.5, extra = {}, disp) => { const m = novo(Motor, FS, Object.assign({ acLevel: 1, rs: Object.assign({ level: 1, modo }, p) }, extra)); return renderVoz(m, 'rs', seg, disp || [{ t: 0.01, ac }]); };
+  const RS = 0, CL = 1, esp = r => espectro(r.y, Math.round(r.t0 * FS), 8192);
+  const cl = rs(CL), rr = rs(RS), mc = esp(cl), mr = esp(rr);
+  const [fc] = picoEsp(mc, FS, 2000, 3200), [fr1] = picoEsp(mr, FS, 1400, 2200), [fr2] = picoEsp(mr, FS, 350, 600);
+  confere('CL: frequência do IC20 (bridged-T, 2,2 nF + 2,2 nF)', '2526 Hz ±1 % (Parte C, seção 6; c sobre a)', f(fc, 0) + ' Hz', perto(fc, 2526, 25));
+  confere('CL: dentro da faixa da tabela p.14 (0,4 ms, resolução 0,1 ms)', '2381 a 2632 Hz', f(fc, 0) + ' Hz', fc >= 2381 && fc <= 2632);
+  confere('RS: frequência do IC20 (C118 em paralelo: 2,2 nF + 4,4 nF)', '1786 Hz ±1,5 % (Parte C, seção 6)', f(fr1, 0) + ' Hz', perto(fr1, 1786, 27));
+  confere('RS: dentro da faixa da tabela p.14 (0,6 ms)', '1538 a 1818 Hz', f(fr1, 0) + ' Hz', fr1 >= 1538 && fr1 <= 1818);
+  confere('RS: frequência do IC21', '452,5 Hz ±3 % (Parte B 3.4; tabela: 455)', f(fr2, 1) + ' Hz', perto(fr2, 452.5, 13.6));
+  const Tcl = tempoAteRms(cl.y, FS, cl.t0, 0.1, 0.001) * 1000, Trs = tempoAteRms(rr.y, FS, rr.t0, 0.1, 0.002) * 1000;
+  confere('CL: decay a −20 dB', '25 ms ±15 % (tabela p.14; tol. minha)', f(Tcl, 1) + ' ms', perto(Tcl, 25, 3.75));
+  confere('RS: decay a −20 dB', '10 ms ±15 % (tabela p.14; tol. minha)', f(Trs, 1) + ' ms', perto(Trs, 10, 1.5));
+  for (const [nome, modo, alvo] of [['CL', CL, [2.5, 8]], ['RS', RS, [3, 10]]]) {
+    const n = rs(modo), a = rs(modo, {}, true), pn = vpp(n.y), pa = vpp(a.y);
+    confere(`${nome}: amplitude normal / accent`, alvo.join(' / ') + ' Vpp ±5 % (tabela p.14)', f(pn) + ' / ' + f(pa) + ' Vpp', perto(pn, alvo[0], alvo[0] * 0.05) && perto(pa, alvo[1], alvo[1] * 0.05));
+    const fq = modo === CL ? 2526 : 1786, bd = r => dB(Math.sqrt(energiaBanda(espectro(r.y, Math.round(r.t0 * FS), 1024), FS, 2 * fq, 6 * fq))) - dB(Math.sqrt(energiaBanda(espectro(r.y, Math.round(r.t0 * FS), 1024), FS, 0.5 * fq, 1.5 * fq))), dif = bd(a) - bd(n);
+    confere(`${nome}: accent muda o timbre (energia 2 a 6 f0 contra 0,5 a 1,5 f0, 21 ms iniciais)`, '|diferença| ≥ 0,5 dB (tol. minha; texto: o VCA "swing" gera muitos harmônicos)', f(dif) + ' dB', Math.abs(dif) >= 0.5);
+    const q = rs(modo, {}, true, 0.5, { acLevel: 0 }); confere(`${nome}: accent com ACCENT LEVEL no mínimo = normal`, f(pn) + ' Vpp ±5 %', f(vpp(q.y)) + ' Vpp', perto(vpp(q.y), pn, pn * 0.05));
+    const i0 = Math.round(n.t0 * FS), fim = rms(rs(modo, {}, false, 1.5).y, Math.round(1 * FS), Math.round(1.5 * FS));
+    confere(`${nome}: silêncio exato antes do disparo e decai a zero`, '0 e < −80 dB', f(pico(n.y, 0, i0 - 1), 12) + ' e ' + f(dB(fim / pico(n.y)), 1) + ' dB', pico(n.y, 0, i0 - 1) === 0 && dB(fim / pico(n.y)) < -80);
+    confere(`${nome}: LEVEL no mínimo: mudo`, '0 V', f(pico(rs(modo, { level: 0 }).y), 9), pico(rs(modo, { level: 0 }).y) === 0);
+  }
+  // o IC21 só toca no RS: no CL o espectro não tem a linha de 452 Hz (a, p.6: "pode ser ignorada")
+  confere('IC21 só no RS: linha de 452 Hz no CL relativa à de 2526 Hz', '< −40 dB', f(dB(picoEsp(mc, FS, 380, 520)[1] / picoEsp(mc, FS, 2000, 3200)[1]), 1) + ' dB', dB(picoEsp(mc, FS, 380, 520)[1] / picoEsp(mc, FS, 2000, 3200)[1]) < -40);
+  // chave: o par é um circuito só; o 2º disparo não soma vozes
+  { const um = vpp(rr.y), r2 = rs(RS, {}, false, 0.5, {}, [{ t: 0.01, ac: false }, { t: 0.02, ac: false }]); confere('RS/CL: par exclusivo (2º disparo a 10 ms não soma vozes)', 'Vpp ≤ 2× o de um disparo', f(vpp(r2.y) / um) + '×', vpp(r2.y) <= 2 * um); }
+  for (const [nome, modo] of [['RS', 0], ['CL', 1]]) { const T512 = 512 / FS, ref = renderVoz(novo(Motor, FS, { acLevel: 1, rs: { level: 1, modo } }), 'rs', 1, [{ t: T512, ac: false }]);
+    const d2 = render(novo(Motor, FS, { master: 1, acLevel: 1, rs: { level: 1, modo } }), 1, [{ t: T512, v: 'rs', ac: false }]), e = vpp(ref.y) * D.GANHO_MIX.rs * D.V_POR_UNIDADE;
+    confere(`mix: ${nome} com ganho 1,0 (Parte C, seção 10)`, f(e, 3) + ' Vpp digital ±3 %', f(vpp(d2), 3), perto(vpp(d2), e, e * 0.03)); }
+}
+
 // ===== relatório =====
 const larg = [0, 1, 2].map(k => Math.min(70, Math.max(...linhas.map(l => (l[k + 1] || '').length))));
 for (const l of linhas) console.log(l[0] === '' ? '\n' + l[1] : `${l[0]}  ${l[1].padEnd(larg[0])}  esperado: ${l[2].padEnd(larg[1])}  medido: ${l[3]}`);

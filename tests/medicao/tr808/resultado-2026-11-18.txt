@@ -197,4 +197,27 @@ ok    silêncio exato antes do disparo e decai a zero                          e
 ok    LEVEL no mínimo: mudo                                                   esperado: 0 V                                                                     medido: 0,000000000
 ok    mix: CP com ganho 1,0 (Parte C, seção 10)                               esperado: 0,305 Vpp digital ±3 %                                                  medido: 0,305
 
-170 medições, 168 ok, 2 fora
+— rim shot e claves: frequências, decay, nível, accent, chave, mix —
+ok    CL: frequência do IC20 (bridged-T, 2,2 nF + 2,2 nF)                     esperado: 2526 Hz ±1 % (Parte C, seção 6; c sobre a)                              medido: 2526 Hz
+ok    CL: dentro da faixa da tabela p.14 (0,4 ms, resolução 0,1 ms)           esperado: 2381 a 2632 Hz                                                          medido: 2526 Hz
+ok    RS: frequência do IC20 (C118 em paralelo: 2,2 nF + 4,4 nF)              esperado: 1786 Hz ±1,5 % (Parte C, seção 6)                                       medido: 1786 Hz
+ok    RS: dentro da faixa da tabela p.14 (0,6 ms)                             esperado: 1538 a 1818 Hz                                                          medido: 1786 Hz
+ok    RS: frequência do IC21                                                  esperado: 452,5 Hz ±3 % (Parte B 3.4; tabela: 455)                                medido: 452,5 Hz
+ok    CL: decay a −20 dB                                                      esperado: 25 ms ±15 % (tabela p.14; tol. minha)                                   medido: 25,5 ms
+ok    RS: decay a −20 dB                                                      esperado: 10 ms ±15 % (tabela p.14; tol. minha)                                   medido: 10,0 ms
+ok    CL: amplitude normal / accent                                           esperado: 2.5 / 8 Vpp ±5 % (tabela p.14)                                          medido: 2,50 / 8,00 Vpp
+FORA  CL: accent muda o timbre (energia 2 a 6 f0 contra 0,5 a 1,5 f0, 21 ms iniciais)  esperado: |diferença| ≥ 0,5 dB (tol. minha; texto: o VCA "swing" gera muitos harmônicos)  medido: -0,00 dB
+ok    CL: accent com ACCENT LEVEL no mínimo = normal                          esperado: 2,50 Vpp ±5 %                                                           medido: 2,50 Vpp
+ok    CL: silêncio exato antes do disparo e decai a zero                      esperado: 0 e < −80 dB                                                            medido: 0,000000000000 e -240,0 dB
+ok    CL: LEVEL no mínimo: mudo                                               esperado: 0 V                                                                     medido: 0,000000000
+ok    RS: amplitude normal / accent                                           esperado: 3 / 10 Vpp ±5 % (tabela p.14)                                           medido: 3,00 / 10,00 Vpp
+ok    RS: accent muda o timbre (energia 2 a 6 f0 contra 0,5 a 1,5 f0, 21 ms iniciais)  esperado: |diferença| ≥ 0,5 dB (tol. minha; texto: o VCA "swing" gera muitos harmônicos)  medido: 9,17 dB
+ok    RS: accent com ACCENT LEVEL no mínimo = normal                          esperado: 3,00 Vpp ±5 %                                                           medido: 3,00 Vpp
+ok    RS: silêncio exato antes do disparo e decai a zero                      esperado: 0 e < −80 dB                                                            medido: 0,000000000000 e -240,0 dB
+ok    RS: LEVEL no mínimo: mudo                                               esperado: 0 V                                                                     medido: 0,000000000
+ok    IC21 só no RS: linha de 452 Hz no CL relativa à de 2526 Hz              esperado: < −40 dB                                                                medido: -129,9 dB
+ok    RS/CL: par exclusivo (2º disparo a 10 ms não soma vozes)                esperado: Vpp ≤ 2× o de um disparo                                                medido: 1,09×
+ok    mix: RS com ganho 1,0 (Parte C, seção 10)                               esperado: 0,300 Vpp digital ±3 %                                                  medido: 0,300
+ok    mix: CL com ganho 1,0 (Parte C, seção 10)                               esperado: 0,250 Vpp digital ±3 %                                                  medido: 0,250
+
+191 medições, 188 ok, 3 fora
