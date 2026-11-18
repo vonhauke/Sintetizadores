@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Clone do TR-808 (em construção: bumbo e caixa)</title>
+<title>Clone do TR-808 (em construção: bumbo, caixa, toms e congas)</title>
 <link rel="stylesheet" href="../fonts/fonts.css">
 <style>
 :root{--pagina:#16181b;--tinta:#e8e6df;--apagado:#9a9890;--painel:#2b2f36;--sulco:#14161a;--acento:#e0662a;--foco:#1f7ae0;
@@ -21,8 +21,8 @@ output{display:block;color:var(--apagado);font-size:.8rem;font-variant-numeric:t
 input[type=range]{width:100%;min-height:44px}
 button{min-height:44px;min-width:44px;padding:0 18px;border-radius:8px;border:1px solid #555;background:#3a3f48;color:var(--tinta);font:inherit;cursor:pointer}
 button.liga[aria-pressed=true]{background:var(--acento);color:#111;border-color:var(--acento)}
-.pad{grid-column:1/-1;display:flex;gap:12px;align-items:center}
-.pad .bd{flex:1;min-height:88px;font-family:var(--f-rot);font-size:1.6rem;letter-spacing:.08em}
+.pad{grid-column:1/-1;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.pad .bd{flex:1 1 130px;min-height:88px;font-family:var(--f-rot);font-size:1.6rem;letter-spacing:.08em}
 :focus-visible{outline:2px solid var(--foco);outline-offset:2px}
 #barra{margin:12px 0 0;color:var(--apagado);font-size:.85rem;min-height:1.2em}
 </style>
@@ -30,7 +30,7 @@ button.liga[aria-pressed=true]{background:var(--acento);color:#111;border-color:
 <body>
 <div class="wrap">
 <h1>Rhythm Composer, em construção</h1>
-<p class="aviso">Etapa 2 de 10: bumbo e caixa. Controles e sequenciador completos vêm depois das vozes. Página provisória, ainda fora do menu.</p>
+<p class="aviso">Etapa 3 de 10: bumbo, caixa, toms e congas. Controles e sequenciador completos vêm depois das vozes. Página provisória, ainda fora do menu.</p>
 <div class="painel" id="painel"></div>
 <p id="barra" role="status"></p>
 </div>
@@ -42,7 +42,7 @@ button.liga[aria-pressed=true]{background:var(--acento);color:#111;border-color:
 const T_TRIG = 0.001;                    // (a) COMMON TRIG alargado para ~1 ms (p.4)
 const V_NORMAL = 4, V_ACC_MAX = 14;      // (a) trigger ~4 V sem accent; até 14 V com accent no máximo (p.4)
 const V_POR_UNIDADE = 0.1;               // (c) 1,0 digital = 10 V de pico no mix; só dá folga de cabeça
-const GANHO_MIX = { bd: 1.5, sd: 1.0 };           // (c, sobre a) R75 33k / R5 22k (Parte C, seção 10)
+const GANHO_MIX = { bd: 1.5, sd: 1.0, lt: 1.0, mt: 1.0, ht: 1.0 };           // (c, sobre a) R75 33k / R5 22k (Parte C, seção 10)
 /* Bumbo. f0: decisão do usuário (Werner/amostras). tDecay e Vpp: (a) tabela p.14, critério 1/10 do Vpp. */
 const BD = {
   f0: 49.5, tDecay: [0.050, 0.300, 0.800], vppNormal: 3.5, vppAccent: 10,
@@ -90,10 +90,14 @@ class Bumbo {
     (R130·C202, lote 6 em diante, Parte C seção 4), normalizado para rms 1. O nível de 130 mV em TP-4 não entra: os ganhos
     seguintes não foram lidos, então cada voz tem seu ganho (c). */
 const WN_FC = 7230;
+const PN_F0 = 273, PN_Q = 0.74;      // (c sobre a) "ruído rosa" = Sallen-Key passa-baixas de 2 polos aplicado ao WN (Parte C, seção 4); não é −3 dB/oitava
 class Ruido {
-  constructor(fs, semente = 0x1234abcd) { this.u = semente >>> 0; this.y = 0; this.g = 1 - Math.exp(-2 * Math.PI * WN_FC / fs); this.norma = Math.sqrt((2 - this.g) / this.g); this.wn = 0; }
+  constructor(fs, semente = 0x1234abcd) { this.u = semente >>> 0; this.y = 0; this.g = 1 - Math.exp(-2 * Math.PI * WN_FC / fs); this.norma = Math.sqrt((2 - this.g) / this.g); this.wn = 0; this.pn = 0; this.z1 = this.z2 = 0;
+    const w0 = 2 * Math.PI * PN_F0 / fs, al = Math.sin(w0) / (2 * PN_Q), a0 = 1 + al, cw = Math.cos(w0);   // biquad passa-baixas (RBJ)
+    this.b0 = (1 - cw) / 2 / a0; this.b1 = (1 - cw) / a0; this.b2 = this.b0; this.a1 = -2 * cw / a0; this.a2 = (1 - al) / a0; }
   uni() { let u = this.u; u ^= u << 13; u >>>= 0; u ^= u >>> 17; u ^= u << 5; u >>>= 0; this.u = u; return u / 4294967296 - 0.5; }
-  tick() { const b = (this.uni() + this.uni() + this.uni() + this.uni()) * Math.sqrt(3); this.y += this.g * (b - this.y); this.wn = this.y * this.norma; return this.wn; }
+  tick() { const b = (this.uni() + this.uni() + this.uni() + this.uni()) * Math.sqrt(3); this.y += this.g * (b - this.y); this.wn = this.y * this.norma;
+    const o = this.b0 * this.wn + this.z1; this.z1 = this.b1 * this.wn - this.a1 * o + this.z2; this.z2 = this.b2 * this.wn - this.a2 * o; this.pn = o; return this.wn; }
 }
 /** Caixa. Dois bridged-T excitados pelo pulso (versão revisada: C58 0,056, C61 0,015, R191 10k, R200 zero; decisão do usuário)
     + ruído branco -> VCA (envelope, SNAPPY) -> passa-altas Sallen-Key (f0 2750 Hz, Q 0,73). TONE mistura os dois osciladores. */
@@ -127,24 +131,59 @@ class Caixa {
   }
 }
 
+/** Toms e congas: 3 circuitos (LT/LC, MT/MC, HT/HC), cada um com a chave tom/conga que troca a frequência (SW8, C77/R224).
+    Frequências, decays e amplitudes: tabela da p.14 (a), três pontos de TUNING, como decidido (não a fórmula bridged-T).
+    Bridged-T excitado por pulso; os diodos de germânio (D80/D81) encurtam a constante de tempo logo após o disparo, então o pitch
+    começa mais alto e cai (a, p.6). Os toms recebem ruído "rosa" com decay um pouco mais longo (a, p.6; S10: todos os toms). */
+const TOM_PULSO = { tom: 0.0001, conga: 0.00003 };   // (c sobre a) largura do pulso que excita o ressonador: o gatilho é diferenciado por C73·R226 (22k × 6,8 nF = 150 µs, LT) ou R224 (1,5k, LC) (Parte B 3.3); ordem de grandeza, não valor exato
+const TOM_RUIDO_EXP = 1.5;             // (c) SEM FONTE: o ruído cresce com o trigger^1,5 (VCA do ruído, Q52, expansivo). É o que dá ao MT (tom) 11 Vpp com accent (razão 3,67 > 3,5 dos triggers) e muda o timbre do tom com accent
+const TOM_RUIDO_DECAY = 1.3;           // (c) SEM FONTE: o texto diz só "slightly longer"
+const TOM_QUEDA = { d: 0.3, tau: 0.025, exp: 0.25 };   // (c) SEM FONTE: queda de pitch em Hz ou cents "não encontrada". Início = f × (1 + d·(A/A_normal)^exp), caindo com τ = 25 ms; maior com accent, pois o diodo conduz com mais sinal (a, p.6); exp = 0,25 foi o maior que ainda deixa o MT chegar perto de 11 Vpp
+const TOM = {   // f: Hz em TUNING mín./12 h/máx. (a); T: decay a −20 dB em s (a); vk, k, gN: calibrados contra a tabela (3,5/12; 3/11; 3/10 Vpp); gN do ruído: (c) ver abaixo
+  lt: { tom: { f: [80, 90, 100], T: 0.200, vk: 9.67306, k: 0.42293, gN: 0.399472 }, conga: { f: [165, 185, 220], T: 0.180, vk: 52.1538, k: 0.444257, gN: 0 } },
+  mt: { tom: { f: [120, 135, 160], T: 0.130, vk: 1e9, k: 0.376489, gN: 0.301175 }, conga: { f: [250, 280, 310], T: 0.100, vk: 33.9543, k: 0.382723, gN: 0 } },
+  ht: { tom: { f: [165, 185, 220], T: 0.100, vk: 7.95204, k: 0.454598, gN: 0.447879 }, conga: { f: [370, 400, 455], T: 0.080, vk: 52.2124, k: 0.444466, gN: 0 } },   // HT = LC: está impresso assim na tabela
+};
+/** TUNING 0 a 1 (horário = mais agudo, (c)) -> Hz. Interpolação log-linear entre os três pontos da tabela (c): a lei do pot. não foi encontrada. */
+const fTom = (f, th) => th <= 0.5 ? f[0] * Math.pow(f[1] / f[0], th / 0.5) : f[1] * Math.pow(f[2] / f[1], (th - 0.5) / 0.5);
+class Tom {
+  constructor(fs, fonte, circ) { this.fs = fs; this.fonte = fonte; this.circ = circ; this.ti = 1e9; this.x = 0; this.y = 0; this.t = 1e9; this.V = V_NORMAL; this.A = 0; this.d = 0; }
+  trig(V) { this.t = 0; this.V = V; this.pend = true; this.ti = 0; }   // A e a queda de pitch dependem da chave tom/conga, lida no 1º passo
+  /** p = { level, tuning, modo } (modo 0 = tom, 1 = conga). Devolve volts no MULTI OUT. */
+  amostra(p) {
+    const fs = this.fs, t = this.t, e = TOM[this.circ][p.modo ? 'conga' : 'tom']; this.ent = e;
+    if (this.pend) { this.pend = false; this.A = e.vk * Math.tanh(this.V / e.vk); this.d = TOM_QUEDA.d * Math.pow(this.A / (e.vk * Math.tanh(V_NORMAL / e.vk)), TOM_QUEDA.exp); }
+    const w = 2 * Math.PI * fTom(e.f, p.tuning) * (1 + this.d * Math.exp(-t / TOM_QUEDA.tau)) / fs, a = Math.exp(-Math.LN10 / e.T / fs);
+    const c = Math.cos(w), s = Math.sin(w), x = this.x, y = this.y;
+    this.x = a * (x * c - y * s); this.y = a * (x * s + y * c);
+    const np = Math.max(1, Math.round(TOM_PULSO[p.modo ? 'conga' : 'tom'] * fs)); if (this.ti < np) { this.x += e.k * this.A / np; this.ti++; }
+    let n = 0; if (e.gN) n = this.fonte.pn * Math.exp(-t * Math.LN10 / (TOM_RUIDO_DECAY * e.T)) * V_NORMAL * Math.pow(this.V / V_NORMAL, TOM_RUIDO_EXP) * e.gN;
+    this.t += 1 / fs;
+    return (this.x + n) * p.level * p.level;
+  }
+}
+
 class Motor {
   constructor(fs) {
-    this.fs = fs; this.p = { acLevel: 1, master: 1, bd: { level: 1, tone: 0.5, decay: 0.5 }, sd: { level: 1, tone: 0.5, snappy: 0.5 } };
-    this.fonte = new Ruido(fs); this.bd = new Bumbo(fs); this.sd = new Caixa(fs, this.fonte); this.saida = null;
+    this.fs = fs; this.p = { acLevel: 1, master: 1, bd: { level: 1, tone: 0.5, decay: 0.5 }, sd: { level: 1, tone: 0.5, snappy: 0.5 },
+      lt: { level: 1, tuning: 0.5, modo: 0 }, mt: { level: 1, tuning: 0.5, modo: 0 }, ht: { level: 1, tuning: 0.5, modo: 0 } };
+    this.fonte = new Ruido(fs); this.bd = new Bumbo(fs); this.sd = new Caixa(fs, this.fonte);
+    for (const c of ['lt', 'mt', 'ht']) this[c] = new Tom(fs, this.fonte, c); this.saida = null;
   }
   msg(m) {
-    if (m.t === 'p') { const q = m.p; for (const v of ['bd', 'sd']) if (q[v]) Object.assign(this.p[v], q[v]); for (const k of ['acLevel', 'master']) if (k in q) this.p[k] = q[k]; }
+    if (m.t === 'p') { const q = m.p; for (const v of ['bd', 'sd', 'lt', 'mt', 'ht']) if (q[v]) Object.assign(this.p[v], q[v]); for (const k of ['acLevel', 'master']) if (k in q) this.p[k] = q[k]; }
     else if (m.t === 'trig' && this[m.v] && this[m.v].trig) this[m.v].trig(m.ac ? V_NORMAL + (V_ACC_MAX - V_NORMAL) * this.p.acLevel : V_NORMAL);
   }
   /** Soma das vozes em volts, já com o ganho do resistor de mistura. */
   tick() { this.fonte.tick(); }
-  mixVolts() { return this.bd.amostra(this.p.bd) * GANHO_MIX.bd + this.sd.amostra(this.p.sd) * GANHO_MIX.sd; }
+  mixVolts() { return this.bd.amostra(this.p.bd) * GANHO_MIX.bd + this.sd.amostra(this.p.sd) * GANHO_MIX.sd
+    + this.lt.amostra(this.p.lt) * GANHO_MIX.lt + this.mt.amostra(this.p.mt) * GANHO_MIX.mt + this.ht.amostra(this.p.ht) * GANHO_MIX.ht; }
   process(L, R, n) {
     const g = this.p.master * this.p.master * V_POR_UNIDADE;
     for (let i = 0; i < n; i++) { this.tick(); const v = this.mixVolts() * g; L[i] = v; R[i] = v; }
   }
 }
-Motor.dados = { T_TRIG, V_NORMAL, V_ACC_MAX, V_POR_UNIDADE, BD, GANHO_MIX, T20, fcTone, pulsoBd, RC_TONE, Bumbo, SD, Caixa, Ruido };
+Motor.dados = { T_TRIG, V_NORMAL, V_ACC_MAX, V_POR_UNIDADE, BD, GANHO_MIX, T20, fcTone, pulsoBd, RC_TONE, Bumbo, SD, Caixa, Ruido, TOM, TOM_RUIDO_DECAY, TOM_QUEDA, Tom, fTom, TOM_PULSO, TOM_RUIDO_EXP };
 
 if (typeof AudioWorkletProcessor !== 'undefined' && typeof registerProcessor === 'function') {
   registerProcessor('motor-tr808', class extends AudioWorkletProcessor {
@@ -160,9 +199,9 @@ if (typeof AudioWorkletProcessor !== 'undefined' && typeof registerProcessor ===
 const $ = id => document.getElementById(id);
 const FONTE_DSP = $('dsp').textContent;
 const Motor = new Function(FONTE_DSP + '\nreturn Motor;')();
-const estado = { acLevel: 1, master: 0.8, bd: { level: 0.85, tone: 0.5, decay: 0.5 }, sd: { level: 0.85, tone: 0.5, snappy: 0.5 }, acc: false };
+const estado = { acLevel: 1, master: 0.8, bd: { level: 0.85, tone: 0.5, decay: 0.5 }, sd: { level: 0.85, tone: 0.5, snappy: 0.5 }, lt: { level: 0.85, tuning: 0.5, modo: 0 }, mt: { level: 0.85, tuning: 0.5, modo: 0 }, ht: { level: 0.85, tuning: 0.5, modo: 0 }, acc: false };
 const CHAVE = 'sint-tr808-v1:estado';
-try { const s = JSON.parse(localStorage.getItem(CHAVE) || 'null'); if (s) { Object.assign(estado, s); estado.bd = Object.assign({ level: 0.85, tone: 0.5, decay: 0.5 }, s.bd); estado.sd = Object.assign({ level: 0.85, tone: 0.5, snappy: 0.5 }, s.sd); } } catch (e) {}
+try { const s = JSON.parse(localStorage.getItem(CHAVE) || 'null'); if (s) { Object.assign(estado, s); estado.bd = Object.assign({ level: 0.85, tone: 0.5, decay: 0.5 }, s.bd); estado.sd = Object.assign({ level: 0.85, tone: 0.5, snappy: 0.5 }, s.sd); for (const c of ['lt', 'mt', 'ht']) estado[c] = Object.assign({ level: 0.85, tuning: 0.5, modo: 0 }, s[c]); } } catch (e) {}
 const salva = () => { try { localStorage.setItem(CHAVE, JSON.stringify(estado)); } catch (e) {} };
 let ctx = null, no = null, reserva = null, pronto = false; const pend = [];
 const manda = m => { if (!pronto) { pend.push(m); return; } if (no) no.port.postMessage(m); else if (reserva) reserva.motor.msg(m); };
@@ -201,20 +240,27 @@ knob('BD decay', () => estado.bd.decay, v => { estado.bd.decay = v; manda({ t: '
 knob('SD level', () => estado.sd.level, v => { estado.sd.level = v; manda({ t: 'p', p: { sd: { level: v } } }); });
 knob('SD tone', () => estado.sd.tone, v => { estado.sd.tone = v; manda({ t: 'p', p: { sd: { tone: v } } }); });
 knob('SD snappy', () => estado.sd.snappy, v => { estado.sd.snappy = v; manda({ t: 'p', p: { sd: { snappy: v } } }); });
+for (const [c, nome] of [['lt', 'LT/LC'], ['mt', 'MT/MC'], ['ht', 'HT/HC']]) {
+  knob(nome + ' level', () => estado[c].level, v => { estado[c].level = v; manda({ t: 'p', p: { [c]: { level: v } } }); });
+  knob(nome + ' tuning', () => estado[c].tuning, v => { estado[c].tuning = v; manda({ t: 'p', p: { [c]: { tuning: v } } }); });
+  const ch = document.createElement('div'); ch.innerHTML = `<label>${nome} chave</label><button class="liga" type="button" aria-pressed="${!!estado[c].modo}"></button>`;
+  const b = ch.querySelector('button'), pinta = () => { b.textContent = estado[c].modo ? 'Conga' : 'Tom'; b.setAttribute('aria-pressed', String(!!estado[c].modo)); };
+  pinta(); b.addEventListener('click', () => { estado[c].modo = estado[c].modo ? 0 : 1; pinta(); manda({ t: 'p', p: { [c]: { modo: estado[c].modo } } }); salva(); }); P.appendChild(ch);
+}
 knob('Accent level', () => estado.acLevel, v => { estado.acLevel = v; manda({ t: 'p', p: { acLevel: v } }); });
 knob('Master volume', () => estado.master, v => { estado.master = v; manda({ t: 'p', p: { master: v } }); });
 const pad = document.createElement('div'); pad.className = 'pad';
-pad.innerHTML = '<button class="bd" id="bd" type="button">BASS DRUM</button><button class="bd" id="sd" type="button">SNARE DRUM</button><button class="liga" id="acc" type="button" aria-pressed="false">Accent</button>';
+pad.innerHTML = '<button class="bd" id="bd" type="button">BASS DRUM</button><button class="bd" id="sd" type="button">SNARE DRUM</button><button class="bd" id="lt" type="button">LOW TOM/CONGA</button><button class="bd" id="mt" type="button">MID TOM/CONGA</button><button class="bd" id="ht" type="button">HI TOM/CONGA</button><button class="liga" id="acc" type="button" aria-pressed="false">Accent</button>';
 P.appendChild(pad);
 const acc = $('acc'); acc.setAttribute('aria-pressed', String(!!estado.acc));
 acc.addEventListener('click', () => { estado.acc = !estado.acc; acc.setAttribute('aria-pressed', String(estado.acc)); salva(); });
 const dispara = v => { liga(); manda({ t: 'trig', v, ac: estado.acc }); };
-for (const [id, tecla] of [['bd', 'b'], ['sd', 's']]) {
+for (const [id, tecla] of [['bd', 'b'], ['sd', 's'], ['lt', 'l'], ['mt', 'm'], ['ht', 'h']]) {
   $(id).addEventListener('pointerdown', e => { e.preventDefault(); dispara(id); });
   $(id).addEventListener('keydown', e => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); dispara(id); } });
   document.addEventListener('keydown', e => { if (e.target.tagName === 'INPUT' || e.repeat) return; if (e.key === tecla) dispara(id); });
 }
-diz('Toque em BASS DRUM (tecla B) ou SNARE DRUM (tecla S). O som liga no primeiro toque.');
+diz('Teclas: B bumbo, S caixa, L/M/H toms e congas (a chave de cada par escolhe tom ou conga). O som liga no primeiro toque.');
 })();
 </script>
 <script src="../voltar.js"></script>

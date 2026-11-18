@@ -138,6 +138,61 @@ if (D.SD) {
   confere('mix: SD com ganho 1,0 (Parte C, seção 10)', f(esp, 3) + ' Vpp digital ±3 %', f(vpp(d2), 3), perto(vpp(d2), esp, esp * 0.03));
 }
 
+// ===== 8. toms e congas (LT/LC, MT/MC, HT/HC: 3 circuitos com chave tom/conga) =====
+// Tabela da p.14 (a): TUNING baixo/meio/alto em Hz, decay (meio), Vpp normal/accent. HT = LC está impresso assim (Parte B, seção 2).
+const TAB = {
+  lt: { tom: { f: [80, 90, 100], T: 200, v: [3.5, 12] }, conga: { f: [165, 185, 220], T: 180, v: [3.5, 12] } },
+  mt: { tom: { f: [120, 135, 160], T: 130, v: [3, 11] }, conga: { f: [250, 280, 310], T: 100, v: [3, 10] } },
+  ht: { tom: { f: [165, 185, 220], T: 100, v: [3.5, 12] }, conga: { f: [370, 400, 455], T: 80, v: [3.5, 12] } },
+};
+const tm = (c, conga, p = {}, ac = false, seg = 1.5, extra = {}) => { const m = novo(Motor, FS, Object.assign({ acLevel: 1, [c]: Object.assign({ level: 1, tuning: 0.5, modo: conga ? 1 : 0 }, p) }, extra)); return renderVoz(m, c, seg, [{ t: 0.01, ac }]); };
+const fPico = (r, fa, f1, f2, jan = 0.25) => { const mg = espectro(r.y, Math.round((r.t0 + jan * 0.4) * FS), 16384); return picoEsp(mg, FS, f1, f2)[0]; };
+titulo('toms e congas: 3 circuitos com chave tom/conga (frequência, decay, nível, queda de pitch, ruído)');
+if (!D.TOM) { fora++; linhas.push(['FORA', 'toms e congas: motor ainda não tem as vozes LT, MT e HT', 'D.TOM', 'ausente']); } else {
+  for (const c of ['lt', 'mt', 'ht']) for (const conga of [false, true]) {
+    const t = TAB[c][conga ? 'conga' : 'tom'], nome = `${c.toUpperCase()}${conga ? ' (conga)' : ' (tom)'}`;
+    // frequência assentada nos três pontos do TUNING (janela que começa depois da queda de pitch)
+    const fs3 = [0, 0.5, 1].map((th, i) => fPico(tm(c, conga, { tuning: th }, false, 1.2), th, t.f[i] * 0.85, t.f[i] * 1.15));
+    confere(`${nome}: TUNING mínimo / 12 h / máximo`, t.f.join(' / ') + ' Hz ±3 % (tabela p.14; tol. minha)', fs3.map(v => f(v, 1)).join(' / ') + ' Hz', fs3.every((v, i) => perto(v, t.f[i], t.f[i] * 0.03)));
+    const r = tm(c, conga), T = tempoAteRms(r.y, FS, r.t0, 0.1, 2 / t.f[1]) * 1000;   // janela RMS de 2 períodos: constante para uma senoide e estável com o ruído dos toms (com 1 período o ruído desviava até 20 %; o tom sozinho dá 204/133/101 ms)
+    confere(`${nome}: decay a −20 dB (TUNING 12 h; RMS de 2 períodos)`, t.T + ' ms ±15 % (tabela p.14; tol. minha)', f(T, 0) + ' ms', perto(T, t.T, t.T * 0.15));
+    const pn = vpp(r.y), pa = vpp(tm(c, conga, {}, true).y);
+    confere(`${nome}: amplitude normal / accent`, t.v.join(' / ') + ' Vpp ±5 % (tabela p.14)', f(pn) + ' / ' + f(pa) + ' Vpp', perto(pn, t.v[0], t.v[0] * 0.05) && perto(pa, t.v[1], t.v[1] * 0.05));
+    // queda de pitch pelos diodos: começa mais alto e cai (a); a magnitude não foi encontrada (c)
+    const fi = freqEm(r.y, r.t0, 0.004, 0.03), ff = fs3[1];   // final pelo pico espectral (o ruído dos toms polui o cruzamento de zero)
+    confere(`${nome}: queda de pitch (4 a 30 ms contra o final)`, 'início > final (texto p.6); magnitude: não encontrada (c)', f(fi, 1) + ' Hz → ' + f(ff, 1) + ' Hz', fi > ff * 1.02);
+    const acm = tm(c, conga, {}, true), a1 = bandaDb(acm, 2 * t.f[1], 12 * t.f[1], 16384) - bandaDb(acm, 0.5 * t.f[1], 1.5 * t.f[1], 16384), a0 = bandaDb(r, 2 * t.f[1], 12 * t.f[1], 16384) - bandaDb(r, 0.5 * t.f[1], 1.5 * t.f[1], 16384);
+    confere(`${nome}: accent muda o timbre (energia 2 a 12 f0 contra 0,5 a 1,5 f0)`, '|diferença| ≥ 0,5 dB (tol. minha)', f(a1 - a0) + ' dB', Math.abs(a1 - a0) >= 0.5);
+    const i0 = Math.round(r.t0 * FS), fim = rms(tm(c, conga, {}, false, 3).y, Math.round(2 * FS), Math.round(3 * FS));
+    confere(`${nome}: silêncio antes do disparo e decai a zero`, '0 e < −80 dB', f(pico(r.y, 0, i0 - 1), 12) + ' e ' + f(dB(fim / pico(r.y)), 1) + ' dB', pico(r.y, 0, i0 - 1) === 0 && dB(fim / pico(r.y)) < -80);
+  }
+  // ruído rosa: passa-baixas de 2 polos em 273 Hz, Q 0,74, aplicado ao ruído branco (Parte C, seção 4)
+  const mR = novo(Motor, FS), N = 1 << 18, pnv = new Float64Array(N); for (let i = 0; i < N; i++) { mR.tick(); pnv[i] = mR.fonte.pn; }
+  const mg = espectro(pnv, 0, 65536), banda = (a, b) => dB(Math.sqrt(energiaBanda(mg, FS, a, b) / (b - a)));
+  const Hp = fq => { const x = fq / 273, lp = 1 / Math.hypot(1 - x * x, x / 0.74), wn = 1 / Math.hypot(1, fq / 7230); return dB(lp * wn); };
+  for (const [a, b] of [[40, 80], [150, 250], [500, 700], [1200, 1800], [3000, 4000]]) {
+    const c = Math.sqrt(a * b), med = banda(a, b) - banda(40, 80), teo = Hp(c) - Hp(Math.sqrt(40 * 80));
+    confere(`ruído "rosa": espectro em ${a} a ${b} Hz, relativo a 40 a 80 Hz`, f(teo, 1) + ' dB ±2 (2 polos, 273 Hz, Q 0,74)', f(med, 1) + ' dB', perto(med, teo, 2));
+  }
+  // ruído isolado de cada circuito: saída com e sem o ruído (mesma realização, ganho zerado por um instante)
+  for (const c of ['lt', 'mt', 'ht']) {
+    const e = D.TOM[c].tom, e2 = D.TOM[c].conga, g = e.gN, g2 = e2.gN, r1 = tm(c, false);
+    e.gN = 0; const r0 = tm(c, false); e.gN = g;
+    const ru = Float64Array.from(r1.y, (v, i) => v - r0.y[i]), Tn = tempoAteRms(ru, FS, r1.t0, 0.1, 0.02) * 1000, esperado = D.TOM_RUIDO_DECAY * TAB[c].tom.T;
+    confere(`${c.toUpperCase()} tom: decay do ruído, "um pouco mais longo" que o do tom`, f(esperado, 0) + ' ms ±15 % (fator ' + D.TOM_RUIDO_DECAY + ' é (c): sem fonte)', f(Tn, 0) + ' ms', perto(Tn, esperado, esperado * 0.15) && Tn > TAB[c].tom.T);
+    confere(`${c.toUpperCase()} conga: sem ruído (toms têm; congas não, decisão do usuário)`, 'ganho do ruído = 0', String(g2), g2 === 0 && g > 0);
+  }
+  // mix: ganho 1,0 para os três circuitos (Parte C, seção 10), com o disparo alinhado ao bloco de 128 amostras
+  for (const c of ['lt', 'mt', 'ht']) {
+    const T512 = 512 / FS, ref = renderVoz(novo(Motor, FS, { acLevel: 1, [c]: { level: 1, tuning: 0.5, modo: 0 } }), c, 1, [{ t: T512, ac: false }]);
+    const d2 = render(novo(Motor, FS, { master: 1, acLevel: 1, [c]: { level: 1, tuning: 0.5, modo: 0 } }), 1, [{ t: T512, v: c, ac: false }]), esp = vpp(ref.y) * D.GANHO_MIX[c] * D.V_POR_UNIDADE;
+    confere(`mix: ${c.toUpperCase()} com ganho 1,0`, f(esp, 3) + ' Vpp digital ±3 %', f(vpp(d2), 3), perto(vpp(d2), esp, esp * 0.03));
+  }
+  // exclusividade: cada par é um único circuito; um 2º disparo durante o som reexcita o mesmo ressonador, nunca soma duas vozes
+  for (const c of ['lt', 'mt', 'ht']) { const um = vpp(tm(c, false).y), m = novo(Motor, FS, { acLevel: 1, [c]: { level: 1, tuning: 0.5, modo: 0 } }), r = renderVoz(m, c, 1.5, [{ t: 0.01, ac: false }, { t: 0.06, ac: false }]);
+    confere(`${c.toUpperCase()}/${{ lt: 'LC', mt: 'MC', ht: 'HC' }[c]}: par exclusivo (um circuito só; 2º disparo não soma vozes)`, 'Vpp ≤ 2× o de um disparo', f(vpp(r.y) / um) + '×', vpp(r.y) <= 2 * um); }
+}
+
 // ===== relatório =====
 const larg = [0, 1, 2].map(k => Math.min(70, Math.max(...linhas.map(l => (l[k + 1] || '').length))));
 for (const l of linhas) console.log(l[0] === '' ? '\n' + l[1] : `${l[0]}  ${l[1].padEnd(larg[0])}  esperado: ${l[2].padEnd(larg[1])}  medido: ${l[3]}`);

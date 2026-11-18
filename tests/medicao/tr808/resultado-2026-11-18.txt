@@ -60,4 +60,59 @@ ok    silêncio exato antes do disparo                                         e
 ok    decai a zero (sem oscilador livre)                                      esperado: < −80 dB                                                                medido: -240,0 dB
 ok    mix: SD com ganho 1,0 (Parte C, seção 10)                               esperado: 0,299 Vpp digital ±3 %                                                  medido: 0,299
 
-43 medições, 43 ok, 0 fora
+— toms e congas: 3 circuitos com chave tom/conga (frequência, decay, nível, queda de pitch, ruído) —
+ok    LT (tom): TUNING mínimo / 12 h / máximo                                 esperado: 80 / 90 / 100 Hz ±3 % (tabela p.14; tol. minha)                         medido: 80,2 / 90,0 / 99,8 Hz
+ok    LT (tom): decay a −20 dB (TUNING 12 h; RMS de 2 períodos)               esperado: 200 ms ±15 % (tabela p.14; tol. minha)                                  medido: 205 ms
+ok    LT (tom): amplitude normal / accent                                     esperado: 3.5 / 12 Vpp ±5 % (tabela p.14)                                         medido: 3,50 / 12,00 Vpp
+ok    LT (tom): queda de pitch (4 a 30 ms contra o final)                     esperado: início > final (texto p.6); magnitude: não encontrada (c)               medido: 102,0 Hz → 90,0 Hz
+ok    LT (tom): accent muda o timbre (energia 2 a 12 f0 contra 0,5 a 1,5 f0)  esperado: |diferença| ≥ 0,5 dB (tol. minha)                                       medido: 9,06 dB
+ok    LT (tom): silêncio antes do disparo e decai a zero                      esperado: 0 e < −80 dB                                                            medido: 0,000000000000 e -182,3 dB
+ok    LT (conga): TUNING mínimo / 12 h / máximo                               esperado: 165 / 185 / 220 Hz ±3 % (tabela p.14; tol. minha)                       medido: 165,0 / 185,0 / 220,0 Hz
+ok    LT (conga): decay a −20 dB (TUNING 12 h; RMS de 2 períodos)             esperado: 180 ms ±15 % (tabela p.14; tol. minha)                                  medido: 185 ms
+ok    LT (conga): amplitude normal / accent                                   esperado: 3.5 / 12 Vpp ±5 % (tabela p.14)                                         medido: 3,50 / 12,00 Vpp
+ok    LT (conga): queda de pitch (4 a 30 ms contra o final)                   esperado: início > final (texto p.6); magnitude: não encontrada (c)               medido: 213,9 Hz → 185,0 Hz
+ok    LT (conga): accent muda o timbre (energia 2 a 12 f0 contra 0,5 a 1,5 f0)  esperado: |diferença| ≥ 0,5 dB (tol. minha)                                       medido: 3,29 dB
+ok    LT (conga): silêncio antes do disparo e decai a zero                    esperado: 0 e < −80 dB                                                            medido: 0,000000000000 e -238,2 dB
+ok    MT (tom): TUNING mínimo / 12 h / máximo                                 esperado: 120 / 135 / 160 Hz ±3 % (tabela p.14; tol. minha)                       medido: 120,2 / 134,8 / 159,9 Hz
+ok    MT (tom): decay a −20 dB (TUNING 12 h; RMS de 2 períodos)               esperado: 130 ms ±15 % (tabela p.14; tol. minha)                                  medido: 131 ms
+ok    MT (tom): amplitude normal / accent                                     esperado: 3 / 11 Vpp ±5 % (tabela p.14)                                           medido: 3,00 / 10,95 Vpp
+ok    MT (tom): queda de pitch (4 a 30 ms contra o final)                     esperado: início > final (texto p.6); magnitude: não encontrada (c)               medido: 158,6 Hz → 134,8 Hz
+ok    MT (tom): accent muda o timbre (energia 2 a 12 f0 contra 0,5 a 1,5 f0)  esperado: |diferença| ≥ 0,5 dB (tol. minha)                                       medido: 5,41 dB
+ok    MT (tom): silêncio antes do disparo e decai a zero                      esperado: 0 e < −80 dB                                                            medido: 0,000000000000 e -240,0 dB
+ok    MT (conga): TUNING mínimo / 12 h / máximo                               esperado: 250 / 280 / 310 Hz ±3 % (tabela p.14; tol. minha)                       medido: 250,0 / 280,1 / 310,1 Hz
+ok    MT (conga): decay a −20 dB (TUNING 12 h; RMS de 2 períodos)             esperado: 100 ms ±15 % (tabela p.14; tol. minha)                                  medido: 103 ms
+ok    MT (conga): amplitude normal / accent                                   esperado: 3 / 10 Vpp ±5 % (tabela p.14)                                           medido: 3,00 / 10,00 Vpp
+ok    MT (conga): queda de pitch (4 a 30 ms contra o final)                   esperado: início > final (texto p.6); magnitude: não encontrada (c)               medido: 323,8 Hz → 280,1 Hz
+ok    MT (conga): accent muda o timbre (energia 2 a 12 f0 contra 0,5 a 1,5 f0)  esperado: |diferença| ≥ 0,5 dB (tol. minha)                                       medido: 3,36 dB
+ok    MT (conga): silêncio antes do disparo e decai a zero                    esperado: 0 e < −80 dB                                                            medido: 0,000000000000 e -240,0 dB
+ok    HT (tom): TUNING mínimo / 12 h / máximo                                 esperado: 165 / 185 / 220 Hz ±3 % (tabela p.14; tol. minha)                       medido: 165,0 / 185,1 / 220,1 Hz
+ok    HT (tom): decay a −20 dB (TUNING 12 h; RMS de 2 períodos)               esperado: 100 ms ±15 % (tabela p.14; tol. minha)                                  medido: 109 ms
+ok    HT (tom): amplitude normal / accent                                     esperado: 3.5 / 12 Vpp ±5 % (tabela p.14)                                         medido: 3,50 / 12,00 Vpp
+ok    HT (tom): queda de pitch (4 a 30 ms contra o final)                     esperado: início > final (texto p.6); magnitude: não encontrada (c)               medido: 210,7 Hz → 185,1 Hz
+ok    HT (tom): accent muda o timbre (energia 2 a 12 f0 contra 0,5 a 1,5 f0)  esperado: |diferença| ≥ 0,5 dB (tol. minha)                                       medido: 7,92 dB
+ok    HT (tom): silêncio antes do disparo e decai a zero                      esperado: 0 e < −80 dB                                                            medido: 0,000000000000 e -240,0 dB
+ok    HT (conga): TUNING mínimo / 12 h / máximo                               esperado: 370 / 400 / 455 Hz ±3 % (tabela p.14; tol. minha)                       medido: 370,1 / 400,1 / 455,1 Hz
+ok    HT (conga): decay a −20 dB (TUNING 12 h; RMS de 2 períodos)             esperado: 80 ms ±15 % (tabela p.14; tol. minha)                                   medido: 82 ms
+ok    HT (conga): amplitude normal / accent                                   esperado: 3.5 / 12 Vpp ±5 % (tabela p.14)                                         medido: 3,50 / 12,00 Vpp
+ok    HT (conga): queda de pitch (4 a 30 ms contra o final)                   esperado: início > final (texto p.6); magnitude: não encontrada (c)               medido: 462,3 Hz → 400,1 Hz
+ok    HT (conga): accent muda o timbre (energia 2 a 12 f0 contra 0,5 a 1,5 f0)  esperado: |diferença| ≥ 0,5 dB (tol. minha)                                       medido: 3,50 dB
+ok    HT (conga): silêncio antes do disparo e decai a zero                    esperado: 0 e < −80 dB                                                            medido: 0,000000000000 e -240,0 dB
+ok    ruído "rosa": espectro em 40 a 80 Hz, relativo a 40 a 80 Hz             esperado: 0,0 dB ±2 (2 polos, 273 Hz, Q 0,74)                                     medido: 0,0 dB
+ok    ruído "rosa": espectro em 150 a 250 Hz, relativo a 40 a 80 Hz           esperado: -0,7 dB ±2 (2 polos, 273 Hz, Q 0,74)                                    medido: -0,7 dB
+ok    ruído "rosa": espectro em 500 a 700 Hz, relativo a 40 a 80 Hz           esperado: -13,5 dB ±2 (2 polos, 273 Hz, Q 0,74)                                   medido: -14,3 dB
+ok    ruído "rosa": espectro em 1200 a 1800 Hz, relativo a 40 a 80 Hz         esperado: -29,4 dB ±2 (2 polos, 273 Hz, Q 0,74)                                   medido: -29,4 dB
+ok    ruído "rosa": espectro em 3000 a 4000 Hz, relativo a 40 a 80 Hz         esperado: -45,1 dB ±2 (2 polos, 273 Hz, Q 0,74)                                   medido: -45,7 dB
+ok    LT tom: decay do ruído, "um pouco mais longo" que o do tom              esperado: 260 ms ±15 % (fator 1.3 é (c): sem fonte)                               medido: 273 ms
+ok    LT conga: sem ruído (toms têm; congas não, decisão do usuário)          esperado: ganho do ruído = 0                                                      medido: 0
+ok    MT tom: decay do ruído, "um pouco mais longo" que o do tom              esperado: 169 ms ±15 % (fator 1.3 é (c): sem fonte)                               medido: 148 ms
+ok    MT conga: sem ruído (toms têm; congas não, decisão do usuário)          esperado: ganho do ruído = 0                                                      medido: 0
+ok    HT tom: decay do ruído, "um pouco mais longo" que o do tom              esperado: 130 ms ±15 % (fator 1.3 é (c): sem fonte)                               medido: 134 ms
+ok    HT conga: sem ruído (toms têm; congas não, decisão do usuário)          esperado: ganho do ruído = 0                                                      medido: 0
+ok    mix: LT com ganho 1,0                                                   esperado: 0,321 Vpp digital ±3 %                                                  medido: 0,321
+ok    mix: MT com ganho 1,0                                                   esperado: 0,319 Vpp digital ±3 %                                                  medido: 0,319
+ok    mix: HT com ganho 1,0                                                   esperado: 0,312 Vpp digital ±3 %                                                  medido: 0,312
+ok    LT/LC: par exclusivo (um circuito só; 2º disparo não soma vozes)        esperado: Vpp ≤ 2× o de um disparo                                                medido: 1,36×
+ok    MT/MC: par exclusivo (um circuito só; 2º disparo não soma vozes)        esperado: Vpp ≤ 2× o de um disparo                                                medido: 1,00×
+ok    HT/HC: par exclusivo (um circuito só; 2º disparo não soma vozes)        esperado: Vpp ≤ 2× o de um disparo                                                medido: 1,00×
+
+96 medições, 96 ok, 0 fora
