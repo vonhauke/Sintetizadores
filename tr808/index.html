@@ -49,7 +49,7 @@ const BD = {
   riseRatio: 2.81,       // (c sobre a) sqrt((R166+R165)/R166) = sqrt(53,8k/6,8k) com Q43 saturado (Parte B 3.1); o texto da Roland diz "twice", Werner ">1 oitava"
   tRise: 0.004,          // (a) Q43 conduz ~4 ms (p.5)
   tauRise: 0.0015,       // (c) volta do ratio a 1 em ~2 ms depois dos 4 ms (S4: ~6 ms no total); forma sem fonte
-  sighSt: 1, tauSigh: 0.1,  // (b) S11: varredura mediana ≈ 1 semitom; (c) τ = 0,1 s: forma sem fonte (S4 dá 48 a 58 Hz em 0,3 s)
+  sighSt: 12 * Math.log2(58 / 49.5), tauSigh: 0.1,  // (b) S4 Fig. 11: 48 a 58 Hz nos primeiros 0,3 s (decisão do usuário: segue o Werner); parte de 58 Hz e assenta em f0. (c) τ = 0,1 s: forma sem fonte
   tauClick: 70e-6,       // (c sobre a) R162·C40 = 4,7k × 15 nF
   vk: 15.722, k: 0.47976,   // calibrados contra a tabela p.14 (3,5 e 10 Vpp com TONE e DECAY a 12 h): VK ajusta a razão accent/normal, k o nível
   kClick: 0.07196         // (c) SEM FONTE: o click vale 15 % de k por volt de trigger. Existe só para o accent mudar o timbre (decisão); ajustar de ouvido

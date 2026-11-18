@@ -22,11 +22,11 @@ titulo('bumbo: frequência (DECAY no máximo)');
   confere('f0 com DECAY longo (0,6 a 1,6 s)', '49,5 Hz ±0,5 (decisão do usuário; tol. minha)', f(fFim) + ' Hz', perto(fFim, 49.5, 0.5));
   const mag = espectro(y, Math.round((t0 + 0.6) * FS), 65536), [fp] = picoEsp(mag, FS, 30, 80);
   confere('f0 pelo pico do espectro (0,6 a 1,9 s)', '49,5 Hz ±0,5', f(fp) + ' Hz', perto(fp, 49.5, 0.5));
-  const fIni = freqEm(y, t0, 0.02, 0.12);
-  const st = semitons(fIni, fFim);
-  confere('varredura: 20 a 120 ms contra o final', '≈ 1 semitom (0,5 a 1,5; tol. minha; S11, mediana)', f(st) + ' semitons (' + f(fIni, 1) + ' Hz)', st >= 0.5 && st <= 1.5);
+  const fIni = freqEm(y, t0, 0.02, 0.12), st = semitons(fIni, fFim);
+  confere('varredura: 20 a 120 ms contra o final', '> 1 semitom e ≤ 3,3 (Werner 48 a 58 Hz; tol. minha)', f(st) + ' semitons (' + f(fIni, 1) + ' Hz)', st > 1 && st <= 3.3);
   let min = 1e9, max = 0; for (let a = 0.02; a < 0.3; a += 0.02) { const q = freqEm(y, t0, a, a + 0.1); if (q < min) min = q; if (q > max) max = q; }
   confere('frequência instantânea nos primeiros 0,4 s dentro de 48 a 58 Hz', '48 a 58 Hz (S4, Fig. 11)', f(min, 1) + ' a ' + f(max, 1) + ' Hz', min >= 48 && max <= 58);
+  confere('o topo da varredura chega perto de 58 Hz (janela de 100 ms)', '≥ 53 Hz (tol. minha)', f(max, 1) + ' Hz', max >= 53);
 }
 
 // ===== 2. bumbo: ataque =====
