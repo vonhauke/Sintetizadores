@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Clone do TR-808 (em construção: todas as vozes, sem sequenciador)</title>
+<title>Clone do TR-808 (em construção: vozes, master e sequenciador)</title>
 <link rel="stylesheet" href="../fonts/fonts.css">
 <style>
 :root{--pagina:#16181b;--tinta:#e8e6df;--apagado:#9a9890;--painel:#2b2f36;--sulco:#14161a;--acento:#e0662a;--foco:#1f7ae0;
@@ -30,7 +30,7 @@ button.liga[aria-pressed=true]{background:var(--acento);color:#111;border-color:
 <body>
 <div class="wrap">
 <h1>Rhythm Composer, em construção</h1>
-<p class="aviso">Etapa 9 de 10: as 16 vozes e o master estão no motor. Faltam o painel final e o sequenciador. Controles e sequenciador completos vêm depois das vozes. Página provisória, ainda fora do menu.</p>
+<p class="aviso">Etapa 10 de 11: vozes, master e sequenciador estão no motor. Esta página só tem controles provisórios do sequenciador (sem edição de passos); falta o painel final. Controles e sequenciador completos vêm depois das vozes. Página provisória, ainda fora do menu.</p>
 <div class="painel" id="painel"></div>
 <p id="barra" role="status"></p>
 </div>
@@ -408,6 +408,97 @@ class Master {
   }
 }
 
+/* ===== Sequenciador =====
+   Clock, passos e patterns do TR-808. O que tem fonte (a): semínima = 24 clocks (p.5); ♩ = 40 a 300; 9 ms de preparação ao dar START (p.5); troca de pattern na barra de compasso;
+   12 trilhas (a 12ª é o accent, global por passo); 1 a 32 passos, partes 1 e 2; 32 patterns = 12 básicos + 4 intro/fill-in, cada um nos bancos A e B; BASIC VARIATION A / AB / B;
+   AUTO FILL IN a cada 2, 4, 8, 12 ou 16 compassos; rhythm track de 12 trilhas × 64 compassos, sem gravar o A/B; sem swing. Marcado (c): PRE-SCALE em clocks por passo (do TR-08),
+   a lógica interna da CPU (fill-in, intro, o que cada posição do MODE faz, o fim do rhythm track) e o mapa do botão de andamento. */
+const SEQ = {
+  trilhas: ['bd', 'sd', 'lt', 'mt', 'ht', 'rs', 'cp', 'cb', 'cy', 'oh', 'ch', 'ac'],   // (a) as 12 trilhas do INSTRUMENT SELECT; 'ac' = accent. 'oh' vem antes de 'ch' para o CH cortar o OH no mesmo passo
+  ppqn: 24, bpmMin: 40, bpmMax: 300,
+  clocksPorPasso: [8, 4, 6, 3],        // (c) PRE-SCALE 1 a 4, a 24 PPQN (tercina de colcheia, de semicolcheia, semicolcheia, fusa)
+  maxPassos: 32, maxCompassosTrilha: 64, nTrilhasSong: 12,
+  atrasoStart: 0.009,                  // (a) "mode change preparation time"
+  autoFill: [0, 16, 12, 8, 4, 2]       // (a) posições do AUTO FILL IN: MANUAL (0), 16, 12, 8, 4, 2 compassos
+};
+/** Botão TEMPO (0 a 1) e FINE (0 a 1, centro 0,5) -> BPM. (c) O circuito é antilogarítmico (a), mas a lei exata não foi encontrada: exponencial de 40 a 300; FINE ±10 %. */
+const bpmDeKnob = (t, fine = 0.5) => Math.max(SEQ.bpmMin, Math.min(SEQ.bpmMax, SEQ.bpmMin * Math.pow(SEQ.bpmMax / SEQ.bpmMin, t) * (1 + (fine - 0.5) * 0.2)));
+const novoPad = () => ({ n: 16, ps: 3, t: Array.from({ length: 12 }, () => new Uint8Array(32)) });
+const lim = (v, a, b) => Math.max(a, Math.min(b, Math.round(+v) || a));
+class Seq {
+  constructor(m) {
+    this.m = m; this.fs = m.fs; this.run = false; this.modo = 'manual'; this.pat = {};
+    for (let k = 1; k <= 12; k++) for (const b of 'AB') this.pat['b' + k + b] = novoPad();
+    for (let k = 1; k <= 4; k++) for (const b of 'AB') this.pat['f' + k + b] = novoPad();
+    this.selB = 1; this.selF = 1; this.varB = 'A'; this.varF = 'A'; this.auto = 0; this.editaFill = false;
+    this.song = Array.from({ length: SEQ.nTrilhasSong }, () => new Array(SEQ.maxCompassosTrilha).fill(null)); this.songT = 0; this.songPos = 0;
+    this.introArm = false; this.introPend = false; this.fillPend = false; this.altAB = false; this.atual = null; this.passo = 0; this.pn = 0; this.comp = -1; this.espera = 0; this.acc = 0;
+    this.setBpm(120);
+  }
+  setBpm(v) { this.bpm = Math.max(SEQ.bpmMin, Math.min(SEQ.bpmMax, +v || 120)); this.spp = this.fs * 60 / (this.bpm * SEQ.ppqn); }
+  emite(e) { e.n = this.m.nAmostra; if (this.m.evento) this.m.evento(e); if (this.m.saida && (e.t === 'passo' || e.t === 'compasso')) this.m.saida(e); }
+  chaveB(n) { let b = this.varB; if (b === 'AB') { b = this.altAB ? 'B' : 'A'; this.altAB = !this.altAB; } return 'b' + n + b; }
+  chaveF(n) { return 'f' + n + this.varF; }
+  /** Pattern que as edições alteram: o básico escolhido (banco A, ou B se a chave estiver em B) ou o INTRO/FILL IN escolhido (banco da chave I/F VARIATION). (c) */
+  alvo() { return this.pat[this.editaFill ? 'f' + this.selF + this.varF : 'b' + this.selB + (this.varB === 'B' ? 'B' : 'A')]; }
+  start() { if (this.run) return; this.run = true; this.espera = Math.round(SEQ.atrasoStart * this.fs); this.acc = 0; this.comp = -1; this.atual = null; this.altAB = false; this.fillPend = false; this.introPend = this.introArm; this.introArm = false; this.songPos = 0; }
+  stop() { this.run = false; this.atual = null; }
+  tap() { if (this.run) this.fillPend = true; else this.introArm = true; }   // (a) TAP = intro set / fill-in trigger; (c) semântica
+  amostra() {
+    if (!this.run) return;
+    if (this.espera > 0) { if (--this.espera === 0) this.acc = this.spp - 1; return; }   // o 1º pulso cai logo na amostra seguinte
+    this.acc += 1; if (this.acc >= this.spp) { this.acc -= this.spp; this.pulso(); }
+  }
+  pulso() {
+    if (!this.atual && !this.novoCompasso()) return;
+    this.emite({ t: 'pulso' });
+    const p = this.atual, cps = SEQ.clocksPorPasso[p.ps - 1];
+    if (this.pn === 0) this.dispara(p);
+    if (++this.pn >= cps) { this.pn = 0; if (++this.passo >= p.n) { this.passo = 0; this.atual = null; } }
+  }
+  novoCompasso() {
+    this.comp++; let key, fill = false;
+    if (this.modo === 'play') {
+      const e = this.song[this.songT][this.songPos]; if (!e) { this.stop(); return false; } this.songPos++;
+      key = e.t === 'b' ? this.chaveB(e.n) : this.chaveF(e.n);
+    } else {
+      if (this.fillPend) { fill = true; this.fillPend = false; } else if (this.introPend) { fill = true; this.introPend = false; }
+      else if (this.auto > 0 && (this.comp + 1) % this.auto === 0) fill = true;
+      key = fill ? this.chaveF(this.selF) : this.chaveB(this.selB);
+      if (this.modo === 'compose' && this.songPos < SEQ.maxCompassosTrilha) this.song[this.songT][this.songPos++] = fill ? { t: 'f', n: this.selF } : { t: 'b', n: this.selB };
+    }
+    this.atual = this.pat[key]; this.passo = 0; this.pn = 0; this.emite({ t: 'compasso', pat: key, c: this.comp }); return true;
+  }
+  dispara(p) {
+    const i = this.passo, ac = !!p.t[11][i]; this.emite({ t: 'passo', i });
+    for (let k = 0; k < 11; k++) if (p.t[k][i]) { this.emite({ t: 'trig', v: SEQ.trilhas[k], ac }); this.m.msg({ t: 'trig', v: SEQ.trilhas[k], ac }); }
+  }
+  alterna(tr, passo) { const k = SEQ.trilhas.indexOf(tr); if (k >= 0 && passo >= 0 && passo < SEQ.maxPassos) this.alvo().t[k][passo] ^= 1; }
+  limpaTrilha(tr) { const k = SEQ.trilhas.indexOf(tr); if (k >= 0) this.alvo().t[k].fill(0); }
+  limpaPadrao() { for (const a of this.alvo().t) a.fill(0); }
+  exporta() { const pat = {}; for (const k in this.pat) pat[k] = { n: this.pat[k].n, ps: this.pat[k].ps, t: this.pat[k].t.map(a => Array.from(a)) };
+    return { bpm: this.bpm, selB: this.selB, selF: this.selF, varB: this.varB, varF: this.varF, auto: this.auto, modo: this.modo, songT: this.songT, song: this.song.map(t => t.map(e => e && { t: e.t, n: e.n })), pat }; }
+  importa(d) {
+    if (!d || typeof d !== 'object') return; this.setBpm(d.bpm); this.selB = lim(d.selB, 1, 12); this.selF = lim(d.selF, 1, 4); this.varB = ['A', 'AB', 'B'].includes(d.varB) ? d.varB : 'A'; this.varF = d.varF === 'B' ? 'B' : 'A';
+    this.auto = SEQ.autoFill.includes(d.auto) ? d.auto : 0; this.modo = ['manual', 'write', 'play', 'compose'].includes(d.modo) ? d.modo : 'manual'; this.songT = lim(d.songT, 0, 11);
+    if (d.pat) for (const k in this.pat) { const s = d.pat[k]; if (!s) continue; this.pat[k].n = lim(s.n, 1, 32); this.pat[k].ps = lim(s.ps, 1, 4); (s.t || []).slice(0, 12).forEach((a, i) => { this.pat[k].t[i].fill(0); (a || []).slice(0, 32).forEach((v, j) => { this.pat[k].t[i][j] = v ? 1 : 0; }); }); }
+    if (Array.isArray(d.song)) d.song.slice(0, 12).forEach((t, i) => (t || []).slice(0, 64).forEach((e, j) => { this.song[i][j] = e && (e.t === 'b' || e.t === 'f') ? { t: e.t, n: lim(e.n, 1, e.t === 'b' ? 12 : 4) } : null; }));
+  }
+  cmd(c) {
+    switch (c.a) {
+      case 'start': this.start(); break; case 'stop': this.stop(); break; case 'tap': this.tap(); break;
+      case 'bpm': this.setBpm(c.v); break; case 'modo': if (['manual', 'write', 'play', 'compose'].includes(c.v)) this.modo = c.v; break;
+      case 'basico': this.selB = lim(c.n, 1, 12); this.editaFill = false; break; case 'fill': this.selF = lim(c.n, 1, 4); this.editaFill = true; break;
+      case 'varB': if (['A', 'AB', 'B'].includes(c.v)) this.varB = c.v; break; case 'varF': if (c.v === 'A' || c.v === 'B') this.varF = c.v; break;
+      case 'auto': this.auto = SEQ.autoFill.includes(c.v) ? c.v : 0; break;
+      case 'alterna': this.alterna(c.trilha, c.passo); break; case 'limpaTrilha': this.limpaTrilha(c.trilha); break; case 'limpaPadrao': this.limpaPadrao(); break;
+      case 'tamanho': this.alvo().n = lim(c.n, 1, SEQ.maxPassos); break; case 'prescale': this.alvo().ps = lim(c.ps, 1, 4); break;
+      case 'songTrilha': this.songT = lim(c.tr, 0, SEQ.nTrilhasSong - 1); break; case 'songLimpa': this.song[this.songT].fill(null); break;
+      case 'importa': this.importa(c.d); break;
+    }
+  }
+}
+
 class Motor {
   constructor(fs) {
     this.fs = fs; this.p = { acLevel: 1, master: 1, on: 1, saida: 0, bd: { level: 1, tone: 0.5, decay: 0.5 }, sd: { level: 1, tone: 0.5, snappy: 0.5 },
@@ -415,9 +506,10 @@ class Motor {
       cy: { level: 1, tone: 0.5, decay: 0.5 }, oh: { level: 1, decay: 0.5 }, ch: { level: 1 }, cb: { level: 1 }, cp: { level: 1, modo: 0 }, rs: { level: 1, modo: 0 } }; this.p.ma = this.p.cp;   // o par MA/CP tem um LEVEL e uma chave só
     this.fonte = new Ruido(fs); this.bd = new Bumbo(fs); this.sd = new Caixa(fs, this.fonte);
     for (const c of ['lt', 'mt', 'ht']) this[c] = new Tom(fs, this.fonte, c);
-    this.metal = new Metal(fs); this.cy = new Prato(fs, this.metal); this.oh = new Hat(fs, this.metal, 'oh'); this.ch = new Hat(fs, this.metal, 'ch'); this.cb = new Cowbell(fs, this.metal); this.cp = new Clap(fs, this.fonte); this.ma = new Maracas(fs, this.fonte); this.rs = new RimClaves(fs); this.master = new Master(fs); this.saida = null;
+    this.metal = new Metal(fs); this.cy = new Prato(fs, this.metal); this.oh = new Hat(fs, this.metal, 'oh'); this.ch = new Hat(fs, this.metal, 'ch'); this.cb = new Cowbell(fs, this.metal); this.cp = new Clap(fs, this.fonte); this.ma = new Maracas(fs, this.fonte); this.rs = new RimClaves(fs); this.master = new Master(fs); this.saida = null; this.evento = null; this.nAmostra = 0; this.seq = new Seq(this);
   }
   msg(m) {
+    if (m.t === 'seq') return this.seq.cmd(m);
     if (m.t === 'p') { const q = m.p; for (const v of ['bd', 'sd', 'lt', 'mt', 'ht', 'cy', 'oh', 'ch', 'cb', 'cp', 'ma', 'rs']) if (q[v]) Object.assign(this.p[v], q[v]); for (const k of ['acLevel', 'master', 'on', 'saida']) if (k in q) this.p[k] = q[k]; }
     else if (m.t === 'trig' && (m.v === 'cp' || m.v === 'ma')) (this.p.cp.modo === 1 ? this.ma : this.cp).trig(m.ac ? V_NORMAL + (V_ACC_MAX - V_NORMAL) * this.p.acLevel : V_NORMAL);   // a chave MA/CP escolhe a voz
     else if (m.t === 'trig' && this[m.v] && this[m.v].trig) { if (m.v === 'ch') this.oh.choke(); this[m.v].trig(m.ac ? V_NORMAL + (V_ACC_MAX - V_NORMAL) * this.p.acLevel : V_NORMAL); }
@@ -430,14 +522,14 @@ class Motor {
   /** L e R recebem a mesma saída mono: HI (padrão) ou LO (p.saida = 1). p.on = 0 desliga (POWER: o muting por Q13). */
   process(L, R, n) {
     const lo = this.p.saida === 1, mudo = this.p.on === 0;
-    for (let i = 0; i < n; i++) { this.tick(); const y = this.master.processa(this.mixVolts(), this.p.master, lo), v = mudo ? 0 : y; L[i] = v; R[i] = v; }
+    for (let i = 0; i < n; i++) { this.seq.amostra(); this.tick(); this.nAmostra++; const y = this.master.processa(this.mixVolts(), this.p.master, lo), v = mudo ? 0 : y; L[i] = v; R[i] = v; }
   }
 }
-Motor.dados = { T_TRIG, V_NORMAL, V_ACC_MAX, V_POR_UNIDADE, BD, GANHO_MIX, T20, fcTone, pulsoBd, RC_TONE, Bumbo, SD, Caixa, Ruido, TOM, TOM_RUIDO_DECAY, TOM_QUEDA, Tom, fTom, TOM_PULSO, TOM_RUIDO_EXP, METAL, Metal, CY, HAT, Prato, Hat, mkBP, mkHP, Hp1, MET_TRIG, T_DECAY, CB, Cowbell, CP, Clap, RS, RimClaves, MA, Maracas, MASTER, Master, mkMasterPolos };
+Motor.dados = { T_TRIG, V_NORMAL, V_ACC_MAX, V_POR_UNIDADE, BD, GANHO_MIX, T20, fcTone, pulsoBd, RC_TONE, Bumbo, SD, Caixa, Ruido, TOM, TOM_RUIDO_DECAY, TOM_QUEDA, Tom, fTom, TOM_PULSO, TOM_RUIDO_EXP, METAL, Metal, CY, HAT, Prato, Hat, mkBP, mkHP, Hp1, MET_TRIG, T_DECAY, CB, Cowbell, CP, Clap, RS, RimClaves, MA, Maracas, MASTER, Master, mkMasterPolos, SEQ, Seq, bpmDeKnob };
 
 if (typeof AudioWorkletProcessor !== 'undefined' && typeof registerProcessor === 'function') {
   registerProcessor('motor-tr808', class extends AudioWorkletProcessor {
-    constructor() { super(); this.m = new Motor(sampleRate); this.port.onmessage = e => this.m.msg(e.data); }
+    constructor() { super(); this.m = new Motor(sampleRate); this.m.saida = x => this.port.postMessage(x); this.port.onmessage = e => this.m.msg(e.data); }
     process(_, saidas) { const o = saidas[0]; if (!o || !o[0]) return true; this.m.process(o[0], o[1] || o[0], o[0].length); return true; }
   });
 }
@@ -449,10 +541,20 @@ if (typeof AudioWorkletProcessor !== 'undefined' && typeof registerProcessor ===
 const $ = id => document.getElementById(id);
 const FONTE_DSP = $('dsp').textContent;
 const Motor = new Function(FONTE_DSP + '\nreturn Motor;')();
-const estado = { acLevel: 1, master: 0.8, bd: { level: 0.85, tone: 0.5, decay: 0.5 }, sd: { level: 0.85, tone: 0.5, snappy: 0.5 }, lt: { level: 0.85, tuning: 0.5, modo: 0 }, mt: { level: 0.85, tuning: 0.5, modo: 0 }, ht: { level: 0.85, tuning: 0.5, modo: 0 }, cy: { level: 0.85, tone: 0.5, decay: 0.5 }, oh: { level: 0.85, decay: 0.5 }, ch: { level: 0.85 }, cb: { level: 0.85 }, cp: { level: 0.85, modo: 0 }, rs: { level: 0.85, modo: 0 }, on: 1, saida: 0, acc: false };
+const DD = Motor.dados;
+const estado = { acLevel: 1, master: 0.8, bd: { level: 0.85, tone: 0.5, decay: 0.5 }, sd: { level: 0.85, tone: 0.5, snappy: 0.5 }, lt: { level: 0.85, tuning: 0.5, modo: 0 }, mt: { level: 0.85, tuning: 0.5, modo: 0 }, ht: { level: 0.85, tuning: 0.5, modo: 0 }, cy: { level: 0.85, tone: 0.5, decay: 0.5 }, oh: { level: 0.85, decay: 0.5 }, ch: { level: 0.85 }, cb: { level: 0.85 }, cp: { level: 0.85, modo: 0 }, rs: { level: 0.85, modo: 0 }, on: 1, saida: 0, acc: false, sq: { tempo: 0.5, fine: 0.5, selB: 1, selF: 1, varB: 'A', varF: 'A', auto: 0 } };
 const CHAVE = 'sint-tr808-v1:estado';
-try { const s = JSON.parse(localStorage.getItem(CHAVE) || 'null'); if (s) { Object.assign(estado, s); estado.bd = Object.assign({ level: 0.85, tone: 0.5, decay: 0.5 }, s.bd); estado.sd = Object.assign({ level: 0.85, tone: 0.5, snappy: 0.5 }, s.sd); for (const c of ['lt', 'mt', 'ht']) estado[c] = Object.assign({ level: 0.85, tuning: 0.5, modo: 0 }, s[c]); estado.cy = Object.assign({ level: 0.85, tone: 0.5, decay: 0.5 }, s.cy); estado.oh = Object.assign({ level: 0.85, decay: 0.5 }, s.oh); estado.ch = Object.assign({ level: 0.85 }, s.ch); estado.cb = Object.assign({ level: 0.85 }, s.cb); estado.cp = Object.assign({ level: 0.85, modo: 0 }, s.cp); estado.rs = Object.assign({ level: 0.85, modo: 0 }, s.rs); estado.on = s.on === 0 ? 0 : 1; estado.saida = s.saida === 1 ? 1 : 0; } } catch (e) {}
+try { const s = JSON.parse(localStorage.getItem(CHAVE) || 'null'); if (s) { Object.assign(estado, s); estado.bd = Object.assign({ level: 0.85, tone: 0.5, decay: 0.5 }, s.bd); estado.sd = Object.assign({ level: 0.85, tone: 0.5, snappy: 0.5 }, s.sd); for (const c of ['lt', 'mt', 'ht']) estado[c] = Object.assign({ level: 0.85, tuning: 0.5, modo: 0 }, s[c]); estado.cy = Object.assign({ level: 0.85, tone: 0.5, decay: 0.5 }, s.cy); estado.oh = Object.assign({ level: 0.85, decay: 0.5 }, s.oh); estado.ch = Object.assign({ level: 0.85 }, s.ch); estado.cb = Object.assign({ level: 0.85 }, s.cb); estado.cp = Object.assign({ level: 0.85, modo: 0 }, s.cp); estado.rs = Object.assign({ level: 0.85, modo: 0 }, s.rs); estado.sq = Object.assign({ tempo: 0.5, fine: 0.5, selB: 1, selF: 1, varB: 'A', varF: 'A', auto: 0 }, s.sq); estado.on = s.on === 0 ? 0 : 1; estado.saida = s.saida === 1 ? 1 : 0; } } catch (e) {}
 const salva = () => { try { localStorage.setItem(CHAVE, JSON.stringify(estado)); } catch (e) {} };
+/* Batida de demonstração (NÃO é do original): só para ouvir o sequenciador enquanto o editor de passos não existe. */
+const DEMO = (() => { const t = new Motor(48000), S = (a, o = {}) => t.msg(Object.assign({ t: 'seq', a }, o)), liga = (tr, ps) => ps.forEach(p => S('alterna', { trilha: tr, passo: p }));
+  for (const b of ['A', 'B']) { S('varB', { v: b }); S('basico', { n: 1 }); S('tamanho', { n: 16 }); S('prescale', { ps: 3 });
+    liga('bd', b === 'A' ? [0, 4, 8, 12] : [0, 4, 8, 10, 12]); liga('sd', [4, 12]); liga('ch', [0, 2, 4, 6, 8, 10, 12]); liga('oh', [14]); liga('ac', [0, 8]); }
+  S('varF', { v: 'A' }); S('fill', { n: 1 }); S('tamanho', { n: 16 }); S('prescale', { ps: 3 }); liga('sd', [8, 10, 12, 13, 14, 15]); liga('lt', [10]); liga('mt', [12]); liga('ht', [14]); liga('bd', [0, 4]); liga('ac', [8, 15]);
+  S('varB', { v: 'A' }); S('basico', { n: 1 }); return t.seq.exporta(); })();
+const mandaSeq = () => { const q = estado.sq; manda({ t: 'seq', a: 'bpm', v: DD.bpmDeKnob(q.tempo, q.fine) }); manda({ t: 'seq', a: 'basico', n: q.selB }); manda({ t: 'seq', a: 'fill', n: q.selF }); manda({ t: 'seq', a: 'basico', n: q.selB });
+  manda({ t: 'seq', a: 'varB', v: q.varB }); manda({ t: 'seq', a: 'varF', v: q.varF }); manda({ t: 'seq', a: 'auto', v: q.auto }); manda({ t: 'seq', a: 'modo', v: 'manual' }); };
+const aoEvento = e => { if (e && e.t === 'passo') $('passo').textContent = 'passo ' + (e.i + 1); else if (e && e.t === 'compasso') $('comp').textContent = 'compasso ' + (e.c + 1) + ' (' + e.pat + ')'; };
 let ctx = null, no = null, reserva = null, pronto = false; const pend = [];
 const manda = m => { if (!pronto) { pend.push(m); return; } if (no) no.port.postMessage(m); else if (reserva) reserva.motor.msg(m); };
 const diz = t => { $('barra').textContent = t; };
@@ -461,14 +563,14 @@ function liga() {
   const AC = window.AudioContext || window.webkitAudioContext; if (!AC) { diz('Este navegador não tem Web Audio.'); return; }
   ctx = new AC({ latencyHint: 'interactive' });
   try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
-  const fim = () => { pronto = true; manda({ t: 'p', p: estado }); for (const m of pend.splice(0)) manda(m); };
-  const usaReserva = () => { const sp = ctx.createScriptProcessor(1024, 0, 2); sp.motor = new Motor(ctx.sampleRate);
+  const fim = () => { pronto = true; manda({ t: 'p', p: estado }); manda({ t: 'seq', a: 'importa', d: DEMO }); mandaSeq(); for (const m of pend.splice(0)) manda(m); };
+  const usaReserva = () => { const sp = ctx.createScriptProcessor(1024, 0, 2); sp.motor = new Motor(ctx.sampleRate); sp.motor.saida = aoEvento;
     sp.onaudioprocess = e => { const o = e.outputBuffer; sp.motor.process(o.getChannelData(0), o.getChannelData(1), o.length); }; sp.connect(ctx.destination); reserva = sp; fim(); };
   if (ctx.audioWorklet && window.AudioWorkletNode) {
     const url = URL.createObjectURL(new Blob([FONTE_DSP], { type: 'application/javascript' }));
     const dataUrl = () => 'data:application/javascript;base64,' + btoa(unescape(encodeURIComponent(FONTE_DSP)));
     ctx.audioWorklet.addModule(url).catch(() => ctx.audioWorklet.addModule(dataUrl())).then(() => {
-      no = new AudioWorkletNode(ctx, 'motor-tr808', { numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [2] });
+      no = new AudioWorkletNode(ctx, 'motor-tr808', { numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [2] }); no.port.onmessage = e => aoEvento(e.data);
       no.connect(ctx.destination); URL.revokeObjectURL(url); fim();
     }).catch(usaReserva);
   } else usaReserva();
@@ -529,7 +631,26 @@ for (const [id, tecla] of [['bd', 'b'], ['sd', 's'], ['lt', 'l'], ['mt', 'm'], [
   $(id).addEventListener('keydown', e => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); dispara(id); } });
   document.addEventListener('keydown', e => { if (e.target.tagName === 'INPUT' || e.repeat) return; if (e.key === tecla) dispara(id); });
 }
-diz('Teclas: B bumbo, S caixa, L/M/H toms e congas (a chave de cada par escolhe tom ou conga), Y prato, O hi-hat aberto, C hi-hat fechado (corta o aberto), K cowbell, P clap ou maracas (pela chave), R rim shot ou claves (pela chave). O som liga no primeiro toque.');
+
+const SQ = document.createElement('div'); SQ.className = 'pad';
+SQ.innerHTML = `<button class="liga" id="seqgo" type="button" aria-pressed="false">START / STOP</button><button class="bd" id="tap" type="button" style="min-height:44px;flex:0 0 auto;font-size:1rem">TAP (fill-in / intro)</button>
+  <span id="passo" role="status">passo -</span><span id="comp" role="status">compasso -</span>`;
+P.appendChild(SQ);
+{ const q = estado.sq, caixa = document.createElement('div'); caixa.style.gridColumn = '1/-1'; caixa.style.display = 'grid'; caixa.style.gridTemplateColumns = 'repeat(auto-fit,minmax(150px,1fr))'; caixa.style.gap = '12px';
+  const campo = (nome, ops, get, set) => { const d = document.createElement('div'), id = 's' + Math.random().toString(36).slice(2, 7); d.innerHTML = `<label for="${id}">${nome}</label><select id="${id}" style="min-height:44px;width:100%"></select>`; const sel = d.querySelector('select');
+    ops.forEach(([v, t]) => { const o = document.createElement('option'); o.value = v; o.textContent = t; sel.appendChild(o); }); sel.value = String(get()); sel.addEventListener('change', () => { set(sel.value); salva(); }); caixa.appendChild(d); };
+  const tempo = document.createElement('div'); tempo.innerHTML = '<label for="tmp">TEMPO</label><input id="tmp" type="range" min="0" max="1" step="0.001"><output id="bpmo"></output>'; const tr = tempo.querySelector('input'), bo = tempo.querySelector('output');
+  tr.value = q.tempo; const pintaBpm = () => { bo.textContent = Math.round(DD.bpmDeKnob(+tr.value, q.fine) * 10) / 10 + ' BPM'; }; pintaBpm(); tr.addEventListener('input', () => { q.tempo = +tr.value; pintaBpm(); manda({ t: 'seq', a: 'bpm', v: DD.bpmDeKnob(q.tempo, q.fine) }); salva(); }); caixa.appendChild(tempo);
+  campo('BASIC RHYTHM', Array.from({ length: 12 }, (_, i) => [i + 1, String(i + 1)]), () => q.selB, v => { q.selB = +v; manda({ t: 'seq', a: 'basico', n: q.selB }); });
+  campo('INTRO / FILL IN', [1, 2, 3, 4].map(i => [i, String(i)]), () => q.selF, v => { q.selF = +v; manda({ t: 'seq', a: 'fill', n: q.selF }); manda({ t: 'seq', a: 'basico', n: q.selB }); });
+  campo('BASIC VARIATION', [['A', 'A'], ['AB', 'AB'], ['B', 'B']], () => q.varB, v => { q.varB = v; manda({ t: 'seq', a: 'varB', v }); });
+  campo('I/F VARIATION', [['A', 'A'], ['B', 'B']], () => q.varF, v => { q.varF = v; manda({ t: 'seq', a: 'varF', v }); });
+  campo('AUTO FILL IN (compassos)', [[0, 'MANUAL'], [16, '16'], [12, '12'], [8, '8'], [4, '4'], [2, '2']], () => q.auto, v => { q.auto = +v; manda({ t: 'seq', a: 'auto', v: q.auto }); });
+  P.appendChild(caixa); }
+let rodando = false; const go = $('seqgo'); const alterna = () => { liga(); rodando = !rodando; go.setAttribute('aria-pressed', String(rodando)); manda({ t: 'seq', a: rodando ? 'start' : 'stop' }); if (!rodando) { $('passo').textContent = 'passo -'; $('comp').textContent = 'compasso -'; } };
+go.addEventListener('click', alterna); $('tap').addEventListener('click', () => { liga(); manda({ t: 'seq', a: 'tap' }); });
+document.addEventListener('keydown', e => { if (e.key === ' ' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'SELECT' && !e.repeat) { e.preventDefault(); alterna(); } });
+diz('Teclas: B bumbo, S caixa, L/M/H toms e congas (a chave de cada par escolhe tom ou conga), Y prato, O hi-hat aberto, C hi-hat fechado (corta o aberto), K cowbell, P clap ou maracas (pela chave), R rim shot ou claves (pela chave). Espaço: START/STOP. A batida do sequenciador é de demonstração, não do original. O som liga no primeiro toque.');
 })();
 </script>
 <script src="../voltar.js"></script>

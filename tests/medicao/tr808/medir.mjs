@@ -445,6 +445,97 @@ if (!D.MASTER) { fora++; linhas.push(['FORA', 'master: motor ainda não tem o es
     confere('pior caso: 11 canais com accent no máximo ao mesmo tempo, master no máximo', 'finito, pico ≤ 1,0 (sem estourar o conversor)', f(pico(r), 3) + (fin ? '' : ' (NaN!)'), fin && pico(r) <= 1.0); }
 }
 
+// ===== 15. sequenciador: clock, pre-scale, passos, patterns, variações, fill-in, rhythm track =====
+titulo('sequenciador: clock de 24 pulsos por semínima, pre-scale, passos, patterns, fill-in, rhythm track');
+if (!D.SEQ) { fora++; linhas.push(['FORA', 'sequenciador: motor ainda não tem o sequenciador', 'D.SEQ', 'ausente']); } else {
+  const SQ = D.SEQ, T = SQ.trilhas;
+  // roda o motor por `seg` segundos em blocos de `bloco` amostras e devolve os eventos {t, n, ...} (n = índice da amostra)
+  const roda = (m, seg, bloco = 128, antes) => { const ev = []; m.evento = e => ev.push(e); if (antes) antes(m); const N = Math.round(seg * FS), L = new Float32Array(bloco), R = new Float32Array(bloco);
+    for (let i = 0; i < N; i += bloco) m.process(L, R, Math.min(bloco, N - i)); return ev; };
+  const novoM = (bpm = 120) => { const m = novo(Motor, FS, { master: 1, acLevel: 1 }); m.msg({ t: 'seq', a: 'bpm', v: bpm }); return m; };
+  const S = (m, a, o = {}) => m.msg(Object.assign({ t: 'seq', a }, o));
+  const quadrado = (m, trilha, passos, banco = 'A', n = 1) => { S(m, 'basico', { n }); S(m, 'varB', { v: banco }); passos.forEach(p => S(m, 'alterna', { trilha, passo: p })); };
+  /** Configura os DOIS bancos (A e B) do pattern básico n ('b') ou INTRO/FILL IN n ('f') com `comp` passos e pre-scale `ps` (curto, para a simulação caber). */
+  const cfg = (m, tipo, n, comp = 2, ps = 4) => { for (const b of ['A', 'B']) { S(m, tipo === 'f' ? 'varF' : 'varB', { v: b }); S(m, tipo === 'f' ? 'fill' : 'basico', { n }); S(m, 'tamanho', { n: comp }); S(m, 'prescale', { ps }); } S(m, 'varB', { v: 'A' }); S(m, 'varF', { v: 'A' }); S(m, 'basico', { n: 1 }); };
+  // 1) clock: 24 pulsos por semínima
+  { const m = novoM(120); quadrado(m, 'bd', [0]); S(m, 'prescale', { ps: 4 }); S(m, 'tamanho', { n: 32 }); S(m, 'start');
+    const ev = roda(m, 2.5), pulsos = ev.filter(e => e.t === 'pulso');
+    const dif = pulsos.slice(1).map((e, i) => e.n - pulsos[i].n), esp = FS * 60 / (120 * 24);
+    confere('clock: pulsos em 2 s a 120 BPM (a partir do 1º)', '96 pulsos (= 4 semínimas × 24 pulsos; a, p.5)', String(pulsos.filter(e => e.n <= pulsos[0].n + 2 * FS - 1).length), pulsos.filter(e => e.n <= pulsos[0].n + 2 * FS - 1).length === 96);
+    confere('clock: intervalo entre pulsos a 120 BPM', f(esp, 1) + ' amostras (20,83 ms) ±1', f(Math.min(...dif), 0) + ' a ' + f(Math.max(...dif), 0), Math.min(...dif) >= Math.floor(esp) && Math.max(...dif) <= Math.ceil(esp)); }
+  // 2) faixa de andamento: período do pulso entre 8,33 ms (300 BPM) e 62,5 ms (40 BPM); a especificação dá 8,3 a 65 ms
+  for (const [bpm, pulso] of [[300, 8.333], [40, 62.5]]) { const m = novoM(bpm); quadrado(m, 'bd', [0]); S(m, 'tamanho', { n: 32 }); S(m, 'prescale', { ps: 4 }); S(m, 'start'); const ev = roda(m, 1.5), p = ev.filter(e => e.t === 'pulso'), d = (p[p.length - 1].n - p[1].n) / (p.length - 2) / FS * 1000;
+    confere(`andamento ${bpm} BPM: período do pulso`, `${f(pulso, 2)} ms ±1 % (Parte C: 8,33 a 65 ms entre 300 e ~38,5 BPM)`, f(d, 3) + ' ms', perto(d, pulso, pulso * 0.01)); }
+  { const m = novoM(500); confere('andamento limitado a 40–300 BPM (alto)', '300', String(m.seq.bpm), m.seq.bpm === 300); const m2 = novoM(5); confere('andamento limitado a 40–300 BPM (baixo)', '40', String(m2.seq.bpm), m2.seq.bpm === 40); }
+  // 3) pre-scale: clocks por passo 8 / 4 / 6 / 3 (c: do remake TR-08); intervalo entre passos a 120 BPM
+  for (const [ps, cl] of [[1, 8], [2, 4], [3, 6], [4, 3]]) { const m = novoM(120); quadrado(m, 'bd', [0, 1, 2, 3, 4, 5, 6, 7]); S(m, 'prescale', { ps }); S(m, 'tamanho', { n: 8 }); S(m, 'start'); const ev = roda(m, 1.2), st = ev.filter(e => e.t === 'passo').slice(0, 7), d = st.slice(1).map((e, i) => e.n - st[i].n), esp = cl * FS * 60 / (120 * 24);
+    confere(`PRE-SCALE ${ps}: ${cl} clocks por passo (c); intervalo entre passos a 120 BPM`, f(esp / FS * 1000, 2) + ' ms ±1 amostra', f(Math.min(...d) / FS * 1000, 2) + ' a ' + f(Math.max(...d) / FS * 1000, 2) + ' ms', Math.min(...d) >= Math.floor(esp) && Math.max(...d) <= Math.ceil(esp)); }
+  // 4) sem swing: todos os passos igualmente espaçados (a: o original não tem swing)
+  { const m = novoM(97); quadrado(m, 'bd', [0, 3, 5, 9]); S(m, 'prescale', { ps: 3 }); S(m, 'start'); const ev = roda(m, 4), st = ev.filter(e => e.t === 'passo'), d = st.slice(1).map((e, i) => e.n - st[i].n);
+    confere('sem swing: espaçamento dos passos ao longo de 4 s a 97 BPM', 'todos iguais ±1 amostra', f(Math.max(...d) - Math.min(...d), 0) + ' amostra(s) de dispersão', Math.max(...d) - Math.min(...d) <= 1); }
+  // 5) 9 ms de preparação ao dar START (a, p.5)
+  { const m = novoM(120); quadrado(m, 'bd', [0]); S(m, 'start'); const ev = roda(m, 0.3), p = ev.find(e => e.t === 'pulso');
+    confere('START: primeiro pulso depois de 9 ms (mode change preparation time)', '9 ms ±0,1 (a, p.5)', f(p.n / FS * 1000, 2) + ' ms', perto(p.n / FS * 1000, 9, 0.1)); }
+  // 6) número de passos por compasso, 1 a 32, e duração do compasso
+  for (const n of [1, 5, 7, 11, 16, 32]) { const m = novoM(300); quadrado(m, 'bd', [0]); S(m, 'tamanho', { n }); S(m, 'prescale', { ps: 3 }); S(m, 'start'); const ev = roda(m, n * 0.05 * 3.3 + 0.1), cs = ev.filter(e => e.t === 'compasso'), esp = n * 6 * FS * 60 / (300 * 24);
+    const d = cs.length > 2 ? cs[2].n - cs[1].n : NaN; confere(`compasso de ${n} passo(s): duração a 300 BPM, PRE-SCALE 3`, f(esp / FS * 1000, 1) + ' ms ±2 amostras', f(d / FS * 1000, 1) + ' ms', Math.abs(d - esp) <= 2); }
+  { const m = novoM(120); S(m, 'tamanho', { n: 99 }); const a = m.seq.alvo().n; S(m, 'tamanho', { n: 0 }); const b = m.seq.alvo().n; confere('limites de passos: 1 a 32', '32 e 1', a + ' e ' + b, a === 32 && b === 1); }
+  // 7) disparos: cada passo ligado dispara a voz da trilha; AC dá accent a todas as vozes do passo (a: accent global)
+  { const m = novoM(120); quadrado(m, 'bd', [0, 8]); quadrado(m, 'sd', [4, 8]); quadrado(m, 'ac', [8]); S(m, 'tamanho', { n: 16 }); S(m, 'start'); const ev = roda(m, 2.2).filter(e => e.t === 'trig').slice(0, 5), s = ev.map(e => e.v + (e.ac ? '+AC' : '')).join(' ');
+    confere('disparos do 1º compasso: BD (passos 1 e 9), SD (5 e 9), AC no 9', 'bd sd bd+AC sd+AC (e bd no compasso seguinte)', s, s === 'bd sd bd+AC sd+AC bd'); }
+  { const m = novoM(120); quadrado(m, 'oh', [0]); quadrado(m, 'ch', [0]); S(m, 'start'); const ev = roda(m, 0.2).filter(e => e.t === 'trig').map(e => e.v);
+    confere('passo com OH e CH: o CH dispara depois do OH (corta o decay do aberto)', 'oh, ch', ev.slice(0, 2).join(', '), ev[0] === 'oh' && ev[1] === 'ch'); }
+  // 8) a troca de pattern acontece na barra de compasso (a, S8)
+  { const m = novoM(120); for (const n of [1, 2]) { S(m, 'basico', { n }); S(m, 'tamanho', { n: 4 }); S(m, 'prescale', { ps: 4 }); } quadrado(m, 'bd', [0], 'A', 1); quadrado(m, 'sd', [0], 'A', 2); S(m, 'basico', { n: 1 }); S(m, 'start'); const ev = []; m.evento = e => ev.push(e);   // compasso = 4 passos × 3 clocks = 250 ms a 120 BPM
+    const L = new Float32Array(128), R = new Float32Array(128); let pedido = false; for (let i = 0; i < Math.round(2.2 * FS); i += 128) { if (!pedido && i > 0.35 * FS) { S(m, 'basico', { n: 2 }); pedido = true; } m.process(L, R, 128); }
+    const cs = ev.filter(e => e.t === 'compasso').map(e => e.pat); confere('troca de pattern pedida aos 0,35 s (meio do 2º compasso de 250 ms) só vale no compasso seguinte', 'compassos: b1A, b1A, b2A, b2A (a, S8: a troca acontece na barra de compasso)', cs.slice(0, 4).join(', '), cs.slice(0, 4).join(',') === 'b1A,b1A,b2A,b2A'); }
+  // 9) BASIC VARIATION A / AB / B
+  for (const [v, esp] of [['A', 'b1A,b1A,b1A,b1A'], ['B', 'b1B,b1B,b1B,b1B'], ['AB', 'b1A,b1B,b1A,b1B']]) { const m = novoM(240); cfg(m, 'b', 1, 4, 4); S(m, 'varB', { v }); S(m, 'start'); const ev = roda(m, 1.6), cs = ev.filter(e => e.t === 'compasso').map(e => e.pat).slice(0, 4);
+    confere(`BASIC VARIATION ${v}`, esp + (v === 'AB' ? ' (alterna A e B a cada compasso)' : ''), cs.join(','), cs.join(',') === esp); }
+  // 10) fill-in pelo TAP: o próximo compasso toca o INTRO/FILL IN escolhido, depois volta ao básico
+  { const m = novoM(240); cfg(m, 'b', 1, 4, 4); cfg(m, 'f', 3, 4, 4); S(m, 'fill', { n: 3 }); S(m, 'start'); const ev = []; m.evento = e => ev.push(e);
+    const L = new Float32Array(128), R = new Float32Array(128); let tocou = false; for (let i = 0; i < Math.round(2 * FS); i += 128) { if (!tocou && i > 0.4 * FS) { S(m, 'tap'); tocou = true; } m.process(L, R, 128); }
+    const cs = ev.filter(e => e.t === 'compasso').map(e => e.pat).slice(0, 6); const k = cs.findIndex(c => c[0] === 'f');
+    confere('TAP durante o play: o compasso seguinte é o INTRO/FILL IN 3 e depois volta ao básico', 'f3A uma vez e b1A em volta (c: semântica inferida)', cs.join(','), k > 0 && cs[k] === 'f3A' && cs[k + 1] === 'b1A' && cs.filter(c => c[0] === 'f').length === 1); }
+  // 11) AUTO FILL IN: a cada N compassos o último do bloco é o fill-in (c)
+  for (const N of [2, 4, 8, 12, 16]) { const m = novoM(300); cfg(m, 'b', 1, 2, 4); cfg(m, 'f', 2, 2, 4); S(m, 'fill', { n: 2 }); S(m, 'auto', { v: N }); S(m, 'start'); const ev = roda(m, 2 * N * 0.1 * 4 + 0.2), cs = ev.filter(e => e.t === 'compasso').map(e => e.pat).slice(0, 2 * N);
+    const idx = cs.map((c, i) => c[0] === 'f' ? i : -1).filter(i => i >= 0); confere(`AUTO FILL IN ${N}: fill-in nos compassos`, `${N - 1}, ${2 * N - 1} (0-based; o último de cada bloco de ${N}; c)`, idx.join(', '), idx.join(',') === `${N - 1},${2 * N - 1}`); }
+  { const m = novoM(300); cfg(m, 'b', 1, 2, 4); S(m, 'auto', { v: 0 }); S(m, 'start'); const ev = roda(m, 3), cs = ev.filter(e => e.t === 'compasso').map(e => e.pat); confere('AUTO FILL IN em MANUAL: nenhum fill-in automático', '0 fill-ins em ' + cs.length + ' compassos', String(cs.filter(c => c[0] === 'f').length), cs.filter(c => c[0] === 'f').length === 0); }
+  // 12) INTRO: TAP com o aparelho parado arma o intro; o primeiro compasso depois do START é o INTRO/FILL IN (c)
+  { const m = novoM(240); cfg(m, 'b', 1, 4, 4); cfg(m, 'f', 4, 4, 4); S(m, 'fill', { n: 4 }); S(m, 'tap'); S(m, 'start'); const ev = roda(m, 1.5), cs = ev.filter(e => e.t === 'compasso').map(e => e.pat).slice(0, 3);
+    confere('INTRO SET (TAP parado) + START: 1º compasso é o INTRO/FILL IN 4, depois o básico', 'f4A, b1A, b1A (c)', cs.join(','), cs.join(',') === 'f4A,b1A,b1A'); }
+  // 13) rhythm track: compõe (grava o que toca) e toca de volta; o A/B não é gravado (a, S8)
+  { const m = novoM(300); for (const n of [1, 3, 5]) cfg(m, 'b', n, 2, 4); S(m, 'basico', { n: 1 }); S(m, 'songTrilha', { tr: 2 }); S(m, 'modo', { v: 'compose' }); S(m, 'start'); const ev = []; m.evento = e => ev.push(e);
+    const L = new Float32Array(128), R = new Float32Array(128); const pede = [[0.25, 3], [0.45, 5], [0.65, 1]]; let k = 0; for (let i = 0; i < Math.round(1.4 * FS); i += 128) { if (k < pede.length && i / FS > pede[k][0]) { S(m, 'basico', { n: pede[k][1] }); k++; } m.process(L, R, 128); }
+    S(m, 'stop'); const gravado = m.seq.song[2].filter(e => e).map(e => e.t + e.n).join(',');
+    confere('COMPOSE: o que toca é gravado na trilha do rhythm track (compassos de 2 passos)', 'começa em b1 e passa por b3, b5, b1 (o texto do rhythm track tem 12 trilhas de 64 compassos)', gravado.split(',').slice(0, 8).join(','), /^b1(,b1)*,b3(,b3)*,b5(,b5)*,b1/.test(gravado));
+    S(m, 'varB', { v: 'B' }); S(m, 'modo', { v: 'play' }); S(m, 'start'); const ev2 = roda(m, 2).filter(e => e.t === 'compasso').map(e => e.pat);
+    confere('PLAY do rhythm track: segue a trilha gravada; o A/B vem da chave BASIC VARIATION (não é gravado)', 'todos os compassos no banco B', ev2.slice(0, 6).join(','), ev2.length > 0 && ev2.every(c => c.endsWith('B')));
+    const ordem = ev2.map(c => c.slice(0, 2)).filter((c, i, a) => i === 0 || a[i - 1] !== c).join(','); confere('PLAY: a ordem dos patterns é a gravada', 'b1,b3,b5,b1', ordem, ordem.startsWith('b1,b3,b5,b1')); }
+  { const m = novoM(300); const T64 = SQ.maxCompassosTrilha, T12 = m.seq.song.length; confere('rhythm track: 12 trilhas de 64 compassos (768 no total)', '12 × 64', T12 + ' × ' + m.seq.song[0].length, T12 === 12 && m.seq.song[0].length === T64); }
+  // 14) determinismo: os tempos não dependem do tamanho do bloco de processamento (tempo ao nível da amostra)
+  { const tempos = bl => { const m = novoM(133); quadrado(m, 'bd', [0, 2, 3, 6]); S(m, 'tamanho', { n: 8 }); S(m, 'start'); return roda(m, 3, bl).filter(e => e.t === 'trig').map(e => e.n).join(','); };
+    const a = tempos(128), b = tempos(1), c = tempos(500); confere('os disparos caem nas mesmas amostras com blocos de 128, 1 e 500', 'idênticos', (a === b && b === c) ? 'idênticos' : 'diferentes', a === b && b === c); }
+  // 15) parar e reiniciar; andamento alterado durante o play
+  { const m = novoM(120); quadrado(m, 'bd', [0]); S(m, 'start'); const ev = []; m.evento = e => ev.push(e); const L = new Float32Array(128), R = new Float32Array(128);
+    for (let i = 0; i < 0.6 * FS; i += 128) m.process(L, R, 128); S(m, 'stop'); const n0 = ev.length; for (let i = 0; i < 0.6 * FS; i += 128) m.process(L, R, 128);
+    confere('STOP: nenhum evento depois de parar', '0', String(ev.length - n0), ev.length === n0); }
+  { const m = novoM(120); quadrado(m, 'bd', [0, 1, 2, 3]); S(m, 'prescale', { ps: 4 }); S(m, 'tamanho', { n: 4 }); S(m, 'start'); const ev = []; m.evento = e => ev.push(e); const L = new Float32Array(128), R = new Float32Array(128);
+    for (let i = 0; i < 1 * FS; i += 128) m.process(L, R, 128); S(m, 'bpm', { v: 240 }); for (let i = 0; i < 1 * FS; i += 128) m.process(L, R, 128);
+    const p = ev.filter(e => e.t === 'pulso'), a = p.filter(e => e.n < FS).slice(-4), b = p.filter(e => e.n > 1.2 * FS).slice(0, 4), da = (a[3].n - a[0].n) / 3, db = (b[3].n - b[0].n) / 3;
+    confere('mudar o andamento durante o play: o intervalo dos pulsos cai à metade', f(da / 2, 1) + ' amostras ±1', f(db, 1) + ' amostras', perto(db, da / 2, 1)); }
+  // 16) exportar / importar (persistência)
+  { const m = novoM(120); quadrado(m, 'bd', [0, 4, 8]); quadrado(m, 'ac', [4]); S(m, 'tamanho', { n: 12 }); S(m, 'prescale', { ps: 2 }); const d = JSON.parse(JSON.stringify(m.seq.exporta())), m2 = novoM(120); m2.seq.importa(d);
+    confere('exportar e importar: o estado do sequenciador volta idêntico', 'JSON igual', JSON.stringify(m2.seq.exporta()) === JSON.stringify(d) ? 'igual' : 'diferente', JSON.stringify(m2.seq.exporta()) === JSON.stringify(d)); }
+  // 16b) ligação com o áudio: o passo de BD produz som na saída logo depois do disparo e o passo vazio, não
+  { const m = novoM(120); quadrado(m, 'bd', [4]); S(m, 'tamanho', { n: 8 }); S(m, 'prescale', { ps: 3 }); S(m, 'start'); const ev = []; m.evento = e => ev.push(e); const N = Math.round(1.2 * FS), y = new Float32Array(N), R = new Float32Array(N);
+    for (let i = 0; i < N; i += 128) m.process(y.subarray(i, Math.min(N, i + 128)), R.subarray(i, Math.min(N, i + 128)), Math.min(128, N - i));
+    const t = ev.find(e => e.t === 'trig').n, antes = pico(y, 0, t), depois = pico(y, t, t + Math.round(0.05 * FS));
+    confere('o passo ligado de BD toca o bumbo na saída; antes dele, silêncio exato', 'pico antes = 0; pico depois > 0,05 (BD normal ≈ 0,5 Vpp digital)', f(antes, 9) + ' e ' + f(depois, 3), antes === 0 && depois > 0.05); }
+  // 17) mapa do botão de andamento (c): TEMPO 0 a 1 -> 40 a 300 BPM, exponencial
+  { const b = D.bpmDeKnob; confere('mapa do botão TEMPO: extremos e meio', '40 e 300 BPM; meio = média geométrica 109,5 (c: o circuito é antilogarítmico, a lei exata não foi encontrada)', f(b(0, 0.5), 1) + ', ' + f(b(1, 0.5), 1) + ', ' + f(b(0.5, 0.5), 1), perto(b(0, 0.5), 40, 0.1) && perto(b(1, 0.5), 300, 0.1) && perto(b(0.5, 0.5), 109.5, 0.2)); }
+}
+
 // ===== relatório =====
 const larg = [0, 1, 2].map(k => Math.min(70, Math.max(...linhas.map(l => (l[k + 1] || '').length))));
 for (const l of linhas) console.log(l[0] === '' ? '\n' + l[1] : `${l[0]}  ${l[1].padEnd(larg[0])}  esperado: ${l[2].padEnd(larg[1])}  medido: ${l[3]}`);

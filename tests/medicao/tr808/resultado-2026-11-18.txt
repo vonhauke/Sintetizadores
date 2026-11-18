@@ -254,4 +254,49 @@ ok    POWER desligado: saída zero (o motor para de soar)                      e
 ok    somador: BD + SD juntos = BD sozinho + SD sozinho                       esperado: diferença < 1e-6 (linear)                                               medido: 2.8e-8
 ok    pior caso: 11 canais com accent no máximo ao mesmo tempo, master no máximo  esperado: finito, pico ≤ 1,0 (sem estourar o conversor)                           medido: 1,000
 
-219 medições, 215 ok, 4 fora
+— sequenciador: clock de 24 pulsos por semínima, pre-scale, passos, patterns, fill-in, rhythm track —
+ok    clock: pulsos em 2 s a 120 BPM (a partir do 1º)                         esperado: 96 pulsos (= 4 semínimas × 24 pulsos; a, p.5)                           medido: 96
+ok    clock: intervalo entre pulsos a 120 BPM                                 esperado: 1000,0 amostras (20,83 ms) ±1                                           medido: 1000 a 1000
+ok    andamento 300 BPM: período do pulso                                     esperado: 8,33 ms ±1 % (Parte C: 8,33 a 65 ms entre 300 e ~38,5 BPM)              medido: 8,333 ms
+ok    andamento 40 BPM: período do pulso                                      esperado: 62,50 ms ±1 % (Parte C: 8,33 a 65 ms entre 300 e ~38,5 BPM)             medido: 62,500 ms
+ok    andamento limitado a 40–300 BPM (alto)                                  esperado: 300                                                                     medido: 300
+ok    andamento limitado a 40–300 BPM (baixo)                                 esperado: 40                                                                      medido: 40
+ok    PRE-SCALE 1: 8 clocks por passo (c); intervalo entre passos a 120 BPM   esperado: 166,67 ms ±1 amostra                                                    medido: 166,67 a 166,67 ms
+ok    PRE-SCALE 2: 4 clocks por passo (c); intervalo entre passos a 120 BPM   esperado: 83,33 ms ±1 amostra                                                     medido: 83,33 a 83,33 ms
+ok    PRE-SCALE 3: 6 clocks por passo (c); intervalo entre passos a 120 BPM   esperado: 125,00 ms ±1 amostra                                                    medido: 125,00 a 125,00 ms
+ok    PRE-SCALE 4: 3 clocks por passo (c); intervalo entre passos a 120 BPM   esperado: 62,50 ms ±1 amostra                                                     medido: 62,50 a 62,50 ms
+ok    sem swing: espaçamento dos passos ao longo de 4 s a 97 BPM              esperado: todos iguais ±1 amostra                                                 medido: 1 amostra(s) de dispersão
+ok    START: primeiro pulso depois de 9 ms (mode change preparation time)     esperado: 9 ms ±0,1 (a, p.5)                                                      medido: 9,00 ms
+ok    compasso de 1 passo(s): duração a 300 BPM, PRE-SCALE 3                  esperado: 50,0 ms ±2 amostras                                                     medido: 50,0 ms
+ok    compasso de 5 passo(s): duração a 300 BPM, PRE-SCALE 3                  esperado: 250,0 ms ±2 amostras                                                    medido: 250,0 ms
+ok    compasso de 7 passo(s): duração a 300 BPM, PRE-SCALE 3                  esperado: 350,0 ms ±2 amostras                                                    medido: 350,0 ms
+ok    compasso de 11 passo(s): duração a 300 BPM, PRE-SCALE 3                 esperado: 550,0 ms ±2 amostras                                                    medido: 550,0 ms
+ok    compasso de 16 passo(s): duração a 300 BPM, PRE-SCALE 3                 esperado: 800,0 ms ±2 amostras                                                    medido: 800,0 ms
+ok    compasso de 32 passo(s): duração a 300 BPM, PRE-SCALE 3                 esperado: 1600,0 ms ±2 amostras                                                   medido: 1600,0 ms
+ok    limites de passos: 1 a 32                                               esperado: 32 e 1                                                                  medido: 32 e 1
+ok    disparos do 1º compasso: BD (passos 1 e 9), SD (5 e 9), AC no 9         esperado: bd sd bd+AC sd+AC (e bd no compasso seguinte)                           medido: bd sd bd+AC sd+AC bd
+ok    passo com OH e CH: o CH dispara depois do OH (corta o decay do aberto)  esperado: oh, ch                                                                  medido: oh, ch
+ok    troca de pattern pedida aos 0,35 s (meio do 2º compasso de 250 ms) só vale no compasso seguinte  esperado: compassos: b1A, b1A, b2A, b2A (a, S8: a troca acontece na barra de compasso)  medido: b1A, b1A, b2A, b2A
+ok    BASIC VARIATION A                                                       esperado: b1A,b1A,b1A,b1A                                                         medido: b1A,b1A,b1A,b1A
+ok    BASIC VARIATION B                                                       esperado: b1B,b1B,b1B,b1B                                                         medido: b1B,b1B,b1B,b1B
+ok    BASIC VARIATION AB                                                      esperado: b1A,b1B,b1A,b1B (alterna A e B a cada compasso)                         medido: b1A,b1B,b1A,b1B
+ok    TAP durante o play: o compasso seguinte é o INTRO/FILL IN 3 e depois volta ao básico  esperado: f3A uma vez e b1A em volta (c: semântica inferida)                      medido: b1A,b1A,b1A,b1A,f3A,b1A
+ok    AUTO FILL IN 2: fill-in nos compassos                                   esperado: 1, 3 (0-based; o último de cada bloco de 2; c)                          medido: 1, 3
+ok    AUTO FILL IN 4: fill-in nos compassos                                   esperado: 3, 7 (0-based; o último de cada bloco de 4; c)                          medido: 3, 7
+ok    AUTO FILL IN 8: fill-in nos compassos                                   esperado: 7, 15 (0-based; o último de cada bloco de 8; c)                         medido: 7, 15
+ok    AUTO FILL IN 12: fill-in nos compassos                                  esperado: 11, 23 (0-based; o último de cada bloco de 12; c)                       medido: 11, 23
+ok    AUTO FILL IN 16: fill-in nos compassos                                  esperado: 15, 31 (0-based; o último de cada bloco de 16; c)                       medido: 15, 31
+ok    AUTO FILL IN em MANUAL: nenhum fill-in automático                       esperado: 0 fill-ins em 60 compassos                                              medido: 0
+ok    INTRO SET (TAP parado) + START: 1º compasso é o INTRO/FILL IN 4, depois o básico  esperado: f4A, b1A, b1A (c)                                                       medido: f4A,b1A,b1A
+ok    COMPOSE: o que toca é gravado na trilha do rhythm track (compassos de 2 passos)  esperado: começa em b1 e passa por b3, b5, b1 (o texto do rhythm track tem 12 trilhas de 64 compassos)  medido: b1,b1,b1,b1,b1,b3,b3,b3
+ok    PLAY do rhythm track: segue a trilha gravada; o A/B vem da chave BASIC VARIATION (não é gravado)  esperado: todos os compassos no banco B                                           medido: b1B,b1B,b1B,b1B,b1B,b3B
+ok    PLAY: a ordem dos patterns é a gravada                                  esperado: b1,b3,b5,b1                                                             medido: b1,b3,b5,b1
+ok    rhythm track: 12 trilhas de 64 compassos (768 no total)                 esperado: 12 × 64                                                                 medido: 12 × 64
+ok    os disparos caem nas mesmas amostras com blocos de 128, 1 e 500         esperado: idênticos                                                               medido: idênticos
+ok    STOP: nenhum evento depois de parar                                     esperado: 0                                                                       medido: 0
+ok    mudar o andamento durante o play: o intervalo dos pulsos cai à metade   esperado: 500,0 amostras ±1                                                       medido: 500,0 amostras
+ok    exportar e importar: o estado do sequenciador volta idêntico            esperado: JSON igual                                                              medido: igual
+ok    o passo ligado de BD toca o bumbo na saída; antes dele, silêncio exato  esperado: pico antes = 0; pico depois > 0,05 (BD normal ≈ 0,5 Vpp digital)        medido: 0,000000000 e 0,267
+ok    mapa do botão TEMPO: extremos e meio                                    esperado: 40 e 300 BPM; meio = média geométrica 109,5 (c: o circuito é antilogarítmico, a lei exata não foi encontrada)  medido: 40,0, 300,0, 109,5
+
+262 medições, 258 ok, 4 fora
