@@ -3,38 +3,110 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Clone do TR-808 (em construção: vozes, master e sequenciador)</title>
+<title>Caixa de ritmos analógica (clone em Web Audio)</title>
 <link rel="stylesheet" href="../fonts/fonts.css">
 <style>
-:root{--pagina:#16181b;--tinta:#e8e6df;--apagado:#9a9890;--painel:#2b2f36;--sulco:#14161a;--acento:#e0662a;--foco:#1f7ae0;
+:root{--pagina:#10151c;--chapa:#1d2733;--faixa:#2b3a4d;--faixa2:#34465c;--tinta:#e9eef4;--apagado:#97a6b8;--acento:#f0b24a;--vivo:#4fd1c5;--perigo:#e5604f;--foco:#6cb4ff;--sulco:#0f1620;
+  --g1:#4fd1c5;--g2:#5aa9ff;--g3:#b48cff;--g4:#e9eef4;
   --f-rot:"Barlow Condensed","Arial Narrow",Arial,sans-serif;--f-texto:"Barlow","Helvetica Neue",Arial,sans-serif;color-scheme:dark;box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 *,*::before,*::after{box-sizing:inherit}
 html{touch-action:manipulation;-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--pagina);color:var(--tinta);font-family:var(--f-texto);line-height:1.4}
-.wrap{max-width:720px;margin:0 auto;padding:20px 12px 80px}
-h1{font-family:var(--f-rot);font-weight:600;letter-spacing:.04em;margin:0 0 4px}
-.aviso{color:var(--apagado);font-size:.9rem;margin:0 0 16px}
-.painel{background:var(--painel);border-radius:10px;padding:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px}
-label{display:block;font-family:var(--f-rot);letter-spacing:.06em;text-transform:uppercase;font-size:.95rem}
-output{display:block;color:var(--apagado);font-size:.8rem;font-variant-numeric:tabular-nums}
-input[type=range]{width:100%;min-height:44px}
-button{min-height:44px;min-width:44px;padding:0 18px;border-radius:8px;border:1px solid #555;background:#3a3f48;color:var(--tinta);font:inherit;cursor:pointer}
-button.liga[aria-pressed=true]{background:var(--acento);color:#111;border-color:var(--acento)}
-.pad{grid-column:1/-1;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-.pad .bd{flex:1 1 130px;min-height:88px;font-family:var(--f-rot);font-size:1.6rem;letter-spacing:.08em}
+body{margin:0;background:radial-gradient(120% 80% at 50% 0%,#1a2330 0%,var(--pagina) 65%) fixed var(--pagina);color:var(--tinta);font-family:var(--f-texto);line-height:1.35}
+button,select,input{font:inherit;color:inherit;touch-action:manipulation}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 :focus-visible{outline:2px solid var(--foco);outline-offset:2px}
-#barra{margin:12px 0 0;color:var(--apagado);font-size:.85rem;min-height:1.2em}
+.pagina{max-width:1500px;margin:0 auto;padding:14px max(10px,env(safe-area-inset-left,0px)) 80px}
+h1{font-family:var(--f-rot);font-weight:600;letter-spacing:.06em;font-size:1.1rem;margin:0 0 8px;color:var(--apagado)}
+.rolagem{overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch}
+.painel{min-width:1420px;background:linear-gradient(180deg,#223041,var(--chapa));border:1px solid #3a4c63;border-radius:12px;padding:14px 16px 16px;box-shadow:0 10px 30px #0008, inset 0 1px 0 #ffffff12}
+.topo{display:flex;align-items:center;gap:18px;margin-bottom:10px}
+.topo .titulo{font-family:var(--f-rot);letter-spacing:.14em;color:var(--acento);font-size:1.15rem}
+.meio{display:grid;grid-template-columns:372px minmax(0,1fr);gap:12px}
+.esq{display:grid;grid-template-columns:150px 1fr;min-width:0;grid-template-areas:"mode inst" "clear inst" "auto auto" "tempo tempo";gap:6px 10px;background:var(--faixa);border-radius:10px;padding:10px;align-content:start}
+.esq .mode{grid-area:mode}.esq .inst{grid-area:inst}.esq .clear{grid-area:clear}.esq .auto{grid-area:auto}.esq .tempo{grid-area:tempo}
+.vozes{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:0;background:var(--faixa);border-radius:10px;align-content:start}
+.col{display:grid;grid-template-rows:96px 96px 96px 104px 44px;min-width:0;justify-items:center;align-items:center;border-left:1px solid #0003;padding:4px 2px;position:relative}
+.col:first-child{border-left:0}
+.col .nome{font-family:var(--f-rot);letter-spacing:.05em;font-size:.82rem;text-align:center;background:var(--faixa2);border-radius:4px;padding:3px 4px;width:92%;line-height:1.05}
+.ctl{display:flex;flex-direction:column;align-items:center;gap:2px;position:relative}
+.ctl .rot{font-family:var(--f-rot);letter-spacing:.06em;font-size:.78rem;color:var(--apagado);text-transform:uppercase}
+.aprende [data-ctl]{cursor:crosshair}
+.aprende [data-ctl]:hover{outline:1px dashed var(--acento);outline-offset:2px}
+[data-ctl].selecionado{outline:2px solid var(--acento);outline-offset:2px;border-radius:8px}
+.knob{width:56px;height:56px;border-radius:50%;cursor:grab;touch-action:none;display:block}
+.knob.grande{width:112px;height:112px}.knob.pequeno{width:44px;height:44px}
+.knob:active{cursor:grabbing}
+.knob svg{width:100%;height:100%;display:block;overflow:visible}
+.knob .base{fill:#0e141b;stroke:#4b6079;stroke-width:1.5}.knob .tampa{fill:#2a3a4d;stroke:#7a8ea6;stroke-width:1}.knob .pt{stroke:var(--acento);stroke-width:3.2;stroke-linecap:round}
+.knob .marca{fill:#7186a0}
+.rotulos{position:relative}
+.rotulos .etq{position:absolute;transform:translate(-50%,-50%);font-family:var(--f-rot);font-size:.78rem;line-height:1;min-width:30px;min-height:24px;padding:2px 4px;border-radius:4px;border:1px solid #4b6079;background:#26384b;color:var(--tinta);cursor:pointer;white-space:nowrap}
+.rotulos .etq[aria-checked=true]{background:var(--acento);color:#161b22;border-color:var(--acento)}
+.rotulos .centro{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+.slide{display:flex;gap:4px;align-items:center}
+.slide.v{flex-direction:column}
+.slide.h{flex-direction:column-reverse;align-items:flex-start}
+.slide.par{flex-direction:column-reverse;align-items:center}
+.slide.par .op:nth-child(2){position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);min-width:0;min-height:0;padding:0;border:0}
+.slide.par .op{font-size:.7rem;min-width:60px;min-height:44px}
+.slide .trilho{position:relative;background:#0e141b;border:1px solid #4b6079;border-radius:6px}
+.slide.v .trilho{width:16px}.slide.par .trilho{height:44px!important}.slide.h .trilho{height:16px}
+.slide .polegar{position:absolute;background:linear-gradient(180deg,#8da2bb,#516782);border:1px solid #c0cfe0;border-radius:3px}
+.slide.v .polegar{left:-4px;right:-4px;height:18px}.slide.h .polegar{top:-4px;bottom:-4px;width:22px}
+.slide .opcoes{display:flex;gap:2px}.slide.v .opcoes{flex-direction:column}
+.slide .op{min-width:44px;min-height:44px;background:transparent;border:1px solid #3f566e;border-radius:4px;font-family:var(--f-rot);font-size:.8rem;color:var(--apagado);cursor:pointer;padding:0 6px}
+.slide .op[aria-checked=true]{color:var(--tinta);border-color:var(--acento)}
+.btn{min-width:44px;min-height:44px;border-radius:8px;border:1px solid #5a6f88;background:#2e4157;color:var(--tinta);cursor:pointer;font-family:var(--f-rot);letter-spacing:.06em;font-size:.9rem;padding:0 12px}
+.btn:active{background:#3b5470}
+.btn.liga[aria-pressed=true]{background:var(--acento);color:#161b22;border-color:var(--acento)}
+.btn.vermelho{background:#6d2a26;border-color:#c0645a}.btn.vermelho.armado{background:var(--perigo);box-shadow:0 0 0 2px #fff4}
+.led{display:inline-block;width:9px;height:9px;border-radius:50%;background:#46343a;box-shadow:inset 0 0 0 1px #0006}
+.led.on{background:var(--perigo);box-shadow:0 0 8px var(--perigo)}
+.led.verde.on{background:var(--vivo);box-shadow:0 0 8px var(--vivo)}
+.baixo{display:grid;grid-template-columns:140px 110px 90px minmax(800px,1fr) 140px;gap:10px;margin-top:12px;background:var(--faixa);border-radius:10px;padding:10px;align-items:center}
+.passos{display:grid;grid-template-columns:repeat(16,minmax(44px,1fr));gap:6px}
+.passo{position:relative;min-height:62px;border-radius:6px;border:1px solid #0008;color:#10151c;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:4px 0}
+.passo .n{font-family:var(--f-rot);font-size:.78rem;color:var(--tinta);position:absolute;top:-17px}
+.passo .abaixo{position:absolute;bottom:-20px;font-family:var(--f-rot);font-size:.85rem;color:var(--apagado)}
+.passo .led{margin-top:2px}
+.passo.g1{background:var(--g1)}.passo.g2{background:var(--g2)}.passo.g3{background:var(--g3)}.passo.g4{background:var(--g4)}
+.passo.aceso{box-shadow:0 0 0 2px #fff, 0 0 10px #fffa;filter:brightness(1.12)}
+.passo:not(.aceso){filter:brightness(.62)}
+.passo.cabeca{outline:3px solid var(--acento);outline-offset:1px}
+.passos-linha{padding-bottom:26px;padding-top:16px}
+.start{min-height:62px;font-size:1.05rem;background:#7a5a1e;border-color:#f0b24a}
+.pre{display:flex;gap:6px;align-items:center}
+.faixa-acess{margin-top:18px;background:#161d27;border:1px dashed #556b85;border-radius:12px;padding:12px 14px}
+.faixa-acess h2{font-family:var(--f-rot);letter-spacing:.08em;font-size:.95rem;margin:0 0 8px;color:var(--apagado)}
+.faixa-acess .tag{background:#3b2f1f;color:var(--acento);border-radius:4px;padding:1px 6px;font-size:.75rem;margin-left:6px;letter-spacing:.04em}
+.grade-acess{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.bloco{background:#1c2633;border-radius:8px;padding:10px}
+.bloco h3{font-family:var(--f-rot);letter-spacing:.06em;font-size:.9rem;margin:0 0 6px;color:var(--tinta)}
+.linha{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0}
+.linha label{font-size:.85rem;color:var(--apagado)}
+select,input[type=number]{min-height:44px;background:#0f1620;border:1px solid #4b6079;border-radius:6px;padding:0 8px}
+input[type=checkbox]{width:28px;height:28px;margin:8px}
+.pads{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:6px}
+.nota{font-size:.82rem;color:var(--apagado)}
+.mapa{width:100%;border-collapse:collapse;font-size:.85rem}.mapa td,.mapa th{padding:2px 6px;border-bottom:1px solid #2b3a4d;text-align:left}
+#estado-msg{min-height:1.3em;color:var(--apagado);font-size:.85rem;margin-top:8px}
+.esq>div>.rot{font-family:var(--f-rot);letter-spacing:.06em;font-size:.78rem;color:var(--apagado);text-transform:uppercase}
+.esq .inst .rotulos{margin:0 auto}
+.linha label{min-height:44px;display:inline-flex;align-items:center}
+input[type=file]{min-height:44px;max-width:100%}
+.slide{min-width:44px;cursor:pointer}
 </style>
 </head>
 <body>
-<div class="wrap">
-<h1>Rhythm Composer, em construção</h1>
-<p class="aviso">Etapa 10 de 11: vozes, master e sequenciador estão no motor. Esta página só tem controles provisórios do sequenciador (sem edição de passos); falta o painel final. Controles e sequenciador completos vêm depois das vozes. Página provisória, ainda fora do menu.</p>
-<div class="painel" id="painel"></div>
-<p id="barra" role="status"></p>
+<div class="pagina">
+<div class="rolagem"><div id="painel" class="painel" role="group" aria-label="Painel da caixa de ritmos"></div></div>
+<section id="acess" class="faixa-acess" aria-labelledby="t-acess">
+<h2 id="t-acess">Acessórios <span class="tag">não são do original</span></h2>
+<div id="acess-grade" class="grade-acess"></div>
+<div id="estado-msg" role="status"></div>
+</section>
 </div>
-
 <script type="text/plain" id="dsp">
 /* Motor de som do clone do TR-808. Roda igual em três lugares: AudioWorklet (página), ScriptProcessor (reserva)
    e Node (tests/medicao/tr808). Por isso não usa nada do navegador. Marcas (a) (b) (c): ver docs/pesquisa/tr808.md.
@@ -436,13 +508,13 @@ class Seq {
     this.setBpm(120);
   }
   setBpm(v) { this.bpm = Math.max(SEQ.bpmMin, Math.min(SEQ.bpmMax, +v || 120)); this.spp = this.fs * 60 / (this.bpm * SEQ.ppqn); }
-  emite(e) { e.n = this.m.nAmostra; if (this.m.evento) this.m.evento(e); if (this.m.saida && (e.t === 'passo' || e.t === 'compasso')) this.m.saida(e); }
+  emite(e) { e.n = this.m.nAmostra; if (this.m.evento) this.m.evento(e); if (this.m.saida && (e.t === 'passo' || e.t === 'compasso' || e.t === 'batida' || e.t === 'parou')) this.m.saida(e); }
   chaveB(n) { let b = this.varB; if (b === 'AB') { b = this.altAB ? 'B' : 'A'; this.altAB = !this.altAB; } return 'b' + n + b; }
   chaveF(n) { return 'f' + n + this.varF; }
   /** Pattern que as edições alteram: o básico escolhido (banco A, ou B se a chave estiver em B) ou o INTRO/FILL IN escolhido (banco da chave I/F VARIATION). (c) */
   alvo() { return this.pat[this.editaFill ? 'f' + this.selF + this.varF : 'b' + this.selB + (this.varB === 'B' ? 'B' : 'A')]; }
-  start() { if (this.run) return; this.run = true; this.espera = Math.round(SEQ.atrasoStart * this.fs); this.acc = 0; this.comp = -1; this.atual = null; this.altAB = false; this.fillPend = false; this.introPend = this.introArm; this.introArm = false; this.songPos = 0; }
-  stop() { this.run = false; this.atual = null; }
+  start() { if (this.run) return; this.run = true; this.espera = Math.round(SEQ.atrasoStart * this.fs); this.acc = 0; this.comp = -1; this.atual = null; this.altAB = false; this.fillPend = false; this.introPend = this.introArm; this.introArm = false; this.songPos = 0; this.nP = 0; }
+  stop() { const era = this.run; this.run = false; this.atual = null; if (era) this.emite({ t: 'parou' }); }
   tap() { if (this.run) this.fillPend = true; else this.introArm = true; }   // (a) TAP = intro set / fill-in trigger; (c) semântica
   amostra() {
     if (!this.run) return;
@@ -451,7 +523,7 @@ class Seq {
   }
   pulso() {
     if (!this.atual && !this.novoCompasso()) return;
-    this.emite({ t: 'pulso' });
+    this.emite({ t: 'pulso' }); if (this.nP++ % SEQ.ppqn === 0) this.emite({ t: 'batida' });   // uma batida por semínima (LED de andamento)
     const p = this.atual, cps = SEQ.clocksPorPasso[p.ps - 1];
     if (this.pn === 0) this.dispara(p);
     if (++this.pn >= cps) { this.pn = 0; if (++this.passo >= p.n) { this.passo = 0; this.atual = null; } }
@@ -534,36 +606,84 @@ if (typeof AudioWorkletProcessor !== 'undefined' && typeof registerProcessor ===
   });
 }
 </script>
-
 <script>
 (() => {
 'use strict';
 const $ = id => document.getElementById(id);
+const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+const NS = 'http://www.w3.org/2000/svg';
+const sv = (tag, at) => { const e = document.createElementNS(NS, tag); for (const k in at) e.setAttribute(k, at[k]); return e; };
+const lim = (v, a, b) => Math.max(a, Math.min(b, v));
 const FONTE_DSP = $('dsp').textContent;
 const Motor = new Function(FONTE_DSP + '\nreturn Motor;')();
-const DD = Motor.dados;
-const estado = { acLevel: 1, master: 0.8, bd: { level: 0.85, tone: 0.5, decay: 0.5 }, sd: { level: 0.85, tone: 0.5, snappy: 0.5 }, lt: { level: 0.85, tuning: 0.5, modo: 0 }, mt: { level: 0.85, tuning: 0.5, modo: 0 }, ht: { level: 0.85, tuning: 0.5, modo: 0 }, cy: { level: 0.85, tone: 0.5, decay: 0.5 }, oh: { level: 0.85, decay: 0.5 }, ch: { level: 0.85 }, cb: { level: 0.85 }, cp: { level: 0.85, modo: 0 }, rs: { level: 0.85, modo: 0 }, on: 1, saida: 0, acc: false, sq: { tempo: 0.5, fine: 0.5, selB: 1, selF: 1, varB: 'A', varF: 'A', auto: 0 } };
-const CHAVE = 'sint-tr808-v1:estado';
-try { const s = JSON.parse(localStorage.getItem(CHAVE) || 'null'); if (s) { Object.assign(estado, s); estado.bd = Object.assign({ level: 0.85, tone: 0.5, decay: 0.5 }, s.bd); estado.sd = Object.assign({ level: 0.85, tone: 0.5, snappy: 0.5 }, s.sd); for (const c of ['lt', 'mt', 'ht']) estado[c] = Object.assign({ level: 0.85, tuning: 0.5, modo: 0 }, s[c]); estado.cy = Object.assign({ level: 0.85, tone: 0.5, decay: 0.5 }, s.cy); estado.oh = Object.assign({ level: 0.85, decay: 0.5 }, s.oh); estado.ch = Object.assign({ level: 0.85 }, s.ch); estado.cb = Object.assign({ level: 0.85 }, s.cb); estado.cp = Object.assign({ level: 0.85, modo: 0 }, s.cp); estado.rs = Object.assign({ level: 0.85, modo: 0 }, s.rs); estado.sq = Object.assign({ tempo: 0.5, fine: 0.5, selB: 1, selF: 1, varB: 'A', varF: 'A', auto: 0 }, s.sq); estado.on = s.on === 0 ? 0 : 1; estado.saida = s.saida === 1 ? 1 : 0; } } catch (e) {}
-const salva = () => { try { localStorage.setItem(CHAVE, JSON.stringify(estado)); } catch (e) {} };
-/* Batida de demonstração (NÃO é do original): só para ouvir o sequenciador enquanto o editor de passos não existe. */
-const DEMO = (() => { const t = new Motor(48000), S = (a, o = {}) => t.msg(Object.assign({ t: 'seq', a }, o)), liga = (tr, ps) => ps.forEach(p => S('alterna', { trilha: tr, passo: p }));
-  for (const b of ['A', 'B']) { S('varB', { v: b }); S('basico', { n: 1 }); S('tamanho', { n: 16 }); S('prescale', { ps: 3 });
-    liga('bd', b === 'A' ? [0, 4, 8, 12] : [0, 4, 8, 10, 12]); liga('sd', [4, 12]); liga('ch', [0, 2, 4, 6, 8, 10, 12]); liga('oh', [14]); liga('ac', [0, 8]); }
+const DD = Motor.dados, SEQT = DD.SEQ.trilhas;
+const CHAVE = 'sint-tr808-v1';
+
+/* ---------- dados fixos do painel (conferidos com a foto) ---------- */
+const POS_TRACK = ['ac', 'bd', 'sd', 'lt', 'mt', 'ht', 'rs', 'cp', 'cb', 'cy', 'oh', 'ch'];          // INSTRUMENT SELECT: posições 1 a 12 (AC = 1, CH = 12)
+const POS_NOME = ['AC', 'BD', 'SD', 'LT', 'MT', 'HT', 'RS', 'CP', 'CB', 'CY', 'OH', 'CH'];
+const MODOS = ['PATTERN CLEAR', '1st PART', '2nd PART', 'MANUAL PLAY', 'PLAY', 'COMPOSE'];            // MODE, sentido horário
+const MODO_MOTOR = ['manual', 'manual', 'manual', 'manual', 'play', 'compose'];
+const AUTOS = [0, 16, 12, 8, 4, 2], AUTO_NOME = ['MANUAL', '16', '12', '8', '4', '2'];
+const COLS = [
+  { id: 'ac', nome: 'ACCENT', c: [[0, 'ac', 'LEVEL']] },
+  { id: 'bd', nome: 'BASS DRUM', c: [[0, 'level', 'LEVEL'], [1, 'tone', 'TONE'], [2, 'decay', 'DECAY']] },
+  { id: 'sd', nome: 'SNARE DRUM', c: [[0, 'level', 'LEVEL'], [1, 'tone', 'TONE'], [2, 'snappy', 'SNAPPY']] },
+  { id: 'lt', nome: 'LOW TOM', par: ['LOW CONGA', 'LOW TOM'], c: [[0, 'level', 'LEVEL'], [1, 'tuning', 'TUNING']] },
+  { id: 'mt', nome: 'MID TOM', par: ['MID CONGA', 'MID TOM'], c: [[0, 'level', 'LEVEL'], [1, 'tuning', 'TUNING']] },
+  { id: 'ht', nome: 'HI TOM', par: ['HI CONGA', 'HI TOM'], c: [[0, 'level', 'LEVEL'], [1, 'tuning', 'TUNING']] },
+  { id: 'rs', nome: 'RIM SHOT', par: ['CLAVES', 'RIM SHOT'], c: [[0, 'level', 'LEVEL']] },
+  { id: 'cp', nome: 'HAND CLAP', par: ['MARACAS', 'HAND CLAP'], c: [[0, 'level', 'LEVEL']] },
+  { id: 'cb', nome: 'COW BELL', c: [[0, 'level', 'LEVEL']] },
+  { id: 'cy', nome: 'CYMBAL', c: [[0, 'level', 'LEVEL'], [1, 'tone', 'TONE'], [2, 'decay', 'DECAY']] },
+  { id: 'oh', nome: 'OPEN HI-HAT', c: [[0, 'level', 'LEVEL'], [2, 'decay', 'DECAY']] },
+  { id: 'ch', nome: "CLS'D HI-HAT", c: [[0, 'level', 'LEVEL']] }
+];
+const MAPA_NOTAS = { bd: 36, sd: 38, lt: 43, mt: 47, ht: 50, lc: 64, mc: 63, hc: 62, rs: 37, cl: 75, cp: 39, ma: 70, cb: 56, cy: 49, oh: 46, ch: 42 };   // decidido em 18/11/2026 (notas GM de bateria)
+const NOTA_PARA = { 36: ['bd'], 38: ['sd'], 43: ['lt', 0], 47: ['mt', 0], 50: ['ht', 0], 64: ['lt', 1], 63: ['mt', 1], 62: ['ht', 1], 37: ['rs', 0], 75: ['rs', 1], 39: ['cp', 0], 70: ['cp', 1], 56: ['cb'], 49: ['cy'], 46: ['oh'], 42: ['ch'] };
+const NOME_VOZ = { bd: 'Bass drum', sd: 'Snare drum', lt: 'Low tom', mt: 'Mid tom', ht: 'Hi tom', lc: 'Low conga', mc: 'Mid conga', hc: 'Hi conga', rs: 'Rim shot', cl: 'Claves', cp: 'Hand clap', ma: 'Maracas', cb: 'Cow bell', cy: 'Cymbal', oh: 'Open hi-hat', ch: "Closed hi-hat" };
+
+/* ---------- estado ---------- */
+const estado0 = () => ({ master: 0.8, ac: 0.8, on: 1, saida: 0, acc: false,
+  v: { bd: { level: 0.8, tone: 0.5, decay: 0.5 }, sd: { level: 0.8, tone: 0.5, snappy: 0.5 }, lt: { level: 0.8, tuning: 0.5, modo: 0 }, mt: { level: 0.8, tuning: 0.5, modo: 0 }, ht: { level: 0.8, tuning: 0.5, modo: 0 },
+    rs: { level: 0.8, modo: 0 }, cp: { level: 0.8, modo: 0 }, cb: { level: 0.8 }, cy: { level: 0.8, tone: 0.5, decay: 0.5 }, oh: { level: 0.8, decay: 0.5 }, ch: { level: 0.8 } },
+  sq: { tempo: 5, fine: 0.5, selB: 1, selF: 1, varB: 'A', varF: 'A', auto: 0, modoIdx: 3, instIdx: 1 } });
+const midi0 = () => ({ dev: 'todos', ch: 0, vel: false, limiar: 100, map: {} });
+let estado = estado0(), midi = midi0(), temSalvo = false;
+const twin = new Motor(48000);   // gêmeo do sequenciador no thread principal: guarda os patterns, que o editor lê e o motor de áudio recebe pelos mesmos comandos
+function mescla(base, x) { if (!x || typeof x !== 'object') return base; for (const k in base) { if (k in x) { if (base[k] && typeof base[k] === 'object' && !Array.isArray(base[k])) mescla(base[k], x[k]); else if (typeof base[k] === typeof x[k]) base[k] = x[k]; } } return base; }
+try { const d = JSON.parse(localStorage.getItem(CHAVE + ':estado') || 'null'); if (d) { mescla(estado, d.e); if (d.s) twin.seq.importa(d.s); temSalvo = true; }
+  const m = JSON.parse(localStorage.getItem(CHAVE + ':midi') || 'null'); if (m) { mescla(midi, m); if (m.map && typeof m.map === 'object') midi.map = m.map; } } catch (e) {}
+estado.sq.modoIdx = lim(Math.round(estado.sq.modoIdx), 0, 5); estado.sq.instIdx = lim(Math.round(estado.sq.instIdx), 0, 11);
+const bpmAtual = () => DD.bpmDeKnob(estado.sq.tempo / 10, estado.sq.fine);
+function demo(tw) {   // batida de demonstração (NÃO é do original): só na 1ª vez que a página abre
+  const S = (a, o = {}) => tw.msg(Object.assign({ t: 'seq', a }, o)), liga = (tr, ps) => ps.forEach(p => S('alterna', { trilha: tr, passo: p }));
+  for (const b of ['A', 'B']) { S('varB', { v: b }); S('basico', { n: 1 }); S('tamanho', { n: 16 }); S('prescale', { ps: 3 }); liga('bd', b === 'A' ? [0, 4, 8, 12] : [0, 4, 8, 10, 12]); liga('sd', [4, 12]); liga('ch', [0, 2, 4, 6, 8, 10, 12]); liga('oh', [14]); liga('ac', [0, 8]); }
   S('varF', { v: 'A' }); S('fill', { n: 1 }); S('tamanho', { n: 16 }); S('prescale', { ps: 3 }); liga('sd', [8, 10, 12, 13, 14, 15]); liga('lt', [10]); liga('mt', [12]); liga('ht', [14]); liga('bd', [0, 4]); liga('ac', [8, 15]);
-  S('varB', { v: 'A' }); S('basico', { n: 1 }); return t.seq.exporta(); })();
-const mandaSeq = () => { const q = estado.sq; manda({ t: 'seq', a: 'bpm', v: DD.bpmDeKnob(q.tempo, q.fine) }); manda({ t: 'seq', a: 'basico', n: q.selB }); manda({ t: 'seq', a: 'fill', n: q.selF }); manda({ t: 'seq', a: 'basico', n: q.selB });
-  manda({ t: 'seq', a: 'varB', v: q.varB }); manda({ t: 'seq', a: 'varF', v: q.varF }); manda({ t: 'seq', a: 'auto', v: q.auto }); manda({ t: 'seq', a: 'modo', v: 'manual' }); };
-const aoEvento = e => { if (e && e.t === 'passo') $('passo').textContent = 'passo ' + (e.i + 1); else if (e && e.t === 'compasso') $('comp').textContent = 'compasso ' + (e.c + 1) + ' (' + e.pat + ')'; };
+  S('varB', { v: 'A' }); S('basico', { n: 1 });
+}
+if (!temSalvo) demo(twin);
+let tSalva = 0;
+function salva() { clearTimeout(tSalva); tSalva = setTimeout(() => { try { localStorage.setItem(CHAVE + ':estado', JSON.stringify({ e: estado, s: twin.seq.exporta() })); localStorage.setItem(CHAVE + ':midi', JSON.stringify(midi)); } catch (e) { msg('Não foi possível salvar a configuração neste navegador.'); } }, 250); }
+const msg = t => { $('estado-msg').textContent = t; };
+
+/* ---------- áudio ---------- */
 let ctx = null, no = null, reserva = null, pronto = false; const pend = [];
 const manda = m => { if (!pronto) { pend.push(m); return; } if (no) no.port.postMessage(m); else if (reserva) reserva.motor.msg(m); };
-const diz = t => { $('barra').textContent = t; };
+const parametros = () => Object.assign({ acLevel: estado.ac, master: estado.master, on: estado.on, saida: estado.saida }, JSON.parse(JSON.stringify(estado.v)));
+const modoMotor = () => MODO_MOTOR[estado.sq.modoIdx];
+function enviaTudo() {
+  manda({ t: 'p', p: parametros() }); manda({ t: 'seq', a: 'importa', d: twin.seq.exporta() });
+  const q = estado.sq; manda({ t: 'seq', a: 'bpm', v: bpmAtual() }); manda({ t: 'seq', a: 'basico', n: q.selB }); manda({ t: 'seq', a: 'fill', n: q.selF }); if (!twin.seq.editaFill) manda({ t: 'seq', a: 'basico', n: q.selB });
+  manda({ t: 'seq', a: 'varB', v: q.varB }); manda({ t: 'seq', a: 'varF', v: q.varF }); manda({ t: 'seq', a: 'auto', v: q.auto }); manda({ t: 'seq', a: 'songTrilha', tr: q.instIdx }); manda({ t: 'seq', a: 'modo', v: modoMotor() });
+}
+const S = (a, o = {}) => { const m = Object.assign({ t: 'seq', a }, o); twin.msg(m); manda(m); salva(); };
 function liga() {
   if (ctx) { if (ctx.state !== 'running') ctx.resume().catch(() => {}); return; }
-  const AC = window.AudioContext || window.webkitAudioContext; if (!AC) { diz('Este navegador não tem Web Audio.'); return; }
+  const AC = window.AudioContext || window.webkitAudioContext; if (!AC) { msg('Este navegador não tem Web Audio.'); return; }
   ctx = new AC({ latencyHint: 'interactive' });
   try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
-  const fim = () => { pronto = true; manda({ t: 'p', p: estado }); manda({ t: 'seq', a: 'importa', d: DEMO }); mandaSeq(); for (const m of pend.splice(0)) manda(m); };
+  const fim = () => { pronto = true; enviaTudo(); for (const m of pend.splice(0)) manda(m); };
   const usaReserva = () => { const sp = ctx.createScriptProcessor(1024, 0, 2); sp.motor = new Motor(ctx.sampleRate); sp.motor.saida = aoEvento;
     sp.onaudioprocess = e => { const o = e.outputBuffer; sp.motor.process(o.getChannelData(0), o.getChannelData(1), o.length); }; sp.connect(ctx.destination); reserva = sp; fim(); };
   if (ctx.audioWorklet && window.AudioWorkletNode) {
@@ -577,80 +697,219 @@ function liga() {
   ctx.resume().catch(() => {});
 }
 for (const ev of ['touchend', 'pointerup', 'click', 'keydown']) document.addEventListener(ev, () => { if (!ctx || ctx.state !== 'running') liga(); }, { capture: true, passive: true });
+document.addEventListener('visibilitychange', () => { if (!document.hidden && ctx && ctx.state !== 'running') ctx.resume().catch(() => {}); });
 
-const P = $('painel');
-function knob(nome, get, set) {
-  const d = document.createElement('div'), id = 'k' + Math.random().toString(36).slice(2, 7);
-  d.innerHTML = `<label for="${id}">${nome}</label><input id="${id}" type="range" min="0" max="1" step="0.001"><output></output>`;
-  const r = d.querySelector('input'), o = d.querySelector('output'); r.value = get(); o.textContent = Math.round(get() * 100) + ' %';
-  r.addEventListener('input', () => { set(+r.value); o.textContent = Math.round(+r.value * 100) + ' %'; salva(); });
-  P.appendChild(d);
-}
-knob('BD level', () => estado.bd.level, v => { estado.bd.level = v; manda({ t: 'p', p: { bd: { level: v } } }); });
-knob('BD tone', () => estado.bd.tone, v => { estado.bd.tone = v; manda({ t: 'p', p: { bd: { tone: v } } }); });
-knob('BD decay', () => estado.bd.decay, v => { estado.bd.decay = v; manda({ t: 'p', p: { bd: { decay: v } } }); });
-knob('SD level', () => estado.sd.level, v => { estado.sd.level = v; manda({ t: 'p', p: { sd: { level: v } } }); });
-knob('SD tone', () => estado.sd.tone, v => { estado.sd.tone = v; manda({ t: 'p', p: { sd: { tone: v } } }); });
-knob('SD snappy', () => estado.sd.snappy, v => { estado.sd.snappy = v; manda({ t: 'p', p: { sd: { snappy: v } } }); });
-for (const [c, nome] of [['lt', 'LT/LC'], ['mt', 'MT/MC'], ['ht', 'HT/HC']]) {
-  knob(nome + ' level', () => estado[c].level, v => { estado[c].level = v; manda({ t: 'p', p: { [c]: { level: v } } }); });
-  knob(nome + ' tuning', () => estado[c].tuning, v => { estado[c].tuning = v; manda({ t: 'p', p: { [c]: { tuning: v } } }); });
-  const ch = document.createElement('div'); ch.innerHTML = `<label>${nome} chave</label><button class="liga" type="button" aria-pressed="${!!estado[c].modo}"></button>`;
-  const b = ch.querySelector('button'), pinta = () => { b.textContent = estado[c].modo ? 'Conga' : 'Tom'; b.setAttribute('aria-pressed', String(!!estado[c].modo)); };
-  pinta(); b.addEventListener('click', () => { estado[c].modo = estado[c].modo ? 0 : 1; pinta(); manda({ t: 'p', p: { [c]: { modo: estado[c].modo } } }); salva(); }); P.appendChild(ch);
-}
-knob('CY level', () => estado.cy.level, v => { estado.cy.level = v; manda({ t: 'p', p: { cy: { level: v } } }); });
-knob('CY tone', () => estado.cy.tone, v => { estado.cy.tone = v; manda({ t: 'p', p: { cy: { tone: v } } }); });
-knob('CY decay', () => estado.cy.decay, v => { estado.cy.decay = v; manda({ t: 'p', p: { cy: { decay: v } } }); });
-knob('OH level', () => estado.oh.level, v => { estado.oh.level = v; manda({ t: 'p', p: { oh: { level: v } } }); });
-knob('OH decay', () => estado.oh.decay, v => { estado.oh.decay = v; manda({ t: 'p', p: { oh: { decay: v } } }); });
-knob('CH level', () => estado.ch.level, v => { estado.ch.level = v; manda({ t: 'p', p: { ch: { level: v } } }); });
-knob('CB level', () => estado.cb.level, v => { estado.cb.level = v; manda({ t: 'p', p: { cb: { level: v } } }); });
-knob('CP/MA level', () => estado.cp.level, v => { estado.cp.level = v; manda({ t: 'p', p: { cp: { level: v } } }); });
-{ const ch = document.createElement('div'); ch.innerHTML = '<label>CP/MA chave</label><button class="liga" type="button"></button>';
-  const b = ch.querySelector('button'), pinta = () => { b.textContent = estado.cp.modo ? 'Maracas' : 'Hand clap'; b.setAttribute('aria-pressed', String(!!estado.cp.modo)); };
-  pinta(); b.addEventListener('click', () => { estado.cp.modo = estado.cp.modo ? 0 : 1; pinta(); manda({ t: 'p', p: { cp: { modo: estado.cp.modo } } }); salva(); }); P.appendChild(ch); }
-knob('RS/CL level', () => estado.rs.level, v => { estado.rs.level = v; manda({ t: 'p', p: { rs: { level: v } } }); });
-{ const ch = document.createElement('div'); ch.innerHTML = '<label>RS/CL chave</label><button class="liga" type="button"></button>';
-  const b = ch.querySelector('button'), pinta = () => { b.textContent = estado.rs.modo ? 'Claves' : 'Rim shot'; b.setAttribute('aria-pressed', String(!!estado.rs.modo)); };
-  pinta(); b.addEventListener('click', () => { estado.rs.modo = estado.rs.modo ? 0 : 1; pinta(); manda({ t: 'p', p: { rs: { modo: estado.rs.modo } } }); salva(); }); P.appendChild(ch); }
-knob('Accent level', () => estado.acLevel, v => { estado.acLevel = v; manda({ t: 'p', p: { acLevel: v } }); });
-{ const ch = document.createElement('div'); ch.innerHTML = '<label>Power / saída</label><button class="liga" id="pw" type="button"></button> <button class="liga" id="so" type="button"></button>';
-  const pw = ch.querySelector('#pw'), so = ch.querySelector('#so'), pinta = () => { pw.textContent = estado.on ? 'On' : 'Off'; pw.setAttribute('aria-pressed', String(!!estado.on)); so.textContent = estado.saida ? 'LO (−19 dB)' : 'HI'; so.setAttribute('aria-pressed', String(!!estado.saida)); };
-  pinta(); pw.addEventListener('click', () => { estado.on = estado.on ? 0 : 1; pinta(); manda({ t: 'p', p: { on: estado.on } }); salva(); });
-  so.addEventListener('click', () => { estado.saida = estado.saida ? 0 : 1; pinta(); manda({ t: 'p', p: { saida: estado.saida } }); salva(); }); P.appendChild(ch); }
-knob('Master volume', () => estado.master, v => { estado.master = v; manda({ t: 'p', p: { master: v } }); });
-const pad = document.createElement('div'); pad.className = 'pad';
-pad.innerHTML = '<button class="bd" id="bd" type="button">BASS DRUM</button><button class="bd" id="sd" type="button">SNARE DRUM</button><button class="bd" id="lt" type="button">LOW TOM/CONGA</button><button class="bd" id="mt" type="button">MID TOM/CONGA</button><button class="bd" id="ht" type="button">HI TOM/CONGA</button><button class="bd" id="cy" type="button">CYMBAL</button><button class="bd" id="oh" type="button">OPEN HI-HAT</button><button class="bd" id="ch" type="button">CLOSED HI-HAT</button><button class="bd" id="cb" type="button">COW BELL</button><button class="bd" id="cp" type="button">HAND CLAP / MARACAS</button><button class="bd" id="rs" type="button">RIM SHOT / CLAVES</button><button class="liga" id="acc" type="button" aria-pressed="false">Accent</button>';
-P.appendChild(pad);
-const acc = $('acc'); acc.setAttribute('aria-pressed', String(!!estado.acc));
-acc.addEventListener('click', () => { estado.acc = !estado.acc; acc.setAttribute('aria-pressed', String(estado.acc)); salva(); });
-const dispara = v => { liga(); manda({ t: 'trig', v, ac: estado.acc }); };
-for (const [id, tecla] of [['bd', 'b'], ['sd', 's'], ['lt', 'l'], ['mt', 'm'], ['ht', 'h'], ['cy', 'y'], ['oh', 'o'], ['ch', 'c'], ['cb', 'k'], ['cp', 'p'], ['rs', 'r']]) {
-  $(id).addEventListener('pointerdown', e => { e.preventDefault(); dispara(id); });
-  $(id).addEventListener('keydown', e => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); dispara(id); } });
-  document.addEventListener('keydown', e => { if (e.target.tagName === 'INPUT' || e.repeat) return; if (e.key === tecla) dispara(id); });
-}
+/* ---------- registro de controles (para o MIDI learn) ---------- */
+const CTL = {};   // id -> { tipo: 'knob' | 'disc' | 'botao', n, get01, set01, idx, setIdx, press, nome }
+let ultimoDisparo = null;
 
-const SQ = document.createElement('div'); SQ.className = 'pad';
-SQ.innerHTML = `<button class="liga" id="seqgo" type="button" aria-pressed="false">START / STOP</button><button class="bd" id="tap" type="button" style="min-height:44px;flex:0 0 auto;font-size:1rem">TAP (fill-in / intro)</button>
-  <span id="passo" role="status">passo -</span><span id="comp" role="status">compasso -</span>`;
-P.appendChild(SQ);
-{ const q = estado.sq, caixa = document.createElement('div'); caixa.style.gridColumn = '1/-1'; caixa.style.display = 'grid'; caixa.style.gridTemplateColumns = 'repeat(auto-fit,minmax(150px,1fr))'; caixa.style.gap = '12px';
-  const campo = (nome, ops, get, set) => { const d = document.createElement('div'), id = 's' + Math.random().toString(36).slice(2, 7); d.innerHTML = `<label for="${id}">${nome}</label><select id="${id}" style="min-height:44px;width:100%"></select>`; const sel = d.querySelector('select');
-    ops.forEach(([v, t]) => { const o = document.createElement('option'); o.value = v; o.textContent = t; sel.appendChild(o); }); sel.value = String(get()); sel.addEventListener('change', () => { set(sel.value); salva(); }); caixa.appendChild(d); };
-  const tempo = document.createElement('div'); tempo.innerHTML = '<label for="tmp">TEMPO</label><input id="tmp" type="range" min="0" max="1" step="0.001"><output id="bpmo"></output>'; const tr = tempo.querySelector('input'), bo = tempo.querySelector('output');
-  tr.value = q.tempo; const pintaBpm = () => { bo.textContent = Math.round(DD.bpmDeKnob(+tr.value, q.fine) * 10) / 10 + ' BPM'; }; pintaBpm(); tr.addEventListener('input', () => { q.tempo = +tr.value; pintaBpm(); manda({ t: 'seq', a: 'bpm', v: DD.bpmDeKnob(q.tempo, q.fine) }); salva(); }); caixa.appendChild(tempo);
-  campo('BASIC RHYTHM', Array.from({ length: 12 }, (_, i) => [i + 1, String(i + 1)]), () => q.selB, v => { q.selB = +v; manda({ t: 'seq', a: 'basico', n: q.selB }); });
-  campo('INTRO / FILL IN', [1, 2, 3, 4].map(i => [i, String(i)]), () => q.selF, v => { q.selF = +v; manda({ t: 'seq', a: 'fill', n: q.selF }); manda({ t: 'seq', a: 'basico', n: q.selB }); });
-  campo('BASIC VARIATION', [['A', 'A'], ['AB', 'AB'], ['B', 'B']], () => q.varB, v => { q.varB = v; manda({ t: 'seq', a: 'varB', v }); });
-  campo('I/F VARIATION', [['A', 'A'], ['B', 'B']], () => q.varF, v => { q.varF = v; manda({ t: 'seq', a: 'varF', v }); });
-  campo('AUTO FILL IN (compassos)', [[0, 'MANUAL'], [16, '16'], [12, '12'], [8, '8'], [4, '4'], [2, '2']], () => q.auto, v => { q.auto = +v; manda({ t: 'seq', a: 'auto', v: q.auto }); });
-  P.appendChild(caixa); }
-let rodando = false; const go = $('seqgo'); const alterna = () => { liga(); rodando = !rodando; go.setAttribute('aria-pressed', String(rodando)); manda({ t: 'seq', a: rodando ? 'start' : 'stop' }); if (!rodando) { $('passo').textContent = 'passo -'; $('comp').textContent = 'compasso -'; } };
-go.addEventListener('click', alterna); $('tap').addEventListener('click', () => { liga(); manda({ t: 'seq', a: 'tap' }); });
-document.addEventListener('keydown', e => { if (e.key === ' ' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'SELECT' && !e.repeat) { e.preventDefault(); alterna(); } });
-diz('Teclas: B bumbo, S caixa, L/M/H toms e congas (a chave de cada par escolhe tom ou conga), Y prato, O hi-hat aberto, C hi-hat fechado (corta o aberto), K cowbell, P clap ou maracas (pela chave), R rim shot ou claves (pela chave). Espaço: START/STOP. A batida do sequenciador é de demonstração, não do original. O som liga no primeiro toque.');
+/* ---------- componentes ---------- */
+function mkKnob(id, rotulo, get, set, tam = '', aria) {
+  const c = el('div', 'ctl'); c.dataset.ctl = id; const rot = el('div', 'rot', rotulo); const k = el('div', 'knob ' + tam); k.tabIndex = 0; k.setAttribute('role', 'slider'); k.setAttribute('aria-label', aria || rotulo);
+  k.setAttribute('aria-valuemin', '0'); k.setAttribute('aria-valuemax', '100');
+  const s = sv('svg', { viewBox: '0 0 64 64' }); s.appendChild(sv('circle', { cx: 32, cy: 32, r: 27, class: 'base' }));
+  for (let i = 0; i <= 10; i++) { const a = (-135 + 27 * i) * Math.PI / 180; s.appendChild(sv('circle', { cx: 32 + 30 * Math.sin(a), cy: 32 - 30 * Math.cos(a), r: 1.3, class: 'marca' })); }
+  s.appendChild(sv('circle', { cx: 32, cy: 32, r: 20, class: 'tampa' })); const pt = sv('line', { x1: 32, y1: 32, x2: 32, y2: 14, class: 'pt' }); s.appendChild(pt); k.appendChild(s); c.append(k, rot);
+  const pinta = () => { const v = get(); pt.setAttribute('transform', 'rotate(' + (-135 + 270 * v) + ' 32 32)'); k.setAttribute('aria-valuenow', String(Math.round(v * 100))); k.title = rotulo + ': ' + Math.round(v * 100) + ' %'; };
+  const aplica = v => { set(lim(v, 0, 1)); pinta(); salva(); };
+  let y0 = 0, v0 = 0, ativo = false;
+  k.addEventListener('pointerdown', e => { ativo = true; y0 = e.clientY; v0 = get(); k.setPointerCapture(e.pointerId); e.preventDefault(); });
+  k.addEventListener('pointermove', e => { if (ativo) aplica(v0 + (y0 - e.clientY) / 150); });
+  for (const t of ['pointerup', 'pointercancel']) k.addEventListener(t, () => { ativo = false; });
+  k.addEventListener('wheel', e => { e.preventDefault(); aplica(get() - Math.sign(e.deltaY) * 0.02); }, { passive: false });
+  k.addEventListener('keydown', e => { const d = e.shiftKey ? 0.1 : 0.02; if (e.key === 'ArrowUp' || e.key === 'ArrowRight') { aplica(get() + d); e.preventDefault(); } else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') { aplica(get() - d); e.preventDefault(); } else if (e.key === 'Home') { aplica(0); e.preventDefault(); } else if (e.key === 'End') { aplica(1); e.preventDefault(); } });
+  CTL[id] = { tipo: 'knob', nome: aria || rotulo, get01: get, set01: v => { set(lim(v, 0, 1)); pinta(); salva(); }, pinta }; pinta(); return c;
+}
+/** Seletor rotativo de posições fixas, com as etiquetas ao redor (clicáveis). angulos: graus a partir do topo, sentido horário. */
+function mkRot(id, rotulo, labels, angs, tam, get, set) {
+  const w = el('div', 'rotulos'); w.dataset.ctl = id; w.style.width = w.style.height = tam + 'px'; w.setAttribute('role', 'radiogroup'); w.setAttribute('aria-label', rotulo);
+  const kd = Math.round(tam * 0.46), k = el('div', 'knob centro'); k.style.width = k.style.height = kd + 'px'; k.tabIndex = 0; k.setAttribute('role', 'slider'); k.setAttribute('aria-label', rotulo); k.setAttribute('aria-valuemin', '1'); k.setAttribute('aria-valuemax', String(labels.length));
+  const s = sv('svg', { viewBox: '0 0 64 64' }); s.appendChild(sv('circle', { cx: 32, cy: 32, r: 27, class: 'base' })); s.appendChild(sv('circle', { cx: 32, cy: 32, r: 20, class: 'tampa' })); const pt = sv('line', { x1: 32, y1: 32, x2: 32, y2: 12, class: 'pt' }); s.appendChild(pt); k.appendChild(s); w.appendChild(k);
+  const R = tam * 0.42, btn = labels.map((t, i) => { const b = el('button', 'etq', t); b.type = 'button'; b.setAttribute('role', 'radio'); const a = angs[i] * Math.PI / 180; b.style.left = (tam / 2 + R * Math.sin(a)) + 'px'; b.style.top = (tam / 2 - R * Math.cos(a)) + 'px';
+    b.addEventListener('click', () => ajusta(i)); w.appendChild(b); return b; });
+  const pinta = () => { const i = get(); pt.setAttribute('transform', 'rotate(' + angs[i] + ' 32 32)'); k.setAttribute('aria-valuenow', String(i + 1)); k.setAttribute('aria-valuetext', labels[i]); btn.forEach((b, j) => b.setAttribute('aria-checked', String(j === i))); };
+  const ajusta = i => { i = lim(i, 0, labels.length - 1); if (i === get()) return; set(i); pinta(); salva(); };
+  let y0 = 0, i0 = 0, ativo = false;
+  k.addEventListener('pointerdown', e => { ativo = true; y0 = e.clientY; i0 = get(); k.setPointerCapture(e.pointerId); e.preventDefault(); });
+  k.addEventListener('pointermove', e => { if (ativo) ajusta(i0 + Math.round((y0 - e.clientY) / 22)); });
+  for (const t of ['pointerup', 'pointercancel']) k.addEventListener(t, () => { ativo = false; });
+  k.addEventListener('wheel', e => { e.preventDefault(); ajusta(get() - Math.sign(e.deltaY)); }, { passive: false });
+  k.addEventListener('keydown', e => { if (e.key === 'ArrowUp' || e.key === 'ArrowRight') { ajusta(get() + 1); e.preventDefault(); } else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') { ajusta(get() - 1); e.preventDefault(); } });
+  CTL[id] = { tipo: 'disc', nome: rotulo, n: labels.length, idx: get, setIdx: i => { ajusta(i); }, pinta }; pinta(); return w;
+}
+function mkSlide(id, rotulo, labels, vertical, get, set, extra = '') {
+  const c = el('div', 'ctl'); c.dataset.ctl = id; const s = el('div', 'slide ' + (vertical ? 'v' : 'h') + (extra ? ' ' + extra : '')); s.setAttribute('role', 'radiogroup'); s.setAttribute('aria-label', rotulo);
+  const tr = el('div', 'trilho'), pol = el('div', 'polegar'); tr.appendChild(pol); const ops = el('div', 'opcoes'); const n = labels.length, tam = n * 30;
+  if (vertical) tr.style.height = (extra ? 44 : tam) + 'px'; else tr.style.width = (n * 46) + 'px';
+  const bs = labels.map((t, i) => { const b = el('button', 'op', t); b.type = 'button'; b.setAttribute('role', 'radio'); if (!vertical) b.style.minWidth = '46px'; b.addEventListener('click', () => ajusta(i)); ops.appendChild(b); return b; });
+  s.append(tr, ops); c.append(s); if (rotulo) c.appendChild(el('div', 'rot', rotulo));
+  const pinta = () => { const i = get(); const f = (i + 0.5) / n; if (vertical) pol.style.top = 'calc(' + (f * 100) + '% - 9px)'; else pol.style.left = 'calc(' + (f * 100) + '% - 11px)'; bs.forEach((b, j) => b.setAttribute('aria-checked', String(j === i))); };
+  const ajusta = i => { i = lim(i, 0, n - 1); if (i === get()) return; set(i); pinta(); salva(); };
+  s.addEventListener('click', e => { if (e.target.closest('.op')) return; const r = tr.getBoundingClientRect(); ajusta(Math.floor(lim(vertical ? (e.clientY - r.top) / r.height : (e.clientX - r.left) / r.width, 0, 0.999) * n)); });
+  CTL[id] = { tipo: 'disc', nome: rotulo || id, n, idx: get, setIdx: i => ajusta(i), pinta }; pinta(); return c;
+}
+const mkBotao = (id, rotulo, classe, press) => { const b = el('button', 'btn ' + classe, rotulo); b.type = 'button'; b.dataset.ctl = id; b.addEventListener('click', press); CTL[id] = { tipo: 'botao', nome: rotulo, press }; return b; };
+
+/* ---------- painel ---------- */
+const painel = $('painel');
+const linhaTopo = el('div', 'topo'); const pw = mkSlide('power', 'POWER', ['ON', 'OFF'], false, () => estado.on ? 0 : 1, i => { estado.on = i === 0 ? 1 : 0; manda({ t: 'p', p: { on: estado.on } }); });
+linhaTopo.append(pw, el('div', 'titulo', 'CAIXA DE RITMOS ANALÓGICA · clone em Web Audio'));
+const meio = el('div', 'meio'), esq = el('div', 'esq'), vozes = el('div', 'vozes');
+// bloco esquerdo
+const dMode = el('div', 'mode'); dMode.append(el('div', 'rot', 'MODE'), mkRot('mode', 'MODE', MODOS, [225, 270, 315, 45, 90, 135], 140, () => estado.sq.modoIdx, i => { estado.sq.modoIdx = i; mudouModo(); }));
+const dInst = el('div', 'inst'); dInst.append(el('div', 'rot', 'INSTRUMENT SELECT / RHYTHM TRACK'), mkRot('inst', 'INSTRUMENT SELECT', POS_NOME.map((n, i) => n + ' ' + (i + 1)), POS_NOME.map((_, i) => (195 + 30 * i) % 360), 190, () => estado.sq.instIdx, i => { estado.sq.instIdx = i; S('songTrilha', { tr: i }); pinta(); }));
+const dClear = el('div', 'clear ctl'); const btnClear = mkBotao('clear', 'CLEAR', 'vermelho', () => clearToque()); dClear.append(btnClear, el('div', 'nota', 'STEP NUMBER · PRE-SCALE · TRACK / PATTERN CLEAR'));
+const dAuto = el('div', 'auto'); dAuto.append(el('div', 'rot', 'AUTO FILL IN (MEASURES)'), mkRot('auto', 'AUTO FILL IN', AUTO_NOME, [270, 306, 342, 18, 54, 90], 130, () => Math.max(0, AUTOS.indexOf(estado.sq.auto)), i => { estado.sq.auto = AUTOS[i]; S('auto', { v: AUTOS[i] }); }));
+const dTempo = el('div', 'tempo'); { const w = el('div', 'linha'); w.style.justifyContent = 'space-around';
+  const led = el('span', 'led verde'); led.id = 'ledTempo'; const fine = mkKnob('fine', 'FINE (SLOW – FAST)', () => estado.sq.fine, v => { estado.sq.fine = v; S('bpm', { v: bpmAtual() }); pintaBpm(); }, 'pequeno');
+  w.append(mkKnob('tempo', 'TEMPO (0 – 10)', () => estado.sq.tempo / 10, v => { estado.sq.tempo = v * 10; S('bpm', { v: bpmAtual() }); pintaBpm(); }, 'grande'), led, fine); dTempo.append(w, Object.assign(el('div', 'nota'), { id: 'bpm' })); }
+esq.append(dMode, dInst, dClear, dAuto, dTempo);
+// colunas de vozes
+for (const col of COLS) {
+  const c = el('div', 'col'); c.dataset.voz = col.id; const lin = [null, null, null];
+  for (const [r, chave, rot] of col.c) {
+    const get = col.id === 'ac' ? () => estado.ac : () => estado.v[col.id][chave], set = col.id === 'ac' ? v => { estado.ac = v; manda({ t: 'p', p: { acLevel: v } }); } : v => { estado.v[col.id][chave] = v; manda({ t: 'p', p: { [col.id]: { [chave]: v } } }); };
+    lin[r] = mkKnob(col.id === 'ac' ? 'ac.level' : col.id + '.' + chave, rot, get, set, '', col.nome + ' ' + rot);
+  }
+  for (let r = 0; r < 3; r++) c.appendChild(lin[r] || el('div'));
+  if (col.par) c.appendChild(mkSlide(col.id + '.modo', '', col.par, true, () => estado.v[col.id].modo ? 0 : 1, i => { estado.v[col.id].modo = i === 0 ? 1 : 0; manda({ t: 'p', p: { [col.id]: { modo: estado.v[col.id].modo } } }); pintaPads(); }, 'par'));
+  else c.appendChild(el('div'));
+  c.appendChild(el('div', 'nome', col.nome)); vozes.appendChild(c);
+}
+const colMaster = el('div', 'ctl'); colMaster.style.cssText = 'grid-column:1/-1;flex-direction:row;justify-content:flex-end;padding:4px 14px'; colMaster.append(mkKnob('master', 'MASTER VOLUME', () => estado.master, v => { estado.master = v; manda({ t: 'p', p: { master: v } }); }, 'pequeno')); vozes.appendChild(colMaster);
+meio.append(esq, vozes);
+// linha de baixo: sequenciador
+const baixo = el('div', 'baixo');
+const dVarB = el('div'); dVarB.append(mkSlide('varB', 'BASIC VARIATION', ['A', 'AB', 'B'], false, () => ['A', 'AB', 'B'].indexOf(estado.sq.varB), i => { estado.sq.varB = ['A', 'AB', 'B'][i]; S('varB', { v: estado.sq.varB }); pinta(); }));
+{ const leds = el('div', 'linha'); const a = el('span', 'led'); a.id = 'ledA'; const b = el('span', 'led'); b.id = 'ledB'; leds.append(el('span', 'nota', 'A'), a, b, el('span', 'nota', 'B')); dVarB.appendChild(leds); }
+const dStart = el('div'); { const b = mkBotao('start', 'START / STOP', 'liga start', () => alterna()); b.id = 'start'; b.setAttribute('aria-pressed', 'false'); dStart.append(b); }
+const dPre = el('div', 'pre'); dPre.append(mkSlide('prescale', 'PRE-SCALE', ['1', '2', '3', '4'], true, () => lim(twin.seq.alvo().ps - 1, 0, 3), i => { prescaleMudou(i); }));
+const passosBox = el('div', 'passos-linha'); const passos = el('div', 'passos'); const btnPasso = [];
+for (let i = 0; i < 16; i++) { const b = el('button', 'passo g' + (Math.floor(i / 4) + 1)); b.type = 'button'; b.dataset.ctl = 'passo' + (i + 1); b.append(el('span', 'n', String(i + 1)), el('span', 'led'), el('span', 'abaixo', i < 12 ? String(i + 1) : String(i - 11)));
+  b.setAttribute('aria-label', 'Botão ' + (i + 1) + (i < 12 ? ' (STEP ' + (i + 1) + ' / BASIC RHYTHM ' + (i + 1) + ')' : ' (STEP ' + (i + 1) + ' / INTRO-FILL IN ' + (i - 11) + ')')); b.addEventListener('click', () => clicaPasso(i)); CTL['passo' + (i + 1)] = { tipo: 'botao', nome: 'Botão ' + (i + 1), press: () => clicaPasso(i) }; passos.appendChild(b); btnPasso.push(b); }
+{ const p = el('div', 'linha'); p.style.margin = '14px 0 0'; const l1 = el('span', 'led'); l1.id = 'ledP1'; const l2 = el('span', 'led'); l2.id = 'ledP2'; p.append(el('span', 'nota', 'STEP NO'), l1, el('span', 'nota', '1st PART'), l2, el('span', 'nota', '2nd PART'), el('span', 'nota', 'BASIC RHYTHM 1–12 · INTRO/FILL IN 1–4 (embaixo dos botões)'), Object.assign(el('span', 'nota'), { id: 'comp' })); passosBox.append(passos, p); }
+const dIF = el('div'); dIF.append(mkSlide('varF', 'I/F VARIATION', ['A', 'B'], false, () => estado.sq.varF === 'B' ? 1 : 0, i => { estado.sq.varF = i ? 'B' : 'A'; S('varF', { v: estado.sq.varF }); pinta(); }));
+{ const t = mkBotao('tap', 'TAP', 'liga', () => { S('tap'); msg(rodando ? 'TAP: o INTRO/FILL IN toca no próximo compasso.' : 'INTRO SET: o 1º compasso depois do START será o INTRO/FILL IN.'); }); t.style.marginTop = '8px'; t.id = 'tap'; dIF.append(t, el('div', 'nota', 'INTRO SET · FILL IN TRIGGER')); }
+baixo.append(dVarB, dStart, dPre, passosBox, dIF);
+painel.append(linhaTopo, meio, baixo);
+
+/* ---------- lógica do sequenciador no painel ---------- */
+let rodando = false, cabeca = -1, atualPat = '', clearArmado = false, tClear = 0, pintaPads = () => {};
+const alterna = () => { liga(); rodando = !rodando; S(rodando ? 'start' : 'stop'); $('start').setAttribute('aria-pressed', String(rodando)); if (!rodando) cabeca = -1; pinta(); };
+function mudouModo() { S('modo', { v: modoMotor() }); S('songTrilha', { tr: estado.sq.instIdx }); desarma(); pinta(); msg(MODOS[estado.sq.modoIdx] + (estado.sq.modoIdx === 3 ? ': toque os botões 1–12 (BASIC RHYTHM) e 13–16 (INTRO/FILL IN).' : estado.sq.modoIdx === 1 || estado.sq.modoIdx === 2 ? ': os 16 botões são os passos do instrumento selecionado.' : estado.sq.modoIdx === 0 ? ': toque CLEAR duas vezes para apagar o pattern selecionado.' : '')); }
+function clicaPasso(i) {
+  const m = estado.sq.modoIdx, q = estado.sq;
+  if (m === 1 || m === 2) {
+    const passo = i + (m === 2 ? 16 : 0);
+    if (clearArmado) { S('tamanho', { n: passo + 1 }); desarma(); msg('STEP NUMBER: o pattern passa a ter ' + (passo + 1) + ' passo(s).'); }
+    else S('alterna', { trilha: POS_TRACK[q.instIdx], passo });
+  } else if (m === 3 || m === 5) {
+    if (i < 12) { q.selB = i + 1; S('basico', { n: q.selB }); } else { q.selF = i - 11; S('fill', { n: q.selF }); if (m === 5) S('tap'); }
+  }
+  pinta();
+}
+function prescaleMudou(i) {
+  const m = estado.sq.modoIdx;
+  if (m === 1 || m === 2 || clearArmado) { S('prescale', { ps: i + 1 }); if (clearArmado) { desarma(); msg('PRE-SCALE ' + (i + 1) + ' definido para este pattern.'); } }
+  else msg('PRE-SCALE só muda em PATTERN WRITE (1st/2nd PART) ou com CLEAR armado.');
+  CTL.prescale.pinta();
+}
+function desarma() { clearArmado = false; clearTimeout(tClear); btnClear.classList.remove('armado'); }
+function clearToque() {
+  const m = estado.sq.modoIdx;
+  if (!clearArmado) { if (m === 4 || m === 5) { msg('CLEAR não age em PLAY/COMPOSE.'); return; } clearArmado = true; btnClear.classList.add('armado'); tClear = setTimeout(desarma, 4000);
+    msg('CLEAR armado por 4 s: toque um passo (STEP NUMBER) ou mova o PRE-SCALE; ou toque CLEAR de novo para apagar ' + (m === 0 ? 'o pattern selecionado.' : 'a trilha do instrumento selecionado (' + POS_NOME[estado.sq.instIdx] + ').')); return; }
+  desarma(); if (m === 0 || m === 3) { S('limpaPadrao'); msg('Pattern apagado.'); } else { S('limpaTrilha', { trilha: POS_TRACK[estado.sq.instIdx] }); msg('Trilha ' + POS_NOME[estado.sq.instIdx] + ' apagada.'); } pinta();
+}
+function aoEvento(e) {
+  if (!e) return;
+  if (e.t === 'passo') { cabeca = e.i; pinta(); } else if (e.t === 'compasso') { atualPat = e.pat; $('comp').textContent = 'compasso ' + (e.c + 1) + ' · ' + e.pat; pinta(); }
+  else if (e.t === 'batida') { const l = $('ledTempo'); l.classList.add('on'); setTimeout(() => l.classList.remove('on'), 80); }
+  else if (e.t === 'parou') { rodando = false; cabeca = -1; $('start').setAttribute('aria-pressed', 'false'); pinta(); }
+}
+function pinta() {
+  const q = estado.sq, m = q.modoIdx, alvo = twin.seq.alvo(), k = SEQT.indexOf(POS_TRACK[q.instIdx]), part = m === 2 ? 1 : 0;
+  btnPasso.forEach((b, i) => {
+    let aceso = false;
+    if (m === 1 || m === 2) aceso = !!alvo.t[k][i + part * 16];
+    else if (m === 3 || m === 5) aceso = i < 12 ? (q.selB === i + 1 && !twin.seq.editaFill) || (i + 1 === Number((atualPat.match(/^b(\d+)/) || [])[1]) && rodando) : (q.selF === i - 11 && twin.seq.editaFill) || (i - 11 === Number((atualPat.match(/^f(\d+)/) || [])[1]) && rodando);
+    else if (m === 4) aceso = rodando && (i < 12 ? atualPat.startsWith('b') && Number(atualPat.slice(1)) === i + 1 : atualPat.startsWith('f') && Number(atualPat.slice(1)) === i - 11);
+    const cab = rodando && (m === 1 || m === 2 || m === 3 || m === 4 || m === 5) && cabeca >= 0 && cabeca % 16 === i && Math.floor(cabeca / 16) === (m === 2 ? 1 : (m === 1 ? 0 : Math.floor(cabeca / 16)));
+    b.classList.toggle('aceso', aceso); b.classList.toggle('cabeca', !!cab); b.querySelector('.led').classList.toggle('on', aceso);
+  });
+  const p2 = (m === 2) || (rodando && cabeca >= 16 && m !== 1); $('ledP1').classList.toggle('on', !p2); $('ledP2').classList.toggle('on', p2);
+  const bk = atualPat ? atualPat.slice(-1) : '', vb = q.varB; $('ledA').classList.toggle('on', rodando ? bk === 'A' : vb !== 'B'); $('ledB').classList.toggle('on', rodando ? bk === 'B' : vb !== 'A');
+  for (const id in CTL) if (CTL[id].pinta) CTL[id].pinta();
+  pintaBpm();
+}
+function pintaBpm() { $('bpm').textContent = 'Andamento: ' + Math.round(bpmAtual() * 10) / 10 + ' BPM (por semínima)'; }
+
+/* ---------- faixa de acessórios (não original) ---------- */
+const acess = $('acess');
+const bPads = el('div', 'bloco'); bPads.append(el('h3', '', 'Pads de teste'), el('div', 'nota', 'O original só toca pelo sequenciador. Estes pads disparam uma voz na hora, para você ajustar os knobs.'));
+{ const g = el('div', 'pads'); g.style.marginTop = '8px'; const acc = el('button', 'btn liga', 'ACCENT'); acc.type = 'button'; acc.id = 'padAcc'; acc.setAttribute('aria-pressed', String(estado.acc)); acc.addEventListener('click', () => { estado.acc = !estado.acc; acc.setAttribute('aria-pressed', String(estado.acc)); salva(); });
+  const rotuloVoz = id => { const col = COLS.find(c => c.id === id), m = estado.v[id] && estado.v[id].modo; return col.par ? col.par[m ? 0 : 1] : col.nome; };
+  const pads = ['bd', 'sd', 'lt', 'mt', 'ht', 'rs', 'cp', 'cb', 'cy', 'oh', 'ch'].map(id => { const b = el('button', 'btn', ''); b.type = 'button'; b.dataset.pad = id; b.addEventListener('pointerdown', e => { e.preventDefault(); disparar(id, estado.acc); }); b.addEventListener('keydown', e => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); disparar(id, estado.acc); } }); g.appendChild(b); return [b, id]; });
+  pintaPads = () => pads.forEach(([b, id]) => { b.textContent = rotuloVoz(id); }); pintaPads(); g.append(acc); bPads.appendChild(g); }
+function disparar(id, ac, info) { liga(); manda({ t: 'trig', v: id, ac: !!ac }); ultimoDisparo = id; $('ultimo').textContent = 'último disparo: ' + id + (ac ? ' + accent' : '') + (info ? ' (' + info + ')' : ''); }
+const TECLAS = { b: 'bd', s: 'sd', l: 'lt', m: 'mt', h: 'ht', r: 'rs', p: 'cp', k: 'cb', y: 'cy', o: 'oh', c: 'ch' };
+document.addEventListener('keydown', e => { if (e.target.closest('input,select,textarea') || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === ' ' && !e.target.closest('button,[role=slider]')) { e.preventDefault(); alterna(); return; } const v = TECLAS[e.key.toLowerCase()]; if (v && !e.target.closest('button')) disparar(v, estado.acc); });
+
+const bMidi = el('div', 'bloco'); bMidi.append(el('h3', '', 'MIDI'));
+const selDev = el('select'); selDev.id = 'midiDev'; selDev.setAttribute('aria-label', 'Dispositivo MIDI de entrada'); selDev.appendChild(Object.assign(el('option', '', 'Todos os dispositivos'), { value: 'todos' }));
+const selCh = el('select'); selCh.id = 'midiCh'; selCh.setAttribute('aria-label', 'Canal MIDI'); selCh.appendChild(Object.assign(el('option', '', 'Todos os canais'), { value: '0' })); for (let i = 1; i <= 16; i++) selCh.appendChild(Object.assign(el('option', '', 'Canal ' + i), { value: String(i) }));
+const chkVel = el('input'); chkVel.type = 'checkbox'; chkVel.id = 'midiVel'; const limVel = el('input'); limVel.type = 'number'; limVel.min = '1'; limVel.max = '127'; limVel.id = 'midiLim'; limVel.setAttribute('aria-label', 'Velocity mínima para accent');
+const btnLearn = el('button', 'btn liga', 'MIDI learn'); btnLearn.type = 'button'; btnLearn.id = 'learn'; btnLearn.setAttribute('aria-pressed', 'false');
+const btnDesf = el('button', 'btn', 'Desfazer ligação'); btnDesf.type = 'button'; btnDesf.id = 'desfaz'; const btnTodas = el('button', 'btn', 'Apagar todas'); btnTodas.type = 'button'; btnTodas.id = 'apagaTodas';
+{ const a = el('div', 'linha'); a.append(selDev, selCh); const b = el('div', 'linha'); const l1 = el('label', '', 'Velocity vira accent a partir de'); l1.htmlFor = 'midiVel'; const l2 = el('label', '', ''); l2.htmlFor = 'midiLim'; b.append(chkVel, l1, limVel);
+  const c = el('div', 'linha'); c.append(btnLearn, btnDesf, btnTodas); bMidi.append(a, b, c, Object.assign(el('div', 'nota'), { id: 'learnInfo' }), Object.assign(el('div', 'nota'), { id: 'midiInfo' }), Object.assign(el('div', 'nota'), { id: 'ultimo', textContent: 'último disparo: —' })); }
+const bNotas = el('div', 'bloco'); bNotas.append(el('h3', '', 'Mapa de notas (fixo)'), el('div', 'nota', 'Notas MIDI que disparam cada voz. Como cada par (tom/conga, RS/claves, clap/maracas) usa um circuito só, a nota de conga, claves ou maracas muda a chave do par.'));
+{ const t = el('table', 'mapa'); t.id = 'mapaNotas'; for (const id of Object.keys(MAPA_NOTAS)) { const r = el('tr'); r.append(el('td', '', NOME_VOZ[id]), el('td', '', String(MAPA_NOTAS[id]))); t.appendChild(r); } bNotas.appendChild(t); }
+const bPat = el('div', 'bloco'); bPat.append(el('h3', '', 'Patterns e painel'));
+const btnExp = el('button', 'btn', 'Exportar patterns'); btnExp.type = 'button'; btnExp.id = 'exporta'; const inImp = el('input'); inImp.type = 'file'; inImp.accept = 'application/json,.json'; inImp.id = 'importa'; inImp.setAttribute('aria-label', 'Importar patterns');
+const btnZerar = el('button', 'btn', 'Zerar'); btnZerar.type = 'button'; btnZerar.id = 'zerar';
+{ const a = el('div', 'linha'); a.append(btnExp, inImp, btnZerar); bPat.append(a, el('div', 'nota', 'Na primeira abertura o pattern 1 tem uma batida de demonstração (não é do original). Zerar volta o painel ao padrão e apaga todos os patterns; o mapeamento MIDI não é apagado.')); }
+const bSaida = el('div', 'bloco'); bSaida.append(el('h3', '', 'Saída')); { const a = el('div', 'linha'); const s = el('select'); s.id = 'saida'; s.setAttribute('aria-label', 'Saída HI ou LO'); s.append(Object.assign(el('option', '', 'HI (MASTER OUT H)'), { value: '0' }), Object.assign(el('option', '', 'LO (−19 dB)'), { value: '1' })); s.value = String(estado.saida); s.addEventListener('change', () => { estado.saida = +s.value; manda({ t: 'p', p: { saida: estado.saida } }); salva(); }); a.append(s); bSaida.append(a, el('div', 'nota', 'O original tem as duas saídas em jacks; aqui é uma escolha.')); }
+$('acess-grade').append(bPads, bMidi, bNotas, bPat, bSaida);
+
+/* ---------- MIDI ---------- */
+let acessoMidi = null, ctlSel = null;
+function salvaMidi() { salva(); }
+function pintaLearn() { const info = $('learnInfo'); document.body.classList.toggle('aprende', midi.learn); btnLearn.setAttribute('aria-pressed', String(!!midi.learn));
+  document.querySelectorAll('[data-ctl].selecionado').forEach(e => e.classList.remove('selecionado')); if (ctlSel) { const e = document.querySelector('[data-ctl="' + ctlSel + '"]'); if (e) e.classList.add('selecionado'); }
+  const lig = ctlSel && midi.map[ctlSel]; info.textContent = midi.learn ? (ctlSel ? 'Selecionado: ' + CTL[ctlSel].nome + (lig ? ' (ligado ao CC ' + lig.cc + ', canal ' + lig.ch + ')' : ' (sem ligação)') + '. Mexa num knob ou slider do controlador.' : 'MIDI learn ligado: clique num controle do painel e depois mexa num knob do controlador.') : Object.keys(midi.map).length + ' controle(s) ligado(s).'; }
+btnLearn.addEventListener('click', () => { midi.learn = !midi.learn; if (!midi.learn) ctlSel = null; pintaLearn(); });
+document.addEventListener('pointerdown', e => { if (!midi.learn) return; const c = e.target.closest('[data-ctl]'); if (c && c.dataset.ctl) { ctlSel = c.dataset.ctl; pintaLearn(); } }, true);
+document.addEventListener('click', e => { if (midi.learn && e.target.closest('[data-ctl]')) { e.stopPropagation(); e.preventDefault(); } }, true);   // em MIDI learn o clique só seleciona o controle, não o aciona
+btnDesf.addEventListener('click', () => { if (ctlSel && midi.map[ctlSel]) { delete midi.map[ctlSel]; salvaMidi(); } pintaLearn(); });
+btnTodas.addEventListener('click', () => { midi.map = {}; salvaMidi(); pintaLearn(); });
+chkVel.checked = !!midi.vel; limVel.value = String(midi.limiar); selCh.value = String(midi.ch);
+chkVel.addEventListener('change', () => { midi.vel = chkVel.checked; salvaMidi(); }); limVel.addEventListener('change', () => { midi.limiar = lim(Math.round(+limVel.value) || 100, 1, 127); limVel.value = String(midi.limiar); salvaMidi(); });
+selCh.addEventListener('change', () => { midi.ch = +selCh.value; salvaMidi(); }); selDev.addEventListener('change', () => { midi.dev = selDev.value; salvaMidi(); ligaEntradas(); });
+function setaModo(id, m) { if (estado.v[id] && 'modo' in estado.v[id] && estado.v[id].modo !== m) { estado.v[id].modo = m; manda({ t: 'p', p: { [id]: { modo: m } } }); if (CTL[id + '.modo']) CTL[id + '.modo'].pinta(); pintaPads(); salva(); } }
+function recebe(d, canal) {
+  const st = d[0] & 0xF0, ch = (d[0] & 0x0F) + 1; if (midi.ch && ch !== midi.ch) return; if (d.length < 3 && st !== 0xC0 && st !== 0xD0) return;
+  if (st === 0x90 && d[2] > 0) { const alvo = NOTA_PARA[d[1]]; if (alvo) { if (alvo.length > 1) setaModo(alvo[0], alvo[1]); disparar(alvo[0], midi.vel && d[2] >= midi.limiar, 'nota ' + d[1] + ', velocity ' + d[2] + ', canal ' + ch); } else $('ultimo').textContent = 'nota ' + d[1] + ' sem voz no mapa'; }
+  else if (st === 0xB0) {
+    if (midi.learn && ctlSel) { midi.map[ctlSel] = { cc: d[1], ch }; salvaMidi(); pintaLearn(); return; }
+    for (const id in midi.map) { const m = midi.map[id]; if (m.cc !== d[1] || m.ch !== ch || !CTL[id]) continue; const c = CTL[id], v = d[2] / 127;
+      if (c.tipo === 'knob') c.set01(v); else if (c.tipo === 'disc') c.setIdx(Math.min(c.n - 1, Math.floor(v * c.n))); else if (c.tipo === 'botao' && d[2] >= 64) c.press(); }
+  }
+}
+function ligaEntradas() { if (!acessoMidi) return; const ent = [...acessoMidi.inputs.values()]; for (const i of ent) i.onmidimessage = (midi.dev === 'todos' || midi.dev === i.id) ? ev => recebe(ev.data) : null; }
+function listaDisp() { if (!acessoMidi) return; const ent = [...acessoMidi.inputs.values()], atual = midi.dev; selDev.innerHTML = ''; selDev.appendChild(Object.assign(el('option', '', 'Todos os dispositivos'), { value: 'todos' })); for (const i of ent) selDev.appendChild(Object.assign(el('option', '', i.name || i.id), { value: i.id })); selDev.value = [...selDev.options].some(o => o.value === atual) ? atual : 'todos'; midi.dev = selDev.value;
+  $('midiInfo').textContent = ent.length ? ent.length + ' dispositivo(s) de entrada.' : 'Nenhum dispositivo MIDI conectado.'; ligaEntradas(); }
+if (navigator.requestMIDIAccess) navigator.requestMIDIAccess({ sysex: false }).then(a => { acessoMidi = a; a.onstatechange = listaDisp; listaDisp(); }).catch(() => { $('midiInfo').textContent = 'Acesso ao MIDI negado ou indisponível.'; });
+else $('midiInfo').textContent = 'Este navegador não oferece Web MIDI (o Safari do iPhone, até onde se sabe, não oferece). Os pads e o teclado funcionam.';
+pintaLearn();
+
+/* ---------- exportar, importar, zerar ---------- */
+btnExp.addEventListener('click', () => { const blob = new Blob([JSON.stringify({ versao: 1, patterns: twin.seq.exporta(), painel: estado }, null, 1)], { type: 'application/json' }); const a = el('a'); a.href = URL.createObjectURL(blob); a.download = 'patterns-caixa-de-ritmos.json'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); });
+inImp.addEventListener('change', () => { const f = inImp.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { try { const d = JSON.parse(r.result); if (!d || !d.patterns) throw new Error('formato'); twin.seq.importa(d.patterns); if (d.painel) mescla(estado, d.painel); estado.sq.modoIdx = lim(Math.round(estado.sq.modoIdx), 0, 5); enviaTudo(); pinta(); salva(); msg('Patterns importados.'); } catch (e) { msg('Arquivo inválido: não foi possível importar.'); } inImp.value = ''; }; r.readAsText(f); });
+btnZerar.addEventListener('click', () => { if (!confirm('Zerar o painel e apagar todos os patterns? O mapeamento MIDI é mantido.')) return; estado = estado0(); twin.seq.importa(new Motor(48000).seq.exporta()); try { localStorage.setItem(CHAVE + ':estado', JSON.stringify({ e: estado, s: twin.seq.exporta() })); } catch (e) {} location.reload(); });
+window.addEventListener('beforeunload', () => { try { localStorage.setItem(CHAVE + ':estado', JSON.stringify({ e: estado, s: twin.seq.exporta() })); localStorage.setItem(CHAVE + ':midi', JSON.stringify(midi)); } catch (e) {} });
+pinta(); msg('Toque em START / STOP (ou Espaço). Teclas B S L M H R P K Y O C disparam as vozes. O som liga no primeiro toque.');
 })();
 </script>
 <script src="../voltar.js"></script>

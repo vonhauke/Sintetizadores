@@ -1,0 +1,63 @@
+ok   título da página
+ok   painel sem logotipo, marca nem nome do modelo
+ok   12 colunas de vozes na ordem original, cada uma com os controles certos — []
+ok   12 LEVEL (11 vozes e o accent), 3 TONE, 3 TUNING, 3 DECAY, 1 SNAPPY — {"LEVEL":12,"TONE":3,"TUNING":3,"DECAY":3,"SNAPPY":1}
+ok   5 chaves de par (LC/LT, MC/MT, HC/HT, CL/RS, MA/CP)
+ok   controle MASTER VOLUME presente
+ok   controle TEMPO presente
+ok   controle FINE presente
+ok   controle POWER presente
+ok   MODE: 6 posições, sentido horário — PATTERN CLEAR|1st PART|2nd PART|MANUAL PLAY|PLAY|COMPOSE
+ok   INSTRUMENT SELECT: 12 posições, AC = 1 até CH = 12 — AC 1|BD 2|SD 3|LT 4|MT 5|HT 6|RS 7|CP 8|CB 9|CY 10|OH 11|CH 12
+ok   AUTO FILL IN: MANUAL, 16, 12, 8, 4, 2
+ok   BASIC VARIATION A/AB/B, I/F VARIATION A/B, PRE-SCALE 1 a 4
+ok   16 botões de passo em 4 grupos de 4 (BASIC RHYTHM 1–12, INTRO/FILL IN 1–4)
+ok   START/STOP, TAP, CLEAR, LEDs de 1st/2nd PART e A/B
+ok   faixa de acessórios separada e identificada como não original
+ok   pad BD toca pelo AudioWorklet (file://) — rms 0.026 {"nos":1,"sp":0}
+ok   START: o sequenciador toca a batida do pattern 1 — rms 0.163 · compasso 2 · b1A
+ok   o passo corrente é destacado e o LED de 1st PART acende
+ok   STOP cala o sequenciador — rms 0.0000
+ok   TAP parado arma o intro (mensagem) — INTRO SET: o 1º compasso depois do START será o INTRO/FILL IN.
+ok   chave LT/LC em CONGA: o pad passa a se chamar LOW CONGA — LOW CONGA
+ok   chave de volta em TOM
+ok   arrastar o LEVEL do BD para baixo (60 px) reduz o valor em ~40 pontos — 80 → 40
+ok   teclado: End leva o TONE do BD ao máximo
+ok   MANUAL PLAY: o botão 3 escolhe BASIC RHYTHM 3
+ok   1st PART + SD 3: tocar nos passos liga e desliga (7 duas vezes volta ao estado; 9 liga) — passo5,passo13 → passo5,passo9,passo13
+ok   os passos foram gravados no pattern 1A: SD no passo 9 (1st PART) e 20 (2nd PART), AC no passo 2 — sd9=1 sd20=1 sd7=0 ac2=1
+ok   CLEAR arma por 4 s (LED vermelho)
+ok   CLEAR + CLEAR em PATTERN WRITE apaga a trilha SD (TRACK CLEAR) e deixa as outras — bd 10001000100010000000000000000000
+ok   CLEAR + passo 5 (STEP NUMBER): o pattern passa a ter 5 passos — n=5
+ok   CLEAR + PRE-SCALE 2: o pattern passa a pre-scale 2 — ps=2
+ok   fora de PATTERN WRITE o PRE-SCALE não muda sem CLEAR armado — PRE-SCALE só muda em PATTERN WRITE (1st/2nd PART) ou com CLEAR armado.
+ok   autosave: modo, pattern e passos sobrevivem à recarga
+ok   salvamento corrompido: abre no padrão, sem erro
+ok   salvamento com valores absurdos é limitado e não quebra a página — {"tempo":5,"fine":0.5,"selB":1,"selF":1,"varB":"A","varF":"A","auto":0,"modoIdx":3,"instIdx":2}
+ok   o dispositivo MIDI substituto aparece na lista
+ok   mapa de notas mostrado na interface (16 notas)
+ok   nota 36 dispara o bumbo (e toca) — último disparo: bd (nota 36, velocity 100, canal 1) rms 0.008
+ok   nota 64 (LOW CONGA) muda a chave do par para conga — último disparo: lt (nota 64, velocity 100, canal 1)
+ok   nota 43 (LOW TOM) volta a chave para tom
+ok   notas 75 (claves) e 70 (maracas) ajustam RS/CL e MA/CP
+ok   notas 37 (rim shot) e 39 (hand clap) voltam as chaves
+ok   velocity alta NÃO vira accent com a opção desligada — último disparo: bd (nota 36, velocity 127, canal 1)
+ok   velocity 110 vira accent com a opção ligada (limiar 100) — último disparo: sd + accent (nota 38, velocity 110, canal 1)
+ok   velocity 90 não vira accent
+ok   nota fora do mapa é avisada, sem disparar
+ok   filtro de canal 3: nota no canal 1 é ignorada — nota 99 sem voz no mapa
+ok   filtro de canal 3: nota no canal 3 passa — último disparo: ch + accent (nota 42, velocity 100, canal 3)
+ok   MIDI learn: clicar no TEMPO e mexer o CC 20 cria a ligação — {"tempo":{"cc":20,"ch":1}}
+ok   CC 20 em 0 leva o TEMPO ao mínimo (40 BPM) — Andamento: 40 BPM (por semínima)
+ok   CC 20 em 127 leva o TEMPO ao máximo (300 BPM) — Andamento: 300 BPM (por semínima)
+ok   chave de posições (MODE) divide o curso do CC em 6 faixas iguais: 127 = COMPOSE
+ok   botão (START) liga com CC ≥ 64
+ok   o mapeamento MIDI é salvo e volta depois de recarregar — {"tempo":{"cc":20,"ch":1},"mode":{"cc":21,"ch":1},"start":{"cc":22,"ch":1}}
+ok   Desfazer ligação remove só a do controle selecionado — mode,start
+ok   Apagar todas esvazia o mapa
+ok   Zerar apaga os patterns e mantém a ligação MIDI
+ok   alvos de toque de 44 px ou mais (botões, passos, chaves, seletores, knobs; os rótulos ao redor dos seletores rotativos são redundantes com o knob)
+ok   celular (375 px): a página não rola na horizontal; o painel rola dentro da própria área — {"larg":375,"rolaPagina":false,"rolagemPainel":true}
+ok   sem erros no console
+
+0 falha(s).

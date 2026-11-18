@@ -532,6 +532,11 @@ if (!D.SEQ) { fora++; linhas.push(['FORA', 'sequenciador: motor ainda não tem o
     for (let i = 0; i < N; i += 128) m.process(y.subarray(i, Math.min(N, i + 128)), R.subarray(i, Math.min(N, i + 128)), Math.min(128, N - i));
     const t = ev.find(e => e.t === 'trig').n, antes = pico(y, 0, t), depois = pico(y, t, t + Math.round(0.05 * FS));
     confere('o passo ligado de BD toca o bumbo na saída; antes dele, silêncio exato', 'pico antes = 0; pico depois > 0,05 (BD normal ≈ 0,5 Vpp digital)', f(antes, 9) + ' e ' + f(depois, 3), antes === 0 && depois > 0.05); }
+  // 16c) eventos para a interface: uma batida por semínima; "parou" quando o rhythm track termina sozinho
+  { const m = novoM(120); quadrado(m, 'bd', [0]); S(m, 'prescale', { ps: 4 }); S(m, 'tamanho', { n: 32 }); S(m, 'start'); const ev = roda(m, 2.1), b = ev.filter(e => e.t === 'batida');
+    confere('evento de batida: um por semínima (a cada 24 pulsos)', '5 batidas em 2,1 s a 120 BPM (em 9 ms, 0,509, 1,009, 1,509 e 2,009 s), intervalos de 0,500 s', String(b.length) + ' (intervalos ' + b.slice(1).map((e, i) => f((e.n - b[i].n) / FS, 3)).join(', ') + ' s)', b.length === 5 && b.slice(1).every((e, i) => e.n - b[i].n === FS / 2)); }
+  { const m = novoM(300); cfg(m, 'b', 1, 2, 4); S(m, 'songTrilha', { tr: 4 }); m.seq.song[4][0] = { t: 'b', n: 1 }; m.seq.song[4][1] = { t: 'b', n: 1 }; S(m, 'modo', { v: 'play' }); S(m, 'start'); const ev = roda(m, 0.5), parou = ev.filter(e => e.t === 'parou'), cs = ev.filter(e => e.t === 'compasso').length;
+    confere('PLAY: ao fim da trilha (2 compassos) o motor para e avisa', '1 evento "parou" depois de 2 compassos; run = false', String(parou.length) + ' depois de ' + cs + ' compassos; run = ' + m.seq.run, parou.length === 1 && cs === 2 && !m.seq.run); }
   // 17) mapa do botão de andamento (c): TEMPO 0 a 1 -> 40 a 300 BPM, exponencial
   { const b = D.bpmDeKnob; confere('mapa do botão TEMPO: extremos e meio', '40 e 300 BPM; meio = média geométrica 109,5 (c: o circuito é antilogarítmico, a lei exata não foi encontrada)', f(b(0, 0.5), 1) + ', ' + f(b(1, 0.5), 1) + ', ' + f(b(0.5, 0.5), 1), perto(b(0, 0.5), 40, 0.1) && perto(b(1, 0.5), 300, 0.1) && perto(b(0.5, 0.5), 109.5, 0.2)); }
 }
