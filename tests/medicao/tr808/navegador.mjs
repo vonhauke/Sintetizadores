@@ -29,6 +29,8 @@ const GANCHO = `(() => { const orig = AudioNode.prototype.connect; window.__tap 
     if (window.AudioWorkletNode && this instanceof AudioWorkletNode && !window.__an) { window.__tap.nos++; const an = this.context.createAnalyser(); an.fftSize = 2048; orig.call(this, an); window.__an = an; }
     if (window.ScriptProcessorNode && this instanceof ScriptProcessorNode) window.__tap.sp++;
     return orig.call(this, dest, ...r); };
+  window.__pico = () => { if (!window.__an) return -1; const b = new Float32Array(2048); window.__an.getFloatTimeDomainData(b); let m = 0; for (const v of b) m = Math.max(m, Math.abs(v)); return m; };
+  window.__max = 0; window.__zera = () => { window.__max = 0; }; setInterval(() => { const v = window.__pico(); if (v > window.__max) window.__max = v; }, 4);   // registrador de pico dentro da página (a consulta pelo protocolo é lenta demais para não perder um golpe curto)
   window.__rms = () => { if (!window.__an) return -1; const b = new Float32Array(2048); window.__an.getFloatTimeDomainData(b); let s = 0; for (const v of b) s += v * v; return Math.sqrt(s / b.length); };
   const fake = { id: 'fake-1', name: 'Controlador falso', onmidimessage: null }, acesso = { inputs: new Map([['fake-1', fake]]), onstatechange: null };
   navigator.requestMIDIAccess = () => Promise.resolve(acesso); window.__midi = d => fake.onmidimessage && fake.onmidimessage({ data: d });
@@ -47,6 +49,8 @@ try {
   const mouse = (type, x, y) => cdp('Input.dispatchMouseEvent', { type, x, y, button: 'left', buttons: type === 'mouseReleased' ? 0 : 1, clickCount: 1 });
   const clica = async (sel, fx = 0.5, fy = 0.5) => { const r = await rect(sel); if (!r) throw new Error('sem elemento ' + sel); const x = r.x + r.w * fx, y = r.y + r.h * fy; await mouse('mouseMoved', x, y); await mouse('mousePressed', x, y); await mouse('mouseReleased', x, y); await espera(60); };
   const arrasta = async (sel, dy) => { const r = await rect(sel), x = r.x + r.w / 2, y = r.y + r.h / 2; await mouse('mouseMoved', x, y); await mouse('mousePressed', x, y); await mouse('mouseMoved', x, y + dy / 2); await mouse('mouseMoved', x, y + dy); await mouse('mouseReleased', x, y + dy); await espera(60); };
+  const picoMax = async (k = 40, dt = 10) => { await espera(k * dt); return ev('window.__max'); };
+  const zeraPico = () => ev('window.__zera()');
   const rmsMax = async (k = 8, dt = 60) => { let m = 0; for (let i = 0; i < k; i++) { m = Math.max(m, await ev('window.__rms()')); await espera(dt); } return m; };
   const recarrega = async () => { await cdp('Page.navigate', { url: URL_PAGINA }); await espera(1400); };
   const salvo = async () => JSON.parse(await ev("localStorage.getItem('sint-tr808-v1:estado')") || 'null');
@@ -89,6 +93,35 @@ try {
   confere('o passo corrente é destacado e o LED de 1st PART acende', (await ev("!!document.querySelector('.passo.cabeca') && document.getElementById('ledP1').classList.contains('on')")) === true);
   await clica('#start'); await espera(2500); const rp = await rmsMax(5, 60); confere('STOP cala o sequenciador', rp < 0.002 && (await ev("document.querySelector('.passo.cabeca')")) === null, 'rms ' + rp.toFixed(4));
   await clica('#tap'); confere('TAP parado arma o intro (mensagem)', (await texto('#estado-msg')).includes('INTRO SET'), await texto('#estado-msg'));
+
+
+  /* ---- 2b. nível, status do áudio, sequenciador em grade, mute e solo, e a batida de demonstração ---- */
+  confere('o status do áudio mostra que ligou (AudioWorklet)', (await texto('#audio-status')).includes('ligado') && (await texto('#audio-status')).includes('AudioWorklet'), await texto('#audio-status'));
+  await zeraPico(); await clica('[data-pad="bd"]'); const pbd = await picoMax(); await espera(300); await zeraPico(); await clica('[data-pad="sd"]'); const psd = await picoMax();
+  confere('volume audível com os knobs na posição inicial: pico do BD ≥ 0,15 e da SD ≥ 0,08 (antes da correção do nível saía 0,11 e 0,06)', pbd >= 0.15 && psd >= 0.08, `BD ${pbd.toFixed(3)} · SD ${psd.toFixed(3)}`);
+  confere('grade: 12 linhas (ACCENT e 11 vozes), 11 botões M, 11 botões S e 192 passos', (await ev("[document.querySelectorAll('.gnome').length, document.querySelectorAll('.ms.mute').length, document.querySelectorAll('.ms.solo').length, document.querySelectorAll('.gcel').length].join()")) === '12,11,11,192');
+  confere('grade: linhas na ordem do painel', (await ev("[...document.querySelectorAll('.gnome')].map(b => b.textContent).join('|')")) === 'ACCENT|BASS DRUM|SNARE DRUM|LOW TOM|MID TOM|HI TOM|RIM SHOT|HAND CLAP|COW BELL|CYMBAL|OPEN HI-HAT|CLS\'D HI-HAT');
+  confere('batida de demonstração na 1ª abertura: BD com 4 passos e SD com 2 na grade', (await ev("[...document.querySelectorAll('.gcel.aceso[data-linha=\"bd\"]')].length + ',' + [...document.querySelectorAll('.gcel.aceso[data-linha=\"sd\"]')].length")) === '4,2');
+  await clica('.gcel[data-linha="cb"][data-i="6"]'); await espera(450); confere('grade: tocar num passo liga e grava no pattern 1A', (await salvo()).s.pat.b1A.t[7][6] === 1 && (await ev("document.querySelector('.gcel[data-linha=\"cb\"][data-i=\"6\"]').classList.contains('aceso')")) === true);
+  await clica('.gcel[data-linha="cb"][data-i="6"]'); await espera(450); confere('grade: tocar de novo desliga', (await salvo()).s.pat.b1A.t[7][6] === 0);
+  await clica('[data-ctl="lt.modo"] .trilho', 0.5, 0.1); confere('grade: a linha LOW TOM vira LOW CONGA com a chave do par', (await texto('.gnome[data-linha="lt"]')) === 'LOW CONGA', await texto('.gnome[data-linha="lt"]')); await clica('[data-ctl="lt.modo"] .trilho', 0.5, 0.9);
+  await ev("(() => { const s = document.getElementById('gTam'); s.value = '20'; s.dispatchEvent(new Event('change')); })()"); await espera(300);
+  confere('grade: com 20 passos aparece o botão "Passos 17–32" e os passos além do 4º da parte 2 ficam apagados', (await ev("document.getElementById('gParte').style.display !== 'none'")) === true);
+  await clica('#gParte'); confere('grade: a parte 2 mostra os passos 17–32 (os de 21 em diante fora do pattern)', (await ev("document.querySelectorAll('.gcel.fora[data-linha=\"bd\"]').length")) === 12 && (await texto('#gParte')) === 'Passos 1–16');
+  await clica('#gParte'); await ev("(() => { const s = document.getElementById('gTam'); s.value = '16'; s.dispatchEvent(new Event('change')); })()"); await espera(300);
+  // mute: a SD muda não toca; desmutar volta a tocar
+  await clica('.ms.mute[aria-label="Mute sd"]'); await zeraPico(); await clica('[data-pad="sd"]'); const pmudo = await picoMax(40, 10);
+  confere('MUTE da SD: o pad da SD fica mudo', pmudo < 0.001 && (await ev("document.querySelector('.ms.mute[aria-label=\"Mute sd\"]').getAttribute('aria-pressed')")) === 'true', 'pico ' + pmudo.toFixed(5));
+  await clica('.ms.mute[aria-label="Mute sd"]'); await espera(300); await zeraPico(); await clica('[data-pad="sd"]'); const pvolta = await picoMax(); confere('desmutar a SD: volta a tocar', pvolta >= 0.05, 'pico ' + pvolta.toFixed(3));
+  await clica('.ms.solo[aria-label="Solo bd"]'); await espera(300); await zeraPico(); await clica('[data-pad="sd"]'); const psolo = await picoMax(40, 10); await espera(300); await zeraPico(); await clica('[data-pad="bd"]'); const psoloBd = await picoMax();
+  confere('SOLO do BD: a SD fica muda e o BD toca', psolo < 0.001 && psoloBd >= 0.1, `SD ${psolo.toFixed(5)} · BD ${psoloBd.toFixed(3)}`);
+  await ev("document.querySelector('.ms.solo[aria-label=\"Solo bd\"]').click()"); await espera(450);
+  await clica('.ms.mute[aria-label="Mute ch"]'); await espera(450); await recarrega(); confere('o mute do CH sobrevive à recarga', (await ev("document.querySelector('.ms.mute[aria-label=\"Mute ch\"]').getAttribute('aria-pressed')")) === 'true'); await clica('.ms.mute[aria-label="Mute ch"]');
+  // regressão do relato "não sai som": estado salvo no formato da versão provisória não pode apagar a batida de demonstração
+  await ev("localStorage.setItem('sint-tr808-v1:estado', JSON.stringify({ acLevel: 1, master: 0.8, bd: { level: 0.85, tone: 0.5, decay: 0.5 }, sd: { level: 0.85, tone: 0.5, snappy: 0.5 }, on: 1, saida: 0, acc: false }))"); await recarrega();
+  confere('estado salvo no formato antigo (versão provisória): abre com a batida de demonstração, não vazio', (await ev("document.querySelectorAll('.gcel.aceso').length")) > 10, 'passos acesos ' + await ev("document.querySelectorAll('.gcel.aceso').length"));
+  await zeraPico(); await clica('#start'); await espera(1800); const pseq = await picoMax(60, 40);
+  confere('com o estado antigo, START toca (pico entre 0,15 e 1,0)', pseq >= 0.15 && pseq <= 1.0, 'pico ' + pseq.toFixed(3)); await clica('#start'); await ev("localStorage.clear()"); await recarrega();
 
   /* ---- 3. chave de par, controle por mouse e teclado ---- */
   await clica('[data-ctl="lt.modo"] .trilho', 0.5, 0.1);
@@ -162,7 +195,7 @@ try {
   await ev("localStorage.clear()"); await recarrega();
 
   /* ---- 7. alvos de toque e celular ---- */
-  const alvos = await ev(`[...document.querySelectorAll('.btn, .passo, .slide .op, select, input[type=number], input[type=file], .knob, .linha label')].filter(e => { const b = e.getBoundingClientRect(); const oculto = e.closest('.slide.par') && e.matches('.op:nth-child(2)'); return !oculto && b.width > 0 && (b.width < 43.5 || b.height < 43.5); }).map(e => e.className + ':' + e.textContent.slice(0, 12) + ' ' + Math.round(e.getBoundingClientRect().width) + 'x' + Math.round(e.getBoundingClientRect().height)).join(' | ')`);
+  const alvos = await ev(`[...document.querySelectorAll('.btn, .passo, .gcel, .gnome, .ms, .slide .op, select, input[type=number], input[type=file], .knob, .linha label')].filter(e => { const b = e.getBoundingClientRect(); const oculto = e.closest('.slide.par') && e.matches('.op:nth-child(2)'); return !oculto && b.width > 0 && (b.width < 43.5 || b.height < 43.5); }).map(e => e.className + ':' + e.textContent.slice(0, 12) + ' ' + Math.round(e.getBoundingClientRect().width) + 'x' + Math.round(e.getBoundingClientRect().height)).join(' | ')`);
   confere('alvos de toque de 44 px ou mais (botões, passos, chaves, seletores, knobs; os rótulos ao redor dos seletores rotativos são redundantes com o knob)', alvos === '', alvos);
   await cdp('Page.captureScreenshot', { format: 'png', clip: { x: 0, y: 0, width: 1560, height: 1080, scale: 1 } }).then(r => writeFileSync(join(SAIDA, 'tr808-painel.png'), Buffer.from(r.result.data, 'base64')));
   await cdp('Emulation.setDeviceMetricsOverride', { width: 375, height: 812, deviceScaleFactor: 2, mobile: true }); await cdp('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 }); await recarrega();

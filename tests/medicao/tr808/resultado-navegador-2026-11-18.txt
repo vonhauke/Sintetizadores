@@ -14,11 +14,27 @@ ok   BASIC VARIATION A/AB/B, I/F VARIATION A/B, PRE-SCALE 1 a 4
 ok   16 botões de passo em 4 grupos de 4 (BASIC RHYTHM 1–12, INTRO/FILL IN 1–4)
 ok   START/STOP, TAP, CLEAR, LEDs de 1st/2nd PART e A/B
 ok   faixa de acessórios separada e identificada como não original
-ok   pad BD toca pelo AudioWorklet (file://) — rms 0.024 {"nos":1,"sp":0}
-ok   START: o sequenciador toca a batida do pattern 1 — rms 0.163 · compasso 2 · b1A
+ok   pad BD toca pelo AudioWorklet (file://) — rms 0.061 {"nos":1,"sp":0}
+ok   START: o sequenciador toca a batida do pattern 1 — rms 0.407 · compasso 2 · b1A
 ok   o passo corrente é destacado e o LED de 1st PART acende
 ok   STOP cala o sequenciador — rms 0.0000
 ok   TAP parado arma o intro (mensagem) — INTRO SET: o 1º compasso depois do START será o INTRO/FILL IN.
+ok   o status do áudio mostra que ligou (AudioWorklet) — Áudio: ligado (AudioWorklet, 44.1 kHz)
+ok   volume audível com os knobs na posição inicial: pico do BD ≥ 0,15 e da SD ≥ 0,08 (antes da correção do nível saía 0,11 e 0,06) — BD 0.273 · SD 0.152
+ok   grade: 12 linhas (ACCENT e 11 vozes), 11 botões M, 11 botões S e 192 passos
+ok   grade: linhas na ordem do painel
+ok   batida de demonstração na 1ª abertura: BD com 4 passos e SD com 2 na grade
+ok   grade: tocar num passo liga e grava no pattern 1A
+ok   grade: tocar de novo desliga
+ok   grade: a linha LOW TOM vira LOW CONGA com a chave do par — LOW CONGA
+ok   grade: com 20 passos aparece o botão "Passos 17–32" e os passos além do 4º da parte 2 ficam apagados
+ok   grade: a parte 2 mostra os passos 17–32 (os de 21 em diante fora do pattern)
+ok   MUTE da SD: o pad da SD fica mudo — pico 0.00000
+ok   desmutar a SD: volta a tocar — pico 0.142
+ok   SOLO do BD: a SD fica muda e o BD toca — SD 0.00000 · BD 0.273
+ok   o mute do CH sobrevive à recarga
+ok   estado salvo no formato antigo (versão provisória): abre com a batida de demonstração, não vazio — passos acesos 16
+ok   com o estado antigo, START toca (pico entre 0,15 e 1,0) — pico 0.882
 ok   chave LT/LC em CONGA: o pad passa a se chamar LOW CONGA — LOW CONGA
 ok   chave de volta em TOM
 ok   arrastar o LEVEL do BD para baixo (60 px) reduz o valor em ~40 pontos — 80 → 40
@@ -36,7 +52,7 @@ ok   salvamento corrompido: abre no padrão, sem erro
 ok   salvamento com valores absurdos é limitado e não quebra a página — {"tempo":5,"fine":0.5,"selB":1,"selF":1,"varB":"A","varF":"A","auto":0,"modoIdx":3,"instIdx":2}
 ok   o dispositivo MIDI substituto aparece na lista
 ok   mapa de notas mostrado na interface (16 notas)
-ok   nota 36 dispara o bumbo (e toca) — último disparo: bd (nota 36, velocity 100, canal 1) rms 0.008
+ok   nota 36 dispara o bumbo (e toca) — último disparo: bd (nota 36, velocity 100, canal 1) rms 0.019
 ok   nota 64 (LOW CONGA) muda a chave do par para conga — último disparo: lt (nota 64, velocity 100, canal 1)
 ok   nota 43 (LOW TOM) volta a chave para tom
 ok   notas 75 (claves) e 70 (maracas) ajustam RS/CL e MA/CP

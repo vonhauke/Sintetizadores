@@ -6,101 +6,167 @@
 <title>Caixa de ritmos analógica (clone em Web Audio)</title>
 <link rel="stylesheet" href="../fonts/fonts.css">
 <style>
-:root{--pagina:#10151c;--chapa:#1d2733;--faixa:#2b3a4d;--faixa2:#34465c;--tinta:#e9eef4;--apagado:#97a6b8;--acento:#f0b24a;--vivo:#4fd1c5;--perigo:#e5604f;--foco:#6cb4ff;--sulco:#0f1620;
-  --g1:#4fd1c5;--g2:#5aa9ff;--g3:#b48cff;--g4:#e9eef4;
-  --f-rot:"Barlow Condensed","Arial Narrow",Arial,sans-serif;--f-texto:"Barlow","Helvetica Neue",Arial,sans-serif;color-scheme:dark;box-sizing:border-box;
-  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+
+:root{--grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.2'/%3E%3C/svg%3E");
+  --page:#1b1d20;--page-ink:#e4e6e8;--page-muted:#a3a9af;
+  --case-hi:#404040;--case:#222;--case-lo:#151515;--case-glint:rgba(255,255,255,.4);--side-1:#2c2c2c;--side-2:#1c1c1c;--side-3:#101010;
+  --face-hi:#262626;--face:#1b1b1b;--face-lo:#141414;--edge-hi:rgba(255,255,255,.09);--edge-lo:rgba(0,0,0,.7);
+  --print:#ece8dd;--label:#b9b5a8;--mark:#f4572c;--readout:#ff8440;
+  --tag-hi:#f8f1d2;--tag:#e2d8ab;--tag-ink:#151515;
+  --key-hi:#f6f3e8;--key:#d9d5c7;--key-lo:#a9a597;--key-ink:#151515;
+  --pad-hi:#fff3a6;--pad:#f1cd3c;--pad-lo:#c2951a;--pad-ink:#1c1500;
+  --well:#050505;--well-rim:rgba(255,255,255,.14);
+  --seq-hi:#9c9d98;--seq:#8b8c87;--seq-lo:#7a7b76;--seq-ink:#111;--seq-sub:#1c1c1a;
+  --led-on:#ff3a22;--led-glow:#ff5236;--now:#fff;--now-glow:rgba(255,255,255,.75);
+  --cap-hi:#505050;--cap:#272727;--cap-lo:#0f0f0f;--cap-line:#ff6a2a;--slot-rim:rgba(255,255,255,.16);--focus:#ffd24a;
+  --f-rot:"Barlow Condensed","Arial Narrow",Arial,sans-serif;--f-texto:"Barlow","Helvetica Neue",Arial,sans-serif;
+  color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 *,*::before,*::after{box-sizing:inherit}
 html{touch-action:manipulation;-webkit-text-size-adjust:100%}
-body{margin:0;background:radial-gradient(120% 80% at 50% 0%,#1a2330 0%,var(--pagina) 65%) fixed var(--pagina);color:var(--tinta);font-family:var(--f-texto);line-height:1.35}
+body{margin:0;min-height:100vh;color:var(--page-ink);background:radial-gradient(120% 80% at 50% 0%,#34383d 0%,var(--page) 60%,#111214 100%) fixed var(--page);font-family:var(--f-rot);font-weight:500;font-size:18px;line-height:1.35;-webkit-font-smoothing:antialiased}
 button,select,input{font:inherit;color:inherit;touch-action:manipulation}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-:focus-visible{outline:2px solid var(--foco);outline-offset:2px}
-.pagina{max-width:1500px;margin:0 auto;padding:14px max(10px,env(safe-area-inset-left,0px)) 80px}
-h1{font-family:var(--f-rot);font-weight:600;letter-spacing:.06em;font-size:1.1rem;margin:0 0 8px;color:var(--apagado)}
-.rolagem{overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch}
-.painel{min-width:1420px;background:linear-gradient(180deg,#223041,var(--chapa));border:1px solid #3a4c63;border-radius:12px;padding:14px 16px 16px;box-shadow:0 10px 30px #0008, inset 0 1px 0 #ffffff12}
-.topo{display:flex;align-items:center;gap:18px;margin-bottom:10px}
-.topo .titulo{font-family:var(--f-rot);letter-spacing:.14em;color:var(--acento);font-size:1.15rem}
-.meio{display:grid;grid-template-columns:372px minmax(0,1fr);gap:12px}
-.esq{display:grid;grid-template-columns:150px 1fr;min-width:0;grid-template-areas:"mode inst" "clear inst" "auto auto" "tempo tempo";gap:6px 10px;background:var(--faixa);border-radius:10px;padding:10px;align-content:start}
+:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.pagina{max-width:1500px;margin:0 auto;padding:22px max(10px,env(safe-area-inset-left,0px)) 80px}
+.rolagem{overflow-x:auto;padding:0 0 26px;-webkit-overflow-scrolling:touch}
+/* gabinete em relevo */
+.painel{min-width:1420px;position:relative;border-radius:11px;padding:7px 7px 9px;color:var(--print);background:linear-gradient(180deg,var(--case-hi),var(--case) 30%,var(--case-lo));
+  box-shadow:inset 0 1px 0 var(--case-glint),inset 0 0 0 1px rgba(255,255,255,.14),inset 0 -2px 2px rgba(0,0,0,.3),0 2px 0 var(--side-1),0 6px 0 var(--side-2),0 9px 0 var(--side-3),0 10px 1px #0a0a0a,0 14px 10px rgba(0,0,0,.55),0 34px 40px -6px rgba(0,0,0,.6),0 70px 90px -20px rgba(0,0,0,.65)}
+.face{border-radius:6px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(0,0,0,.4),0 1px 0 rgba(255,255,255,.25);background:var(--face)}
+.face>*{position:relative;padding:16px 18px;background:var(--grain),repeating-linear-gradient(0deg,rgba(255,255,255,.035) 0 1px,rgba(0,0,0,.02) 1px 2px),linear-gradient(180deg,var(--face-hi),var(--face) 50%,var(--face-lo));box-shadow:inset 0 1px 0 var(--edge-hi),inset 0 -1px 0 var(--edge-lo)}
+/* faixa de marca (sem logotipo nem nome do modelo) */
+.topo{display:flex;align-items:flex-end;gap:24px;padding-top:18px!important;padding-bottom:12px!important}
+.marca{flex:1 1 320px;display:flex;align-items:baseline;justify-content:flex-end;gap:.7em;border-bottom:2px solid var(--mark);padding-bottom:6px;color:var(--mark)}
+.marca .tipo{font-family:var(--f-texto);font-weight:300;font-size:clamp(1.5rem,3vw,2.3rem);letter-spacing:.04em;white-space:nowrap}
+.marca .sub{font-family:var(--f-texto);font-weight:400;font-size:1rem;color:var(--print);white-space:nowrap}
+/* meio: bloco da esquerda + colunas de vozes */
+.meio{display:grid;grid-template-columns:372px minmax(0,1fr);gap:0 18px}
+.esq{display:grid;grid-template-columns:150px 1fr;min-width:0;grid-template-areas:"mode inst" "clear inst" "auto auto" "tempo tempo";gap:6px 10px;align-content:start;border-right:1px solid #000a;box-shadow:1px 0 0 var(--edge-hi);padding-right:16px}
 .esq .mode{grid-area:mode}.esq .inst{grid-area:inst}.esq .clear{grid-area:clear}.esq .auto{grid-area:auto}.esq .tempo{grid-area:tempo}
-.vozes{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:0;background:var(--faixa);border-radius:10px;align-content:start}
-.col{display:grid;grid-template-rows:96px 96px 96px 104px 44px;min-width:0;justify-items:center;align-items:center;border-left:1px solid #0003;padding:4px 2px;position:relative}
-.col:first-child{border-left:0}
-.col .nome{font-family:var(--f-rot);letter-spacing:.05em;font-size:.82rem;text-align:center;background:var(--faixa2);border-radius:4px;padding:3px 4px;width:92%;line-height:1.05}
-.ctl{display:flex;flex-direction:column;align-items:center;gap:2px;position:relative}
-.ctl .rot{font-family:var(--f-rot);letter-spacing:.06em;font-size:.78rem;color:var(--apagado);text-transform:uppercase}
+.esq>div>.rot,.ctl .rot{font-family:var(--f-rot);font-weight:600;letter-spacing:.06em;font-size:.88rem;color:var(--label);text-transform:uppercase;text-align:center}
+.vozes{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));align-content:start;min-width:0}
+.col{display:grid;grid-template-rows:96px 96px 96px 104px 44px;justify-items:center;align-items:center;border-left:1px solid #000a;box-shadow:-1px 0 0 var(--edge-hi);padding:4px 2px;min-width:0}
+.col:first-child{border-left:0;box-shadow:none}
+.col .nome{font-weight:700;font-size:.86rem;letter-spacing:.05em;text-transform:uppercase;text-align:center;color:var(--tag-ink);line-height:1.05;background:linear-gradient(180deg,var(--tag-hi),var(--tag));border-radius:6px;padding:4px 4px;width:92%;box-shadow:inset 0 1px 0 rgba(255,255,255,.5),inset 0 0 0 1px rgba(0,0,0,.35),0 1px 2px rgba(0,0,0,.45)}
+.ctl{display:flex;flex-direction:column;align-items:center;gap:3px;position:relative}
 .aprende [data-ctl]{cursor:crosshair}
-.aprende [data-ctl]:hover{outline:1px dashed var(--acento);outline-offset:2px}
-[data-ctl].selecionado{outline:2px solid var(--acento);outline-offset:2px;border-radius:8px}
-.knob{width:56px;height:56px;border-radius:50%;cursor:grab;touch-action:none;display:block}
+.aprende [data-ctl]:hover{outline:1px dashed var(--readout);outline-offset:2px}
+[data-ctl].selecionado{outline:2px solid var(--readout);outline-offset:2px;border-radius:8px}
+/* knobs pretos com marca laranja */
+.knob{width:56px;height:56px;border-radius:50%;cursor:grab;touch-action:none;display:block;filter:drop-shadow(0 4px 3px rgba(0,0,0,.7))}
 .knob.grande{width:112px;height:112px}.knob.pequeno{width:44px;height:44px}
 .knob:active{cursor:grabbing}
 .knob svg{width:100%;height:100%;display:block;overflow:visible}
-.knob .base{fill:#0e141b;stroke:#4b6079;stroke-width:1.5}.knob .tampa{fill:#2a3a4d;stroke:#7a8ea6;stroke-width:1}.knob .pt{stroke:var(--acento);stroke-width:3.2;stroke-linecap:round}
-.knob .marca{fill:#7186a0}
+.knob .base{fill:#0b0b0b;stroke:#3b3b3b;stroke-width:1.5}.knob .tampa{fill:#2a2a2a;stroke:#5a5a5a;stroke-width:1.2}.knob .pt{stroke:var(--cap-line);stroke-width:3.4;stroke-linecap:round}
+.knob .marca{fill:var(--label)}
 .rotulos{position:relative}
-.rotulos .etq{position:absolute;transform:translate(-50%,-50%);font-family:var(--f-rot);font-size:.78rem;line-height:1;min-width:30px;min-height:24px;padding:2px 4px;border-radius:4px;border:1px solid #4b6079;background:#26384b;color:var(--tinta);cursor:pointer;white-space:nowrap}
-.rotulos .etq[aria-checked=true]{background:var(--acento);color:#161b22;border-color:var(--acento)}
+.rotulos .etq{position:absolute;transform:translate(-50%,-50%);font-family:var(--f-rot);font-weight:700;letter-spacing:.04em;font-size:.82rem;line-height:1;min-width:30px;min-height:24px;padding:2px 5px 4px;border-radius:5px;border:0;color:var(--tag-ink);cursor:pointer;white-space:nowrap;
+  background:linear-gradient(180deg,var(--tag-hi),var(--tag));box-shadow:inset 0 1px 0 rgba(255,255,255,.5),inset 0 0 0 1px rgba(0,0,0,.35),0 1px 2px rgba(0,0,0,.45)}
+.rotulos .etq[aria-checked=true]{background:linear-gradient(180deg,#ffd9a0,var(--readout));box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 0 0 2px var(--led-on),0 0 9px 1px var(--led-glow)}
 .rotulos .centro{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
-.slide{display:flex;gap:4px;align-items:center}
-.slide.v{flex-direction:column}
-.slide.h{flex-direction:column-reverse;align-items:flex-start}
-.slide.par{flex-direction:column-reverse;align-items:center}
-.slide.par .op:nth-child(2){position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);min-width:0;min-height:0;padding:0;border:0}
-.slide.par .op{font-size:.7rem;min-width:60px;min-height:44px}
-.slide .trilho{position:relative;background:#0e141b;border:1px solid #4b6079;border-radius:6px}
-.slide.v .trilho{width:16px}.slide.par .trilho{height:44px!important}.slide.h .trilho{height:16px}
-.slide .polegar{position:absolute;background:linear-gradient(180deg,#8da2bb,#516782);border:1px solid #c0cfe0;border-radius:3px}
-.slide.v .polegar{left:-4px;right:-4px;height:18px}.slide.h .polegar{top:-4px;bottom:-4px;width:22px}
+/* chaves deslizantes */
+.slide{display:flex;gap:4px;align-items:center;min-width:44px;cursor:pointer}
+.slide.v{flex-direction:column}.slide.h{flex-direction:column-reverse;align-items:flex-start}.slide.par{flex-direction:column-reverse;align-items:center}
+.slide .trilho{position:relative;border-radius:4px;background:linear-gradient(180deg,#000,#232323);box-shadow:inset 0 2px 3px #000,0 1px 0 var(--slot-rim)}
+.slide.v .trilho{width:16px}.slide.par .trilho{height:44px!important}.slide.h .trilho{height:10px}
+.slide .polegar{position:absolute;border-radius:3px;background:linear-gradient(90deg,transparent 44%,var(--cap-line) 44% 56%,transparent 56%),linear-gradient(180deg,var(--cap-hi),var(--cap) 48%,var(--cap-lo));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55),inset 0 -3px 0 rgba(0,0,0,.3),0 0 0 1px #050505,0 4px 4px rgba(0,0,0,.6)}
+.slide.v .polegar{left:-5px;right:-5px;height:20px}.slide.h .polegar{top:-8px;bottom:-8px;width:20px}
 .slide .opcoes{display:flex;gap:2px}.slide.v .opcoes{flex-direction:column}
-.slide .op{min-width:44px;min-height:44px;background:transparent;border:1px solid #3f566e;border-radius:4px;font-family:var(--f-rot);font-size:.8rem;color:var(--apagado);cursor:pointer;padding:0 6px}
-.slide .op[aria-checked=true]{color:var(--tinta);border-color:var(--acento)}
-.btn{min-width:44px;min-height:44px;border-radius:8px;border:1px solid #5a6f88;background:#2e4157;color:var(--tinta);cursor:pointer;font-family:var(--f-rot);letter-spacing:.06em;font-size:.9rem;padding:0 12px}
-.btn:active{background:#3b5470}
-.btn.liga[aria-pressed=true]{background:var(--acento);color:#161b22;border-color:var(--acento)}
-.btn.vermelho{background:#6d2a26;border-color:#c0645a}.btn.vermelho.armado{background:var(--perigo);box-shadow:0 0 0 2px #fff4}
-.led{display:inline-block;width:9px;height:9px;border-radius:50%;background:#46343a;box-shadow:inset 0 0 0 1px #0006}
-.led.on{background:var(--perigo);box-shadow:0 0 8px var(--perigo)}
-.led.verde.on{background:var(--vivo);box-shadow:0 0 8px var(--vivo)}
-.baixo{display:grid;grid-template-columns:140px 110px 90px minmax(800px,1fr) 140px;gap:10px;margin-top:12px;background:var(--faixa);border-radius:10px;padding:10px;align-items:center}
-.passos{display:grid;grid-template-columns:repeat(16,minmax(44px,1fr));gap:6px}
-.passo{position:relative;min-height:62px;border-radius:6px;border:1px solid #0008;color:#10151c;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:4px 0}
-.passo .n{font-family:var(--f-rot);font-size:.78rem;color:var(--tinta);position:absolute;top:-17px}
-.passo .abaixo{position:absolute;bottom:-20px;font-family:var(--f-rot);font-size:.85rem;color:var(--apagado)}
-.passo .led{margin-top:2px}
-.passo.g1{background:var(--g1)}.passo.g2{background:var(--g2)}.passo.g3{background:var(--g3)}.passo.g4{background:var(--g4)}
-.passo.aceso{box-shadow:0 0 0 2px #fff, 0 0 10px #fffa;filter:brightness(1.12)}
-.passo:not(.aceso){filter:brightness(.62)}
-.passo.cabeca{outline:3px solid var(--acento);outline-offset:1px}
-.passos-linha{padding-bottom:26px;padding-top:16px}
-.start{min-height:62px;font-size:1.05rem;background:#7a5a1e;border-color:#f0b24a}
-.pre{display:flex;gap:6px;align-items:center}
-.faixa-acess{margin-top:18px;background:#161d27;border:1px dashed #556b85;border-radius:12px;padding:12px 14px}
-.faixa-acess h2{font-family:var(--f-rot);letter-spacing:.08em;font-size:.95rem;margin:0 0 8px;color:var(--apagado)}
-.faixa-acess .tag{background:#3b2f1f;color:var(--acento);border-radius:4px;padding:1px 6px;font-size:.75rem;margin-left:6px;letter-spacing:.04em}
+.slide .op{min-width:44px;min-height:44px;background:transparent;border:0;border-radius:4px;font-family:var(--f-rot);font-weight:700;letter-spacing:.04em;font-size:.82rem;color:var(--label);cursor:pointer;padding:0 6px;text-transform:uppercase}
+.slide .op[aria-checked=true]{color:var(--readout);text-shadow:0 0 8px rgba(255,132,64,.55)}
+.slide.par .op:nth-child(2){position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);min-width:0;min-height:0;padding:0}
+.slide.par .op{font-size:.66rem;min-width:60px}
+/* teclas */
+.btn{appearance:none;border:0;cursor:pointer;border-radius:3px;min-width:44px;min-height:46px;padding:8px 16px 12px;font-weight:600;font-size:18px;letter-spacing:.03em;color:var(--key-ink);text-shadow:0 1px 0 rgba(255,255,255,.4);
+  background:linear-gradient(90deg,rgba(0,0,0,.14),transparent 6%,transparent 94%,rgba(0,0,0,.18)),linear-gradient(180deg,var(--key-hi),var(--key) 45%,var(--key-lo));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.8),inset 0 -5px 0 rgba(0,0,0,.2),0 0 0 3px var(--well),0 0 0 4px var(--well-rim),0 5px 5px 2px rgba(0,0,0,.45);transition:transform .05s,box-shadow .05s}
+.btn:active{transform:translateY(2px);box-shadow:inset 0 1px 0 rgba(255,255,255,.8),inset 0 -2px 0 rgba(0,0,0,.2),0 0 0 3px var(--well),0 0 0 4px var(--well-rim),0 1px 2px 2px rgba(0,0,0,.45)}
+.btn.liga[aria-pressed=true]{background:linear-gradient(180deg,#ffd9a0,var(--readout) 55%,#c25a1c);color:#1c1000;box-shadow:inset 0 1px 0 rgba(255,255,255,.6),inset 0 -3px 0 rgba(0,0,0,.2),0 0 0 3px var(--well),0 0 0 4px var(--well-rim),0 0 12px 3px rgba(255,132,64,.55)}
+.btn.vermelho{color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.5);background:linear-gradient(90deg,rgba(0,0,0,.18),transparent 6%,transparent 94%,rgba(0,0,0,.2)),linear-gradient(180deg,#ff7a62,#e23a22 45%,#a31d0c)}
+.btn.vermelho.armado{box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 0 0 3px var(--well),0 0 0 4px #fff8,0 0 16px 5px var(--led-glow);filter:brightness(1.2)}
+.start{min-width:110px;min-height:62px;font-size:1.25rem;font-weight:700;text-transform:uppercase;color:var(--pad-ink);background:linear-gradient(90deg,rgba(0,0,0,.14),transparent 5%,transparent 95%,rgba(0,0,0,.18)),linear-gradient(180deg,var(--pad-hi),var(--pad) 45%,var(--pad-lo))!important}
+.start[aria-pressed=true]{box-shadow:inset 0 1px 0 rgba(255,255,255,.85),inset 0 -2px 0 rgba(0,0,0,.2),0 0 0 3px var(--well),0 0 0 4px var(--well-rim),0 0 16px 4px rgba(255,205,60,.6);transform:translateY(2px)}
+.led{display:inline-block;width:10px;height:10px;border-radius:50%;background:radial-gradient(circle at 38% 30%,#a85248,#5e1810 55%,#2c0906);box-shadow:0 0 0 1.5px #0d0d0d,inset 0 1px 1px rgba(255,255,255,.3)}
+.led.on{background:radial-gradient(circle at 38% 30%,#fff,#ffc0b0 24%,var(--led-on) 60%,#a81d0c);box-shadow:0 0 0 1.5px #0d0d0d,0 0 10px 3px var(--led-glow),0 0 22px 7px rgba(255,70,40,.5)}
+.led.verde{background:radial-gradient(circle at 38% 30%,#3c5a3a,#1a2c19 60%,#0a140a)}
+.led.verde.on{background:radial-gradient(circle at 38% 30%,#e6ffe0,#8bff7a 30%,#25c40f 65%,#128a05);box-shadow:0 0 0 1.5px #0d0d0d,0 0 10px 3px #3dff2a88}
+/* faixa de baixo: sequenciador sobre cinza, como no 808 antigo */
+.face>.baixo{display:grid;grid-template-columns:140px 110px 90px minmax(800px,1fr) 140px;gap:10px;align-items:center;color:var(--seq-ink);
+  background:var(--grain),linear-gradient(180deg,var(--seq-hi),var(--seq) 50%,var(--seq-lo));box-shadow:inset 0 3px 4px rgba(0,0,0,.35),inset 0 -1px 0 var(--edge-lo)}
+.baixo .rot,.baixo .nota{color:var(--seq-sub)}
+.baixo .slide .op{color:#33332f}.baixo .slide .op[aria-checked=true]{color:#b53a10;text-shadow:none}
+.baixo .slide .trilho{box-shadow:inset 0 2px 3px #000,0 1px 0 rgba(255,255,255,.35)}
+.passos{display:grid;grid-template-columns:repeat(16,minmax(44px,1fr));gap:8px}
+.passo{position:relative;appearance:none;cursor:pointer;min-height:62px;padding:0;border:0;border-radius:3px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;color:var(--seq-ink);
+  background:linear-gradient(90deg,rgba(0,0,0,.16),transparent 12%,transparent 88%,rgba(0,0,0,.2)),linear-gradient(180deg,var(--step-hi),var(--step) 45%,var(--step-lo));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.65),inset 0 -5px 0 rgba(0,0,0,.22),inset 0 -6px 0 rgba(255,255,255,.22),0 0 0 2px var(--well),0 0 0 3px var(--well-rim),0 5px 4px 1px rgba(0,0,0,.5);filter:brightness(.64) saturate(.9)}
+.passo .led{margin-top:8px}
+.passo .n{font-weight:700;font-size:.85rem;color:var(--seq-sub);position:absolute;top:-22px}
+.passo .abaixo{position:absolute;bottom:-26px;font-weight:700;font-size:.95rem;color:var(--seq-sub)}
+.passo.g1{--step-hi:#ff7a62;--step:#e23a22;--step-lo:#a31d0c}.passo.g2{--step-hi:#ffb060;--step:#f07f1e;--step-lo:#b7560a}
+.passo.g3{--step-hi:#fff58a;--step:#eed522;--step-lo:#b29b0c}.passo.g4{--step-hi:#fbfaf4;--step:#e6e3d8;--step-lo:#b8b5aa}
+.passo.aceso{filter:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.65),inset 0 -5px 0 rgba(0,0,0,.22),inset 0 6px 14px rgba(255,70,40,.4),0 0 0 2px var(--well),0 0 0 3px var(--well-rim),0 5px 4px 1px rgba(0,0,0,.5)}
+.passo.aceso .led{background:radial-gradient(circle at 38% 30%,#fff,#ffc0b0 24%,var(--led-on) 60%,#a81d0c);box-shadow:0 0 0 1.5px #0d0d0d,0 0 10px 3px var(--led-glow),0 0 22px 7px rgba(255,70,40,.5)}
+.passo:active{transform:translateY(2px)}
+.passo.cabeca{filter:brightness(1.28);box-shadow:inset 0 1px 0 rgba(255,255,255,.65),inset 0 -5px 0 rgba(0,0,0,.22),0 0 0 2px var(--now),0 0 10px 3px var(--now-glow),0 5px 4px 1px rgba(0,0,0,.5);z-index:1}
+.passos-linha{padding:20px 0 30px}
+.passos-linha .linha{margin-top:38px!important}
+/* faixa de acessórios (não original) */
+.faixa-acess{margin-top:22px;background:var(--grain),linear-gradient(180deg,#232323,#171717);border:1px dashed #6d6a60;border-radius:12px;padding:14px 16px;color:var(--print)}
+.faixa-acess h2{font-family:var(--f-rot);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:1.05rem;margin:0 0 10px;color:var(--label)}
+.faixa-acess .tag{background:linear-gradient(180deg,var(--tag-hi),var(--tag));color:var(--tag-ink);border-radius:5px;padding:1px 8px 3px;font-size:.8rem;margin-left:8px;letter-spacing:.04em;box-shadow:inset 0 0 0 1px rgba(0,0,0,.35)}
 .grade-acess{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
-.bloco{background:#1c2633;border-radius:8px;padding:10px}
-.bloco h3{font-family:var(--f-rot);letter-spacing:.06em;font-size:.9rem;margin:0 0 6px;color:var(--tinta)}
+.bloco{background:linear-gradient(180deg,#1f1f1f,#161616);border-radius:8px;padding:12px;box-shadow:inset 0 1px 0 var(--edge-hi),inset 0 -1px 0 var(--edge-lo)}
+.bloco h3{font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:.95rem;margin:0 0 6px;color:var(--tag)}
 .linha{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0}
-.linha label{font-size:.85rem;color:var(--apagado)}
-select,input[type=number]{min-height:44px;background:#0f1620;border:1px solid #4b6079;border-radius:6px;padding:0 8px}
-input[type=checkbox]{width:28px;height:28px;margin:8px}
-.pads{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:6px}
-.nota{font-size:.82rem;color:var(--apagado)}
-.mapa{width:100%;border-collapse:collapse;font-size:.85rem}.mapa td,.mapa th{padding:2px 6px;border-bottom:1px solid #2b3a4d;text-align:left}
-#estado-msg{min-height:1.3em;color:var(--apagado);font-size:.85rem;margin-top:8px}
-.esq>div>.rot{font-family:var(--f-rot);letter-spacing:.06em;font-size:.78rem;color:var(--apagado);text-transform:uppercase}
-.esq .inst .rotulos{margin:0 auto}
-.linha label{min-height:44px;display:inline-flex;align-items:center}
-input[type=file]{min-height:44px;max-width:100%}
-.slide{min-width:44px;cursor:pointer}
+.linha label{font-size:.95rem;color:var(--label);min-height:44px;display:inline-flex;align-items:center}
+select,input[type=number],input[type=file]{min-height:44px;max-width:100%;background:#0b0b0b;border:1px solid #444;border-radius:5px;padding:0 8px;color:var(--readout);font-weight:600}
+input[type=checkbox]{width:28px;height:28px;margin:8px;accent-color:#ff8440}
+.pads{display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:10px}
+.nota{font-size:.95rem;color:var(--label)}
+.mapa{width:100%;border-collapse:collapse;font-size:.95rem}.mapa td,.mapa th{padding:2px 6px;border-bottom:1px solid #2c2c2c;text-align:left}.mapa td+td{color:var(--readout);font-weight:700;text-align:right}
+#estado-msg{min-height:1.3em;color:var(--label);font-size:.95rem;margin-top:10px}
+.ctl .slide.h{margin-bottom:10px}
+.topo .ctl .rot{margin-top:2px}
+
+.status{margin:10px 4px 0;color:var(--label);font-size:.95rem}
+.status::before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;background:#46343a;margin-right:8px;vertical-align:baseline}
+/* sequenciador em grade */
+.grade{margin-top:26px;min-width:1160px}
+.grade .face>*{padding:14px 18px}
+.gcab{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:flex-end}
+.gcampo{display:flex;flex-direction:column;gap:2px}
+.gcampo .rot{font-weight:600;letter-spacing:.06em;font-size:.82rem;color:var(--label);text-transform:uppercase}
+.gcab .nota{flex:1 1 100%}
+.face>.gcorpo{background:var(--grain),linear-gradient(180deg,var(--seq-hi),var(--seq) 50%,var(--seq-lo));box-shadow:inset 0 3px 4px rgba(0,0,0,.35),inset 0 -1px 0 var(--edge-lo);overflow-x:auto}
+.ggrade{display:grid;grid-template-columns:190px 44px 44px repeat(16,minmax(44px,1fr));gap:9px 7px;align-items:center;min-width:1090px}
+.gnome{appearance:none;border:0;cursor:pointer;height:44px;font-family:var(--f-rot);font-weight:700;font-size:.95rem;letter-spacing:.05em;text-transform:uppercase;color:var(--tag-ink);border-radius:6px;padding:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  background:linear-gradient(180deg,var(--tag-hi),var(--tag));box-shadow:inset 0 1px 0 rgba(255,255,255,.5),inset 0 0 0 1px rgba(0,0,0,.35),0 1px 2px rgba(0,0,0,.45)}
+.gnome.ac{background:linear-gradient(180deg,#ffd9a0,var(--readout))}
+.gnome.dim{opacity:.45}
+.ms{appearance:none;cursor:pointer;width:44px;height:44px;border:0;border-radius:3px;font-family:var(--f-rot);font-weight:700;font-size:1rem;color:var(--key-ink);padding:0 0 4px;
+  background:linear-gradient(180deg,var(--key-hi),var(--key) 45%,var(--key-lo));box-shadow:inset 0 1px 0 rgba(255,255,255,.8),inset 0 -3px 0 rgba(0,0,0,.2),0 0 0 2px var(--well),0 3px 3px 1px rgba(0,0,0,.45)}
+.ms[aria-pressed=true]{transform:translateY(1px);color:#fff;text-shadow:0 0 6px #fff}
+.ms.mute[aria-pressed=true]{background:linear-gradient(180deg,#ff7a62,#d92a17);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 0 0 2px var(--well),0 0 10px 2px rgba(255,70,40,.7)}
+.ms.solo[aria-pressed=true]{background:linear-gradient(180deg,#ffe27a,#e0a800);color:#1a1a1a;text-shadow:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 0 0 2px var(--well),0 0 10px 2px rgba(255,200,40,.7)}
+.gcel{position:relative;appearance:none;cursor:pointer;height:44px;min-width:44px;padding:0;border:0;border-radius:3px;
+  background:linear-gradient(90deg,rgba(0,0,0,.16),transparent 12%,transparent 88%,rgba(0,0,0,.2)),linear-gradient(180deg,var(--step-hi),var(--step) 45%,var(--step-lo));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.65),inset 0 -5px 0 rgba(0,0,0,.22),inset 0 -6px 0 rgba(255,255,255,.22),0 0 0 2px var(--well),0 0 0 3px var(--well-rim),0 5px 4px 1px rgba(0,0,0,.5);filter:brightness(.64) saturate(.9)}
+.gcel .led{position:absolute;left:50%;top:7px;margin-left:-5px}
+.gcel.g1{--step-hi:#ff7a62;--step:#e23a22;--step-lo:#a31d0c}.gcel.g2{--step-hi:#ffb060;--step:#f07f1e;--step-lo:#b7560a}.gcel.g3{--step-hi:#fff58a;--step:#eed522;--step-lo:#b29b0c}.gcel.g4{--step-hi:#fbfaf4;--step:#e6e3d8;--step-lo:#b8b5aa}
+.gcel.aceso{filter:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.65),inset 0 -5px 0 rgba(0,0,0,.22),inset 0 6px 14px rgba(255,70,40,.4),0 0 0 2px var(--well),0 0 0 3px var(--well-rim),0 5px 4px 1px rgba(0,0,0,.5)}
+.gcel.aceso .led{background:radial-gradient(circle at 38% 30%,#fff,#ffc0b0 24%,var(--led-on) 60%,#a81d0c);box-shadow:0 0 0 1.5px #0d0d0d,0 0 10px 3px var(--led-glow),0 0 22px 7px rgba(255,70,40,.5)}
+.gcel.fora{opacity:.3}
+.gcel:active{transform:translateY(2px)}
+.gcel.cabeca{filter:brightness(1.28);box-shadow:inset 0 1px 0 rgba(255,255,255,.65),inset 0 -5px 0 rgba(0,0,0,.22),0 0 0 2px var(--now),0 0 10px 3px var(--now-glow),0 5px 4px 1px rgba(0,0,0,.5);z-index:1}
 </style>
 </head>
 <body>
 <div class="pagina">
 <div class="rolagem"><div id="painel" class="painel" role="group" aria-label="Painel da caixa de ritmos"></div></div>
+<p id="audio-status" class="status" role="status">Áudio: aguardando o primeiro toque ou clique</p>
+<div class="rolagem"><section id="grade" aria-label="Sequenciador em grade"></section></div>
 <section id="acess" class="faixa-acess" aria-labelledby="t-acess">
 <h2 id="t-acess">Acessórios <span class="tag">não são do original</span></h2>
 <div id="acess-grade" class="grade-acess"></div>
@@ -456,7 +522,7 @@ class Maracas {
    polos em 21,9 kHz nos dois estágios, grampeamento nos trilhos (D9/D10), saída HI e saída LO (R13 27k / R12 3,3k). */
 const MASTER = {
   g2: 1.5,                    // (c sobre a) R76 / R77
-  vRef: 15,                   // (c) 1,0 digital = 15 V de pico na saída HI. Só define o nível digital; o valor dos trilhos (B5) não foi encontrado, o grampeamento é em ±1,0
+  vRef: 6,                    // (c sobre a) 1,0 digital = 6 V de pico na saída HI: a especificação dá 6 Vpp no MASTER OUT H (S1 p.1), então o nível nominal fica em −6 dBFS. Só define o nível digital; o valor dos trilhos (B5) não foi encontrado, o grampeamento é em ±1,0
   lo: 3.3 / (27 + 3.3),       // (c sobre a) saída LO = −19,26 dB contra HI
   polo: 21900                 // (c sobre a) 1 / (2π · 33k · 220 pF) em cada estágio
 };
@@ -578,19 +644,25 @@ class Motor {
       cy: { level: 1, tone: 0.5, decay: 0.5 }, oh: { level: 1, decay: 0.5 }, ch: { level: 1 }, cb: { level: 1 }, cp: { level: 1, modo: 0 }, rs: { level: 1, modo: 0 } }; this.p.ma = this.p.cp;   // o par MA/CP tem um LEVEL e uma chave só
     this.fonte = new Ruido(fs); this.bd = new Bumbo(fs); this.sd = new Caixa(fs, this.fonte);
     for (const c of ['lt', 'mt', 'ht']) this[c] = new Tom(fs, this.fonte, c);
-    this.metal = new Metal(fs); this.cy = new Prato(fs, this.metal); this.oh = new Hat(fs, this.metal, 'oh'); this.ch = new Hat(fs, this.metal, 'ch'); this.cb = new Cowbell(fs, this.metal); this.cp = new Clap(fs, this.fonte); this.ma = new Maracas(fs, this.fonte); this.rs = new RimClaves(fs); this.master = new Master(fs); this.saida = null; this.evento = null; this.nAmostra = 0; this.seq = new Seq(this);
+    this.metal = new Metal(fs); this.cy = new Prato(fs, this.metal); this.oh = new Hat(fs, this.metal, 'oh'); this.ch = new Hat(fs, this.metal, 'ch'); this.cb = new Cowbell(fs, this.metal); this.cp = new Clap(fs, this.fonte); this.ma = new Maracas(fs, this.fonte); this.rs = new RimClaves(fs); this.master = new Master(fs); this.mutes = {}; this.solos = {}; this.temSolo = false; this.saida = null; this.evento = null; this.nAmostra = 0; this.seq = new Seq(this);
   }
   msg(m) {
     if (m.t === 'seq') return this.seq.cmd(m);
+    if (m.t === 'mute' || m.t === 'solo') { (m.t === 'mute' ? this.mutes : this.solos)[m.v] = !!m.on; this.temSolo = Object.values(this.solos).some(Boolean); return; }
     if (m.t === 'p') { const q = m.p; for (const v of ['bd', 'sd', 'lt', 'mt', 'ht', 'cy', 'oh', 'ch', 'cb', 'cp', 'ma', 'rs']) if (q[v]) Object.assign(this.p[v], q[v]); for (const k of ['acLevel', 'master', 'on', 'saida']) if (k in q) this.p[k] = q[k]; }
     else if (m.t === 'trig' && (m.v === 'cp' || m.v === 'ma')) (this.p.cp.modo === 1 ? this.ma : this.cp).trig(m.ac ? V_NORMAL + (V_ACC_MAX - V_NORMAL) * this.p.acLevel : V_NORMAL);   // a chave MA/CP escolhe a voz
     else if (m.t === 'trig' && this[m.v] && this[m.v].trig) { if (m.v === 'ch') this.oh.choke(); this[m.v].trig(m.ac ? V_NORMAL + (V_ACC_MAX - V_NORMAL) * this.p.acLevel : V_NORMAL); }
   }
   /** Soma das vozes em volts, já com o ganho do resistor de mistura. */
   tick() { this.fonte.tick(); this.metal.tick(); }
-  mixVolts() { return this.bd.amostra(this.p.bd) * GANHO_MIX.bd + this.sd.amostra(this.p.sd) * GANHO_MIX.sd
-    + this.lt.amostra(this.p.lt) * GANHO_MIX.lt + this.mt.amostra(this.p.mt) * GANHO_MIX.mt + this.ht.amostra(this.p.ht) * GANHO_MIX.ht
-    + this.cy.amostra(this.p.cy) * GANHO_MIX.cy + this.oh.amostra(this.p.oh) * GANHO_MIX.oh + this.ch.amostra(this.p.ch) * GANHO_MIX.ch + this.cb.amostra(this.p.cb) * GANHO_MIX.cb + this.cp.amostra(this.p.cp) * GANHO_MIX.cp + this.ma.amostra(this.p.ma) * GANHO_MIX.ma + this.rs.amostra(this.p.rs) * GANHO_MIX.rs; }
+  /** Mute e solo por voz (par de circuito = uma voz: LT/LC, MT/MC, HT/HC, RS/CL, CP/MA). Com algum solo ligado, só as vozes em solo tocam (mesmo as mudas); sem solo, tocam as que não estão mudas. (c) O original não tem mute nem solo. Todas as vozes seguem rodando, só a saída é cortada. */
+  g(v) { return this.temSolo ? (this.solos[v] ? 1 : 0) : (this.mutes[v] ? 0 : 1); }
+  mixVolts() {
+    return this.bd.amostra(this.p.bd) * GANHO_MIX.bd * this.g('bd') + this.sd.amostra(this.p.sd) * GANHO_MIX.sd * this.g('sd')
+      + this.lt.amostra(this.p.lt) * GANHO_MIX.lt * this.g('lt') + this.mt.amostra(this.p.mt) * GANHO_MIX.mt * this.g('mt') + this.ht.amostra(this.p.ht) * GANHO_MIX.ht * this.g('ht')
+      + this.cy.amostra(this.p.cy) * GANHO_MIX.cy * this.g('cy') + this.oh.amostra(this.p.oh) * GANHO_MIX.oh * this.g('oh') + this.ch.amostra(this.p.ch) * GANHO_MIX.ch * this.g('ch')
+      + this.cb.amostra(this.p.cb) * GANHO_MIX.cb * this.g('cb') + (this.cp.amostra(this.p.cp) * GANHO_MIX.cp + this.ma.amostra(this.p.ma) * GANHO_MIX.ma) * this.g('cp') + this.rs.amostra(this.p.rs) * GANHO_MIX.rs * this.g('rs');
+  }
   /** L e R recebem a mesma saída mono: HI (padrão) ou LO (p.saida = 1). p.on = 0 desliga (POWER: o muting por Q13). */
   process(L, R, n) {
     const lo = this.p.saida === 1, mudo = this.p.on === 0;
@@ -644,7 +716,8 @@ const NOTA_PARA = { 36: ['bd'], 38: ['sd'], 43: ['lt', 0], 47: ['mt', 0], 50: ['
 const NOME_VOZ = { bd: 'Bass drum', sd: 'Snare drum', lt: 'Low tom', mt: 'Mid tom', ht: 'Hi tom', lc: 'Low conga', mc: 'Mid conga', hc: 'Hi conga', rs: 'Rim shot', cl: 'Claves', cp: 'Hand clap', ma: 'Maracas', cb: 'Cow bell', cy: 'Cymbal', oh: 'Open hi-hat', ch: "Closed hi-hat" };
 
 /* ---------- estado ---------- */
-const estado0 = () => ({ master: 0.8, ac: 0.8, on: 1, saida: 0, acc: false,
+const VOZES = ['bd', 'sd', 'lt', 'mt', 'ht', 'rs', 'cp', 'cb', 'cy', 'oh', 'ch'];
+const estado0 = () => ({ master: 0.8, ac: 0.8, on: 1, saida: 0, acc: false, mute: Object.fromEntries(VOZES.map(v => [v, false])), solo: Object.fromEntries(VOZES.map(v => [v, false])),
   v: { bd: { level: 0.8, tone: 0.5, decay: 0.5 }, sd: { level: 0.8, tone: 0.5, snappy: 0.5 }, lt: { level: 0.8, tuning: 0.5, modo: 0 }, mt: { level: 0.8, tuning: 0.5, modo: 0 }, ht: { level: 0.8, tuning: 0.5, modo: 0 },
     rs: { level: 0.8, modo: 0 }, cp: { level: 0.8, modo: 0 }, cb: { level: 0.8 }, cy: { level: 0.8, tone: 0.5, decay: 0.5 }, oh: { level: 0.8, decay: 0.5 }, ch: { level: 0.8 } },
   sq: { tempo: 5, fine: 0.5, selB: 1, selF: 1, varB: 'A', varF: 'A', auto: 0, modoIdx: 3, instIdx: 1 } });
@@ -652,7 +725,7 @@ const midi0 = () => ({ dev: 'todos', ch: 0, vel: false, limiar: 100, map: {} });
 let estado = estado0(), midi = midi0(), temSalvo = false;
 const twin = new Motor(48000);   // gêmeo do sequenciador no thread principal: guarda os patterns, que o editor lê e o motor de áudio recebe pelos mesmos comandos
 function mescla(base, x) { if (!x || typeof x !== 'object') return base; for (const k in base) { if (k in x) { if (base[k] && typeof base[k] === 'object' && !Array.isArray(base[k])) mescla(base[k], x[k]); else if (typeof base[k] === typeof x[k]) base[k] = x[k]; } } return base; }
-try { const d = JSON.parse(localStorage.getItem(CHAVE + ':estado') || 'null'); if (d) { mescla(estado, d.e); if (d.s) twin.seq.importa(d.s); temSalvo = true; }
+try { const d = JSON.parse(localStorage.getItem(CHAVE + ':estado') || 'null'); if (d && d.e && d.s && d.s.pat) { mescla(estado, d.e); twin.seq.importa(d.s); temSalvo = true; }   // só vale um estado completo (de versões antigas da página sobra outro formato: aí abre com a batida de demonstração)
   const m = JSON.parse(localStorage.getItem(CHAVE + ':midi') || 'null'); if (m) { mescla(midi, m); if (m.map && typeof m.map === 'object') midi.map = m.map; } } catch (e) {}
 estado.sq.modoIdx = lim(Math.round(estado.sq.modoIdx), 0, 5); estado.sq.instIdx = lim(Math.round(estado.sq.instIdx), 0, 11);
 const bpmAtual = () => DD.bpmDeKnob(estado.sq.tempo / 10, estado.sq.fine);
@@ -666,6 +739,7 @@ if (!temSalvo) demo(twin);
 let tSalva = 0;
 function salva() { clearTimeout(tSalva); tSalva = setTimeout(() => { try { localStorage.setItem(CHAVE + ':estado', JSON.stringify({ e: estado, s: twin.seq.exporta() })); localStorage.setItem(CHAVE + ':midi', JSON.stringify(midi)); } catch (e) { msg('Não foi possível salvar a configuração neste navegador.'); } }, 250); }
 const msg = t => { $('estado-msg').textContent = t; };
+const statusAudio = t => { $('audio-status').textContent = 'Áudio: ' + t; };
 
 /* ---------- áudio ---------- */
 let ctx = null, no = null, reserva = null, pronto = false; const pend = [];
@@ -673,17 +747,17 @@ const manda = m => { if (!pronto) { pend.push(m); return; } if (no) no.port.post
 const parametros = () => Object.assign({ acLevel: estado.ac, master: estado.master, on: estado.on, saida: estado.saida }, JSON.parse(JSON.stringify(estado.v)));
 const modoMotor = () => MODO_MOTOR[estado.sq.modoIdx];
 function enviaTudo() {
-  manda({ t: 'p', p: parametros() }); manda({ t: 'seq', a: 'importa', d: twin.seq.exporta() });
+  manda({ t: 'p', p: parametros() }); manda({ t: 'seq', a: 'importa', d: twin.seq.exporta() }); for (const v of VOZES) { manda({ t: 'mute', v, on: estado.mute[v] }); manda({ t: 'solo', v, on: estado.solo[v] }); }
   const q = estado.sq; manda({ t: 'seq', a: 'bpm', v: bpmAtual() }); manda({ t: 'seq', a: 'basico', n: q.selB }); manda({ t: 'seq', a: 'fill', n: q.selF }); if (!twin.seq.editaFill) manda({ t: 'seq', a: 'basico', n: q.selB });
   manda({ t: 'seq', a: 'varB', v: q.varB }); manda({ t: 'seq', a: 'varF', v: q.varF }); manda({ t: 'seq', a: 'auto', v: q.auto }); manda({ t: 'seq', a: 'songTrilha', tr: q.instIdx }); manda({ t: 'seq', a: 'modo', v: modoMotor() });
 }
 const S = (a, o = {}) => { const m = Object.assign({ t: 'seq', a }, o); twin.msg(m); manda(m); salva(); };
 function liga() {
   if (ctx) { if (ctx.state !== 'running') ctx.resume().catch(() => {}); return; }
-  const AC = window.AudioContext || window.webkitAudioContext; if (!AC) { msg('Este navegador não tem Web Audio.'); return; }
-  ctx = new AC({ latencyHint: 'interactive' });
+  const AC = window.AudioContext || window.webkitAudioContext; if (!AC) { statusAudio('este navegador não tem Web Audio.'); return; }
+  ctx = new AC({ latencyHint: 'interactive' }); statusAudio('iniciando…'); ctx.onstatechange = () => { if (ctx.state === 'running') statusAudio('ligado (' + (reserva ? 'modo de reserva' : no ? 'AudioWorklet' : 'carregando o motor') + ', ' + Math.round(ctx.sampleRate / 100) / 10 + ' kHz)'); else statusAudio('parado pelo navegador (' + ctx.state + '): toque ou clique na página'); }; setTimeout(() => { if (ctx && ctx.state !== 'running') statusAudio('o navegador bloqueou o som: toque ou clique na página (ou feche e abra de novo)'); }, 2500);
   try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
-  const fim = () => { pronto = true; enviaTudo(); for (const m of pend.splice(0)) manda(m); };
+  const fim = () => { pronto = true; statusAudio('ligado (' + (reserva ? 'modo de reserva' : 'AudioWorklet') + ', ' + Math.round(ctx.sampleRate / 100) / 10 + ' kHz)'); enviaTudo(); for (const m of pend.splice(0)) manda(m); };
   const usaReserva = () => { const sp = ctx.createScriptProcessor(1024, 0, 2); sp.motor = new Motor(ctx.sampleRate); sp.motor.saida = aoEvento;
     sp.onaudioprocess = e => { const o = e.outputBuffer; sp.motor.process(o.getChannelData(0), o.getChannelData(1), o.length); }; sp.connect(ctx.destination); reserva = sp; fim(); };
   if (ctx.audioWorklet && window.AudioWorkletNode) {
@@ -753,7 +827,7 @@ const mkBotao = (id, rotulo, classe, press) => { const b = el('button', 'btn ' +
 /* ---------- painel ---------- */
 const painel = $('painel');
 const linhaTopo = el('div', 'topo'); const pw = mkSlide('power', 'POWER', ['ON', 'OFF'], false, () => estado.on ? 0 : 1, i => { estado.on = i === 0 ? 1 : 0; manda({ t: 'p', p: { on: estado.on } }); });
-linhaTopo.append(pw, el('div', 'titulo', 'CAIXA DE RITMOS ANALÓGICA · clone em Web Audio'));
+{ const m = el('div', 'marca'); m.append(el('span', 'tipo', 'Caixa de ritmos analógica'), el('span', 'sub', 'clone em Web Audio')); linhaTopo.append(pw, m); }
 const meio = el('div', 'meio'), esq = el('div', 'esq'), vozes = el('div', 'vozes');
 // bloco esquerdo
 const dMode = el('div', 'mode'); dMode.append(el('div', 'rot', 'MODE'), mkRot('mode', 'MODE', MODOS, [225, 270, 315, 45, 90, 135], 140, () => estado.sq.modoIdx, i => { estado.sq.modoIdx = i; mudouModo(); }));
@@ -772,7 +846,7 @@ for (const col of COLS) {
     lin[r] = mkKnob(col.id === 'ac' ? 'ac.level' : col.id + '.' + chave, rot, get, set, '', col.nome + ' ' + rot);
   }
   for (let r = 0; r < 3; r++) c.appendChild(lin[r] || el('div'));
-  if (col.par) c.appendChild(mkSlide(col.id + '.modo', '', col.par, true, () => estado.v[col.id].modo ? 0 : 1, i => { estado.v[col.id].modo = i === 0 ? 1 : 0; manda({ t: 'p', p: { [col.id]: { modo: estado.v[col.id].modo } } }); pintaPads(); }, 'par'));
+  if (col.par) c.appendChild(mkSlide(col.id + '.modo', '', col.par, true, () => estado.v[col.id].modo ? 0 : 1, i => { estado.v[col.id].modo = i === 0 ? 1 : 0; manda({ t: 'p', p: { [col.id]: { modo: estado.v[col.id].modo } } }); pintaPads(); pinta(); }, 'par'));
   else c.appendChild(el('div'));
   c.appendChild(el('div', 'nome', col.nome)); vozes.appendChild(c);
 }
@@ -791,7 +865,56 @@ for (let i = 0; i < 16; i++) { const b = el('button', 'passo g' + (Math.floor(i 
 const dIF = el('div'); dIF.append(mkSlide('varF', 'I/F VARIATION', ['A', 'B'], false, () => estado.sq.varF === 'B' ? 1 : 0, i => { estado.sq.varF = i ? 'B' : 'A'; S('varF', { v: estado.sq.varF }); pinta(); }));
 { const t = mkBotao('tap', 'TAP', 'liga', () => { S('tap'); msg(rodando ? 'TAP: o INTRO/FILL IN toca no próximo compasso.' : 'INTRO SET: o 1º compasso depois do START será o INTRO/FILL IN.'); }); t.style.marginTop = '8px'; t.id = 'tap'; dIF.append(t, el('div', 'nota', 'INTRO SET · FILL IN TRIGGER')); }
 baixo.append(dVarB, dStart, dPre, passosBox, dIF);
-painel.append(linhaTopo, meio, baixo);
+{ const face = el('div', 'face'); face.append(linhaTopo, meio, baixo); painel.append(face); }
+
+/* ---------- sequenciador em grade (visão do pattern em edição, com mute e solo por voz) ---------- */
+const LINHAS = ['ac', 'bd', 'sd', 'lt', 'mt', 'ht', 'rs', 'cp', 'cb', 'cy', 'oh', 'ch'];
+const nomeLinha = id => { const col = COLS.find(c => c.id === id); if (!col) return id; return col.par ? col.par[estado.v[id].modo ? 0 : 1] : col.nome; };
+let gParte = 0; const gCel = {}, gNome = {}, gMute = {}, gSolo = {};
+{
+  const sec = $('grade'); sec.className = 'painel grade'; const face = el('div', 'face'); sec.appendChild(face);
+  const cab = el('div', 'gcab'), corpo = el('div', 'gcorpo'); face.append(cab, corpo);
+  const sel = (id, rot, ops, set) => { const d = el('div', 'gcampo'), s = el('select'); s.id = id; s.setAttribute('aria-label', rot); ops.forEach(([v, t]) => s.appendChild(Object.assign(el('option', '', t), { value: String(v) }))); s.addEventListener('change', () => set(s.value)); d.append(el('label', 'rot', rot), s); d.firstChild.htmlFor = id; cab.appendChild(d); return s; };
+  const editaFill = () => twin.seq.editaFill;
+  const sPat = sel('gPat', 'Pattern em edição', [...Array.from({ length: 12 }, (_, i) => ['b' + (i + 1), 'BASIC RHYTHM ' + (i + 1)]), ...Array.from({ length: 4 }, (_, i) => ['f' + (i + 1), 'INTRO/FILL IN ' + (i + 1)])], v => { const n = +v.slice(1); if (v[0] === 'b') { estado.sq.selB = n; S('basico', { n }); } else { estado.sq.selF = n; S('fill', { n }); } gParte = 0; pinta(); });
+  const sBanco = sel('gBanco', 'Banco', [['A', 'A'], ['B', 'B']], v => { if (editaFill()) { estado.sq.varF = v; S('varF', { v }); } else { estado.sq.varB = v; S('varB', { v }); } pinta(); });
+  const sTam = sel('gTam', 'Passos por compasso', Array.from({ length: 32 }, (_, i) => [i + 1, String(i + 1)]), v => { S('tamanho', { n: +v }); if (+v <= 16) gParte = 0; pinta(); });
+  const sPre = sel('gPre', 'PRE-SCALE', [[1, '1 · tercina de colcheia'], [2, '2 · tercina de semicolcheia'], [3, '3 · semicolcheia'], [4, '4 · fusa']], v => { S('prescale', { ps: +v }); pinta(); });
+  const dBt = el('div', 'gcampo'); const bParte = el('button', 'btn liga', 'Passos 17–32'); bParte.type = 'button'; bParte.id = 'gParte'; bParte.setAttribute('aria-pressed', 'false'); bParte.addEventListener('click', () => { gParte = gParte ? 0 : 1; pinta(); });
+  const bGo = el('button', 'btn liga start', 'START / STOP'); bGo.type = 'button'; bGo.id = 'startGrade'; bGo.setAttribute('aria-pressed', 'false'); bGo.addEventListener('click', () => alterna());
+  const bLimpa = el('button', 'btn', 'Limpar pattern'); bLimpa.type = 'button'; bLimpa.id = 'gLimpa'; bLimpa.addEventListener('click', () => { if (confirm('Apagar todos os passos do pattern em edição?')) { S('limpaPadrao'); pinta(); } });
+  dBt.append(bParte, bGo, bLimpa); dBt.style.cssText = 'display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap'; cab.appendChild(dBt);
+  cab.appendChild(Object.assign(el('div', 'nota'), { id: 'gInfo' }));
+  const grade = el('div', 'ggrade'); corpo.appendChild(grade);
+  for (const id of LINHAS) {
+    const nome = el('button', 'gnome' + (id === 'ac' ? ' ac' : ''), ''); nome.type = 'button'; nome.dataset.linha = id; nome.title = id === 'ac' ? 'Accent: passos com accent dão accent a todas as vozes do passo' : 'Tocar esta voz'; gNome[id] = nome;
+    if (id !== 'ac') nome.addEventListener('pointerdown', e => { e.preventDefault(); disparar(id, estado.acc); });
+    const mk = (cls, txt, tit, quando) => { const b = el('button', 'ms ' + cls, txt); b.type = 'button'; b.title = tit; b.setAttribute('aria-pressed', 'false'); b.setAttribute('aria-label', tit + ' ' + id); b.addEventListener('click', quando); return b; };
+    let bm = null, bs = null;
+    if (id !== 'ac') {
+      bm = mk('mute', 'M', 'Mute', () => { estado.mute[id] = !estado.mute[id]; manda({ t: 'mute', v: id, on: estado.mute[id] }); salva(); pinta(); });
+      bs = mk('solo', 'S', 'Solo', () => { estado.solo[id] = !estado.solo[id]; manda({ t: 'solo', v: id, on: estado.solo[id] }); salva(); pinta(); });
+      gMute[id] = bm; gSolo[id] = bs;
+    }
+    grade.append(nome, bm || el('span'), bs || el('span'));
+    gCel[id] = [];
+    for (let i = 0; i < 16; i++) { const c = el('button', 'gcel g' + (Math.floor(i / 4) + 1)); c.type = 'button'; c.dataset.linha = id; c.dataset.i = String(i); c.append(el('span', 'led')); c.setAttribute('aria-label', nomeLinha(id) + ', passo ' + (i + 1));
+      c.addEventListener('click', () => { S('alterna', { trilha: id, passo: i + gParte * 16 }); pinta(); }); grade.appendChild(c); gCel[id].push(c); }
+  }
+  sec.__ctl = { sPat, sBanco, sTam, sPre, bParte, bGo };
+}
+function pintaGrade() {
+  const sec = $('grade'), c = sec.__ctl, q = estado.sq, alvo = twin.seq.alvo(), fill = twin.seq.editaFill, chave = fill ? 'f' + q.selF + q.varF : 'b' + q.selB + (q.varB === 'B' ? 'B' : 'A');
+  c.sPat.value = (fill ? 'f' + q.selF : 'b' + q.selB); c.sBanco.value = fill ? q.varF : (q.varB === 'B' ? 'B' : 'A'); c.sTam.value = String(alvo.n); c.sPre.value = String(alvo.ps);
+  c.bParte.style.display = alvo.n > 16 ? '' : 'none'; if (alvo.n <= 16) gParte = 0; c.bParte.setAttribute('aria-pressed', String(gParte === 1)); c.bParte.textContent = gParte ? 'Passos 1–16' : 'Passos 17–32'; c.bGo.setAttribute('aria-pressed', String(rodando));
+  const algumSolo = Object.values(estado.solo).some(Boolean);
+  for (const id of LINHAS) {
+    const k = SEQT.indexOf(id); gNome[id].textContent = id === 'ac' ? 'ACCENT' : nomeLinha(id);
+    if (id !== 'ac') { gMute[id].setAttribute('aria-pressed', String(!!estado.mute[id])); gSolo[id].setAttribute('aria-pressed', String(!!estado.solo[id])); gNome[id].classList.toggle('dim', algumSolo ? !estado.solo[id] : !!estado.mute[id]); }
+    gCel[id].forEach((b, i) => { const p = i + gParte * 16, on = !!alvo.t[k][p]; b.classList.toggle('aceso', on); b.classList.toggle('fora', p >= alvo.n); b.classList.toggle('cabeca', rodando && atualPat === chave && cabeca === p); b.setAttribute('aria-pressed', String(on)); });
+  }
+  $('gInfo').textContent = 'Editando ' + (fill ? 'INTRO/FILL IN ' + q.selF : 'BASIC RHYTHM ' + q.selB) + ', banco ' + (fill ? q.varF : (q.varB === 'B' ? 'B' : 'A')) + '. A escolha de pattern e de banco é a mesma do painel.';
+}
 
 /* ---------- lógica do sequenciador no painel ---------- */
 let rodando = false, cabeca = -1, atualPat = '', clearArmado = false, tClear = 0, pintaPads = () => {};
@@ -840,7 +963,7 @@ function pinta() {
   const p2 = (m === 2) || (rodando && cabeca >= 16 && m !== 1); $('ledP1').classList.toggle('on', !p2); $('ledP2').classList.toggle('on', p2);
   const bk = atualPat ? atualPat.slice(-1) : '', vb = q.varB; $('ledA').classList.toggle('on', rodando ? bk === 'A' : vb !== 'B'); $('ledB').classList.toggle('on', rodando ? bk === 'B' : vb !== 'A');
   for (const id in CTL) if (CTL[id].pinta) CTL[id].pinta();
-  pintaBpm();
+  pintaGrade(); pintaBpm();
 }
 function pintaBpm() { $('bpm').textContent = 'Andamento: ' + Math.round(bpmAtual() * 10) / 10 + ' BPM (por semínima)'; }
 
@@ -887,7 +1010,7 @@ btnTodas.addEventListener('click', () => { midi.map = {}; salvaMidi(); pintaLear
 chkVel.checked = !!midi.vel; limVel.value = String(midi.limiar); selCh.value = String(midi.ch);
 chkVel.addEventListener('change', () => { midi.vel = chkVel.checked; salvaMidi(); }); limVel.addEventListener('change', () => { midi.limiar = lim(Math.round(+limVel.value) || 100, 1, 127); limVel.value = String(midi.limiar); salvaMidi(); });
 selCh.addEventListener('change', () => { midi.ch = +selCh.value; salvaMidi(); }); selDev.addEventListener('change', () => { midi.dev = selDev.value; salvaMidi(); ligaEntradas(); });
-function setaModo(id, m) { if (estado.v[id] && 'modo' in estado.v[id] && estado.v[id].modo !== m) { estado.v[id].modo = m; manda({ t: 'p', p: { [id]: { modo: m } } }); if (CTL[id + '.modo']) CTL[id + '.modo'].pinta(); pintaPads(); salva(); } }
+function setaModo(id, m) { if (estado.v[id] && 'modo' in estado.v[id] && estado.v[id].modo !== m) { estado.v[id].modo = m; manda({ t: 'p', p: { [id]: { modo: m } } }); if (CTL[id + '.modo']) CTL[id + '.modo'].pinta(); pintaPads(); pinta(); salva(); } }
 function recebe(d, canal) {
   const st = d[0] & 0xF0, ch = (d[0] & 0x0F) + 1; if (midi.ch && ch !== midi.ch) return; if (d.length < 3 && st !== 0xC0 && st !== 0xD0) return;
   if (st === 0x90 && d[2] > 0) { const alvo = NOTA_PARA[d[1]]; if (alvo) { if (alvo.length > 1) setaModo(alvo[0], alvo[1]); disparar(alvo[0], midi.vel && d[2] >= midi.limiar, 'nota ' + d[1] + ', velocity ' + d[2] + ', canal ' + ch); } else $('ultimo').textContent = 'nota ' + d[1] + ' sem voz no mapa'; }

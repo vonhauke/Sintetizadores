@@ -440,6 +440,26 @@ if (!D.MASTER) { fora++; linhas.push(['FORA', 'master: motor ainda não tem o es
   { const um = (v) => render(novo(Motor, FS, { master: 1, acLevel: 1 }), 0.3, [{ t: 512 / FS, v, ac: false }]), a = um('bd'), b = um('sd'), ab = render(novo(Motor, FS, { master: 1, acLevel: 1 }), 0.3, [{ t: 512 / FS, v: 'bd', ac: false }, { t: 512 / FS, v: 'sd', ac: false }]);
     let e = 0; for (let i = 0; i < ab.length; i++) e = Math.max(e, Math.abs(ab[i] - a[i] - b[i]));
     confere('somador: BD + SD juntos = BD sozinho + SD sozinho', 'diferença < 1e-6 (linear)', e.toExponential(1), e < 1e-6); }
+  // mute e solo por voz (c: o original não tem)
+  { const T = 512 / FS, par = ['bd', 'sd'].map(v => ({ t: T, v, ac: false })), rod = (pre) => { const m = novo(Motor, FS, { master: 1, acLevel: 1 }); (pre || (() => {}))(m); return render(m, 0.4, par); };
+    const livre = rod(), soBd = render(novo(Motor, FS, { master: 1, acLevel: 1 }), 0.4, [par[0]]), soSd = render(novo(Motor, FS, { master: 1, acLevel: 1 }), 0.4, [par[1]]);
+    const mudoBd = rod(m => m.msg({ t: 'mute', v: 'bd', on: true })); let e1 = 0; for (let i = 0; i < livre.length; i++) e1 = Math.max(e1, Math.abs(mudoBd[i] - soSd[i]));
+    confere('MUTE do BD: a saída é só a SD (diferença para a SD sozinha < 1e-6)', '< 1e-6', e1.toExponential(1), e1 < 1e-6);
+    const soloSd = rod(m => m.msg({ t: 'solo', v: 'sd', on: true })); let e2 = 0; for (let i = 0; i < livre.length; i++) e2 = Math.max(e2, Math.abs(soloSd[i] - soSd[i]));
+    confere('SOLO da SD: a saída é só a SD', '< 1e-6', e2.toExponential(1), e2 < 1e-6);
+    const mudoESolo = rod(m => { m.msg({ t: 'mute', v: 'sd', on: true }); m.msg({ t: 'solo', v: 'sd', on: true }); }); let e3 = 0; for (let i = 0; i < livre.length; i++) e3 = Math.max(e3, Math.abs(mudoESolo[i] - soSd[i]));
+    confere('voz muda e em solo toca (o solo vale sobre o mute)', '< 1e-6', e3.toExponential(1), e3 < 1e-6);
+    const dois = rod(m => { m.msg({ t: 'solo', v: 'sd', on: true }); m.msg({ t: 'solo', v: 'bd', on: true }); }); let e4 = 0; for (let i = 0; i < livre.length; i++) e4 = Math.max(e4, Math.abs(dois[i] - livre[i]));
+    confere('dois solos: tocam as duas vozes (igual ao mix livre)', '< 1e-6', e4.toExponential(1), e4 < 1e-6);
+    const desligado = rod(m => { m.msg({ t: 'mute', v: 'bd', on: true }); m.msg({ t: 'mute', v: 'bd', on: false }); }); let e5 = 0; for (let i = 0; i < livre.length; i++) e5 = Math.max(e5, Math.abs(desligado[i] - livre[i]));
+    confere('mute ligado e desligado volta ao mix livre', '< 1e-6', e5.toExponential(1), e5 < 1e-6);
+    // a voz continua rodando por dentro: mute de 50 a 150 ms e depois o som volta de onde estaria
+    { const m = novo(Motor, FS, { master: 1, acLevel: 1 }), n = Math.round(0.4 * FS), y = new Float32Array(n), R = new Float32Array(n), a = Math.round(0.05 * FS), b = Math.round(0.15 * FS); m.msg({ t: 'trig', v: 'bd', ac: false });
+      for (let i = 0; i < n; i++) { if (i === a) m.msg({ t: 'mute', v: 'bd', on: true }); if (i === b) m.msg({ t: 'mute', v: 'bd', on: false }); m.process(y.subarray(i, i + 1), R.subarray(i, i + 1), 1); }
+      const ref = render(novo(Motor, FS, { master: 1, acLevel: 1 }), 0.4, [{ t: 0, v: 'bd', ac: false }]); let ea = 0, em = 0; for (let i = b + 200; i < n; i++) ea = Math.max(ea, Math.abs(y[i] - ref[i])); for (let i = a + 40; i < b; i++) em = Math.max(em, Math.abs(y[i]));   // 40 amostras: os polos do master ainda deixam uma cauda curta
+      confere('durante o mute a saída é zero; ao desmutar o som volta de onde estaria (a voz não parou)', '< 1e-6 durante o mute (depois de 40 amostras); diferença da referência < 1e-3 depois (o disparo cai no início de um bloco)', f(em, 9) + ' e ' + ea.toExponential(1), em < 1e-6 && ea < 1e-3); }
+    // par MA/CP: o mute de 'cp' corta as maracas também
+    { const m = novo(Motor, FS, { master: 1, acLevel: 1, cp: { level: 1, modo: 1 } }); m.msg({ t: 'mute', v: 'cp', on: true }); const r = render(m, 0.3, [{ t: 0.01, v: 'cp', ac: false }]); confere('mute da voz CP/MA corta também as maracas', '0', f(pico(r), 9), pico(r) === 0); } }
   // pior caso: todas as 16 vozes com accent no máximo, master no máximo, ao mesmo tempo
   { const todas = ['bd', 'sd', 'lt', 'mt', 'ht', 'cy', 'oh', 'ch', 'cb', 'cp', 'rs'].map(v => ({ t: 512 / FS, v, ac: true })), r = render(novo(Motor, FS, { master: 1, acLevel: 1 }), 1, todas);
     let fin = true; for (const v of r) if (!Number.isFinite(v)) fin = false;
