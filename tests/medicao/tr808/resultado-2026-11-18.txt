@@ -162,4 +162,20 @@ ok    mix: OH com ganho 0.59 (Parte C, seção 10)                              
 ok    mix: CH com ganho 0.7 (Parte C, seção 10)                               esperado: 0,216 Vpp digital ±3 %                                                  medido: 0,216
 ok    mix: CY com ganho 0.7 (Parte C, seção 10)                               esperado: 0,247 Vpp digital ±3 %                                                  medido: 0,247
 
-139 medições, 139 ok, 0 fora
+— cowbell: osciladores, filtro, envelope em dois estágios, nível, accent, mix —
+ok    oscilador do TM1 (TP-6) no som                                          esperado: 540 Hz ±2 (decaimento alarga a linha; tabela p.14 e Parte C)            medido: 540,0 Hz
+ok    oscilador do TM2 (TP-7) no som                                          esperado: 800 Hz ±2                                                               medido: 800,0 Hz
+ok    nível relativo dos dois (540 / 800 Hz): só o filtro os diferencia (os dois VCAs e divisores são iguais)  esperado: 0,0 dB ±1,5 (resposta do filtro (c))                                    medido: 0,9 dB
+ok    envelope: queda inicial mais íngreme que a cauda                        esperado: inclinação inicial ≥ 1,5× a da cauda (tol. minha)                       medido: -0,63 contra -0,27 dB/ms (2,3×)
+ok    envelope: constante de tempo da cauda                                   esperado: 33 ms ±25 % (R82 33k × C34 1 µF = 33 ms, valores lidos; tol. minha)     medido: 32,3 ms
+ok    decay a −20 dB                                                          esperado: 50 ms ±15 % (tabela p.14; tol. minha)                                   medido: 50 ms
+ok    amplitude normal / accent (LEVEL no máximo)                             esperado: 3,5 / 12 Vpp ±5 % (tabela p.14)                                         medido: 3,50 / 12,00 Vpp
+ok    accent com ACCENT LEVEL no mínimo: trigger de 7 V dos metais (a)        esperado: mesmo que sem accent: 3,5 Vpp ±5 %                                      medido: 3,50 Vpp
+FORA  accent muda o timbre (energia 1,4 a 3,5 kHz contra 0,4 a 1 kHz)         esperado: |diferença| ≥ 0,5 dB (tol. minha)                                       medido: 0,00 dB
+ok    silêncio exato antes do disparo (os osciladores rodam livres, o VCA fecha)  esperado: 0                                                                       medido: 0,000000000000
+ok    decai a zero                                                            esperado: < −80 dB                                                                medido: -240,0 dB
+ok    LEVEL no mínimo: mudo                                                   esperado: 0 V                                                                     medido: 0,000000000
+ok    mix: CB com ganho 0,70 (Parte C, seção 10)                              esperado: 0,243 Vpp digital ±3 %                                                  medido: 0,243
+ok    2 disparos a 30 ms: sem soma de vozes (um circuito só)                  esperado: Vpp ≤ 2× o de um disparo                                                medido: 1,00×
+
+153 medições, 152 ok, 1 fora

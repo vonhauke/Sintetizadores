@@ -249,6 +249,40 @@ if (D.METAL) {
     confere(`mix: ${c.toUpperCase()} com ganho ${g} (Parte C, seção 10)`, f(esp, 3) + ' Vpp digital ±3 %', f(vpp(d2), 3), perto(vpp(d2), esp, esp * 0.03)); }
 }
 
+// ===== 10. cowbell (CB): dois quadrados de 540 e 800 Hz, dois VCAs, filtro, envelope em dois estágios =====
+titulo('cowbell: osciladores, filtro, envelope em dois estágios, nível, accent, mix');
+if (!D.CB) { fora++; linhas.push(['FORA', 'cowbell: motor ainda não tem a voz CB', 'D.CB', 'ausente']); } else {
+  const cb = (p = {}, ac = false, seg = 1, extra = {}, disp) => { const m = novo(Motor, FS, Object.assign({ acLevel: 1, cb: Object.assign({ level: 1 }, p) }, extra)); return renderVoz(m, 'cb', seg, disp || [{ t: 0.01, ac }]); };
+  const n = cb(), a = cb({}, true), mg = espectro(n.y, Math.round(n.t0 * FS), 8192);
+  const [f1, a1] = picoEsp(mg, FS, 480, 600), [f2, a2] = picoEsp(mg, FS, 740, 860);
+  confere('oscilador do TM1 (TP-6) no som', '540 Hz ±2 (decaimento alarga a linha; tabela p.14 e Parte C)', f(f1, 1) + ' Hz', perto(f1, 540, 2));
+  confere('oscilador do TM2 (TP-7) no som', '800 Hz ±2', f(f2, 1) + ' Hz', perto(f2, 800, 2));
+  const H = resposta(D.mkBP(D.CB.bp.f, D.CB.bp.q, FS), FS), teor = H.db(540) - H.db(800);
+  confere('nível relativo dos dois (540 / 800 Hz): só o filtro os diferencia (os dois VCAs e divisores são iguais)', f(teor, 1) + ' dB ±1,5 (resposta do filtro (c))', f(dB(a1 / a2), 1) + ' dB', perto(dB(a1 / a2), teor, 1.5));
+  // envelope em dois estágios: queda inicial abrupta e depois cauda de τ = R82·C34 = 33 ms (a, sobre os valores lidos)
+  const env = (r, t) => rms(r.y, Math.round((r.t0 + t) * FS), Math.round((r.t0 + t + 0.004) * FS));   // janela de 4 ms ≈ 1 período da batida 540/800
+  const rate = (t1, t2) => 20 * Math.log10(env(n, t2) / env(n, t1)) / ((t2 - t1) * 1000);   // dB por ms
+  const rIni = rate(0.003, 0.013), rCauda = rate(0.035, 0.075), tauCauda = -8.686 / rCauda;   // 8,686 dB = 1 neper
+  confere('envelope: queda inicial mais íngreme que a cauda', 'inclinação inicial ≥ 1,5× a da cauda (tol. minha)', f(rIni, 2) + ' contra ' + f(rCauda, 2) + ' dB/ms (' + f(rIni / rCauda, 1) + '×)', rIni / rCauda >= 1.5);
+  confere('envelope: constante de tempo da cauda', f(33, 0) + ' ms ±25 % (R82 33k × C34 1 µF = 33 ms, valores lidos; tol. minha)', f(tauCauda, 1) + ' ms', perto(tauCauda, 33, 33 * 0.25));
+  const T = tempoAteRms(n.y, FS, n.t0, 0.1, 0.004) * 1000;
+  confere('decay a −20 dB', '50 ms ±15 % (tabela p.14; tol. minha)', f(T, 0) + ' ms', perto(T, 50, 7.5));
+  const pn = vpp(n.y), pa = vpp(a.y);
+  confere('amplitude normal / accent (LEVEL no máximo)', '3,5 / 12 Vpp ±5 % (tabela p.14)', f(pn) + ' / ' + f(pa) + ' Vpp', perto(pn, 3.5, 0.175) && perto(pa, 12, 0.6));
+  const q = cb({}, true, 1, { acLevel: 0 }); confere('accent com ACCENT LEVEL no mínimo: trigger de 7 V dos metais (a)', 'mesmo que sem accent: 3,5 Vpp ±5 %', f(vpp(q.y)) + ' Vpp', perto(vpp(q.y), 3.5, 0.175));
+  const hf = r => bandaDb(r, 1400, 3500, 8192) - bandaDb(r, 400, 1000, 8192), dif = hf(a) - hf(n);
+  confere('accent muda o timbre (energia 1,4 a 3,5 kHz contra 0,4 a 1 kHz)', '|diferença| ≥ 0,5 dB (tol. minha)', f(dif) + ' dB', Math.abs(dif) >= 0.5);
+  const i0 = Math.round(n.t0 * FS), fim = rms(cb({}, false, 3).y, Math.round(2 * FS), Math.round(3 * FS));
+  confere('silêncio exato antes do disparo (os osciladores rodam livres, o VCA fecha)', '0', f(pico(n.y, 0, i0 - 1), 12), pico(n.y, 0, i0 - 1) === 0);
+  confere('decai a zero', '< −80 dB', f(dB(fim / pico(n.y)), 1) + ' dB', dB(fim / pico(n.y)) < -80);
+  confere('LEVEL no mínimo: mudo', '0 V', f(pico(cb({ level: 0 }).y), 9), pico(cb({ level: 0 }).y) === 0);
+  const T512 = 512 / FS, ref = renderVoz(novo(Motor, FS, { acLevel: 1, cb: { level: 1 } }), 'cb', 1, [{ t: T512, ac: false }]);
+  const d2 = render(novo(Motor, FS, { master: 1, acLevel: 1, cb: { level: 1 } }), 1, [{ t: T512, v: 'cb', ac: false }]), esp = vpp(ref.y) * D.GANHO_MIX.cb * D.V_POR_UNIDADE;
+  confere('mix: CB com ganho 0,70 (Parte C, seção 10)', f(esp, 3) + ' Vpp digital ±3 %', f(vpp(d2), 3), perto(vpp(d2), esp, esp * 0.03));
+  const um = vpp(n.y), r2 = cb({}, false, 1, {}, [{ t: 0.01, ac: false }, { t: 0.04, ac: false }]);
+  confere('2 disparos a 30 ms: sem soma de vozes (um circuito só)', 'Vpp ≤ 2× o de um disparo', f(vpp(r2.y) / um) + '×', vpp(r2.y) <= 2 * um);
+}
+
 // ===== relatório =====
 const larg = [0, 1, 2].map(k => Math.min(70, Math.max(...linhas.map(l => (l[k + 1] || '').length))));
 for (const l of linhas) console.log(l[0] === '' ? '\n' + l[1] : `${l[0]}  ${l[1].padEnd(larg[0])}  esperado: ${l[2].padEnd(larg[1])}  medido: ${l[3]}`);
