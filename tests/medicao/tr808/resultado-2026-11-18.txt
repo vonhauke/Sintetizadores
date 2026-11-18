@@ -220,4 +220,23 @@ ok    RS/CL: par exclusivo (2º disparo a 10 ms não soma vozes)                
 ok    mix: RS com ganho 1,0 (Parte C, seção 10)                               esperado: 0,300 Vpp digital ±3 %                                                  medido: 0,300
 ok    mix: CL com ganho 1,0 (Parte C, seção 10)                               esperado: 0,250 Vpp digital ±3 %                                                  medido: 0,250
 
-191 medições, 188 ok, 3 fora
+— maracas: passa-altas, envelope assimétrico, decay 25/35 ms (origem desconhecida), nível, chave MA/CP, mix —
+ok    passa-altas do Q68 (10,6 kHz, Q 2,27): pico                             esperado: +7,3 dB ±0,4 perto de 11,2 kHz ±2 % (Parte C, seção 7)                  medido: 7,3 dB em 10985 Hz
+ok    espectro em 4 a 5 kHz, relativo a 10 a 12 kHz                           esperado: -20,1 dB ±3 (passa-altas e polo do ruído; o envelope varia no tempo)    medido: -20,9 dB
+ok    espectro em 6 a 8 kHz, relativo a 10 a 12 kHz                           esperado: -11,2 dB ±3 (passa-altas e polo do ruído; o envelope varia no tempo)    medido: -9,0 dB
+ok    espectro em 14 a 17 kHz, relativo a 10 a 12 kHz                         esperado: -7,2 dB ±3 (passa-altas e polo do ruído; o envelope varia no tempo)     medido: -5,4 dB
+ok    espectro em 19 a 22 kHz, relativo a 10 a 12 kHz                         esperado: -11,4 dB ±3 (passa-altas e polo do ruído; o envelope varia no tempo)    medido: -8,6 dB
+ok    envelope assimétrico: tempo até o pico (subida lenta; R341 · C134 = 15,5 ms num sentido)  esperado: 3 a 12 ms (tol. minha; polaridade do RC não traçada (c))                medido: 4,5 ms
+ok    decay a −20 dB sem accent                                               esperado: 25 ms ±15 % (tabela p.14, "curto"; atribuição ao caso sem accent é (c))  medido: 25,0 ms
+info  decay a −20 dB com accent (informativo)                                 esperado: 35 ms seria o "longo" da tabela p.14, cuja condição não é dita; a compressão que dá 3 / 5 Vpp não o reproduz  medido: 27,6 ms
+FORA  accent muda o decay (a forma temporal do som)                           esperado: razão com/sem accent ≥ 1,2 (tol. minha)                                 medido: 1,11×
+ok    amplitude normal / accent                                               esperado: 3 / 5 Vpp ±5 % (tabela p.14)                                            medido: 3,00 / 5,00 Vpp
+ok    accent com ACCENT LEVEL no mínimo = normal                              esperado: 3,00 Vpp ±5 %                                                           medido: 3,00 Vpp
+ok    silêncio exato antes do disparo e decai a zero                          esperado: 0 e < −80 dB                                                            medido: 0,000000000000 e -240,0 dB
+ok    LEVEL no mínimo: mudo                                                   esperado: 0 V                                                                     medido: 0,000000000
+ok    mix: MA com ganho 1,0 (Parte C, seção 10), disparada pelo canal CP/MA   esperado: 0,296 Vpp digital ±3 %                                                  medido: 0,296
+ok    chave em MA: o disparo toca as maracas (energia acima de 10 kHz domina)  esperado: HF − BF > 0 dB                                                          medido: 35,6 dB
+ok    chave em CP: o mesmo disparo toca o clap (energia de 300 Hz a 3 kHz domina)  esperado: HF − BF < −10 dB                                                        medido: -25,7 dB
+ok    trocar a chave de MA para CP com o aparelho ligado: 1º disparo maracas, 2º disparo clap  esperado: HF − BF > 0 dB e < −10 dB                                               medido: 35,6 dB e -25,2 dB
+
+207 medições, 203 ok, 4 fora

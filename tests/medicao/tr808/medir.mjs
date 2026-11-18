@@ -7,6 +7,8 @@ const Motor = carregaMotor(), D = Motor.dados;
 let fora = 0; const linhas = [];
 const f = (v, c = 2) => typeof v === 'number' ? (Number.isFinite(v) ? v.toFixed(c).replace('.', ',') : String(v)) : String(v);
 function confere(nome, esperado, medido, ok) { if (!ok) fora++; linhas.push([ok ? 'ok  ' : 'FORA', nome, esperado, medido]); }
+/** Linha informativa: aparece no relatório e não conta como ok nem como fora (hipótese ou valor sem critério na fonte). */
+function info(nome, esperado, medido) { linhas.push(['info', nome, esperado, medido]); }
 const perto = (a, b, tol) => Math.abs(a - b) <= tol;
 const titulo = t => linhas.push(['', '— ' + t + ' —', '', '']);
 const semitons = (a, b) => 12 * Math.log2(a / b);
@@ -358,9 +360,52 @@ if (!D.RS) { fora++; linhas.push(['FORA', 'rim shot e claves: motor ainda não t
     confere(`mix: ${nome} com ganho 1,0 (Parte C, seção 10)`, f(e, 3) + ' Vpp digital ±3 %', f(vpp(d2), 3), perto(vpp(d2), e, e * 0.03)); }
 }
 
+// ===== 13. maracas (MA): ruído branco -> VCA Q65 -> passa-altas 10,6 kHz; par com o clap (chave MA/CP) =====
+titulo('maracas: passa-altas, envelope assimétrico, decay 25/35 ms (origem desconhecida), nível, chave MA/CP, mix');
+if (!D.MA) { fora++; linhas.push(['FORA', 'maracas: motor ainda não tem a voz MA', 'D.MA', 'ausente']); } else {
+  const ma = (p = {}, ac = false, seg = 0.5, extra = {}, disp) => { const m = novo(Motor, FS, Object.assign({ acLevel: 1, cp: Object.assign({ level: 1, modo: 1 }, p) }, extra)); return { m, ...renderVoz(m, 'ma', seg, disp || [{ t: 0.01, ac }]) }; };
+  const Hh = resposta(D.mkHP(D.MA.hp.f, D.MA.hp.q, FS), FS);
+  confere('passa-altas do Q68 (10,6 kHz, Q 2,27): pico', '+7,3 dB ±0,4 perto de 11,2 kHz ±2 % (Parte C, seção 7)', f(Hh.pico[1], 1) + ' dB em ' + f(Hh.pico[0], 0) + ' Hz', perto(Hh.pico[1], 7.3, 0.4) && perto(Hh.pico[0], 11200, 224));
+  { const r = ma({}, false, 1), N = 8192, bd = (a, b) => dB(Math.sqrt(energiaBanda(espectro(r.y, Math.round(r.t0 * FS), N), FS, a, b) / (b - a)));
+    const mod = fq => Hh.db(fq) - 10 * Math.log10(1 + (fq / 7230) ** 2);   // passa-altas × polo de 7,23 kHz do ruído branco (Parte C, seção 4)
+    for (const [a, b] of [[4000, 5000], [6000, 8000], [14000, 17000], [19000, 22000]]) { const c = Math.sqrt(a * b), med = bd(a, b) - bd(10000, 12000), teo = mod(c) - mod(Math.sqrt(10000 * 12000));
+      confere(`espectro em ${a / 1000} a ${b / 1000} kHz, relativo a 10 a 12 kHz`, f(teo, 1) + ' dB ±3 (passa-altas e polo do ruído; o envelope varia no tempo)', f(med, 1) + ' dB', perto(med, teo, 3)); } }
+  // envelope: tom puro de 11 kHz no lugar do ruído, para medi-lo sem a aleatoriedade
+  const puro = (ac, mod) => { const m = novo(Motor, FS, { acLevel: 1, cp: { level: 1, modo: 1 } }); let i = 0; m.fonte.tick = function () { this.wn = Math.SQRT2 * Math.sin(2 * Math.PI * 11000 * (i++) / FS); this.pn = 0; }; return renderVoz(m, 'ma', 0.2, [{ t: 0.01, ac }]); };
+  { const r = puro(false), E = []; for (let i = 0; i < 1000; i++) E.push(rms(r.y, Math.round((r.t0 + i / 20000) * FS), Math.round((r.t0 + i / 20000 + 0.0005) * FS)));
+    let kp = 0; for (let i = 1; i < E.length; i++) if (E[i] > E[kp]) kp = i; const tp = kp / 20;
+    confere('envelope assimétrico: tempo até o pico (subida lenta; R341 · C134 = 15,5 ms num sentido)', '3 a 12 ms (tol. minha; polaridade do RC não traçada (c))', f(tp, 1) + ' ms', tp >= 3 && tp <= 12); }
+  // decay a −20 dB desde o disparo: 25 ms sem accent (c: hipótese); 35 ms com accent (o "longo" da tabela, que não diz a condição)
+  { const n = ma(), a = ma({}, true), Tn = tempoAteRms(n.y, FS, n.t0, 0.1, 0.002) * 1000, Ta = tempoAteRms(a.y, FS, a.t0, 0.1, 0.002) * 1000;
+    confere('decay a −20 dB sem accent', '25 ms ±15 % (tabela p.14, "curto"; atribuição ao caso sem accent é (c))', f(Tn, 1) + ' ms', perto(Tn, 25, 3.75));
+    info('decay a −20 dB com accent (informativo)', '35 ms seria o "longo" da tabela p.14, cuja condição não é dita; a compressão que dá 3 / 5 Vpp não o reproduz', f(Ta, 1) + ' ms');
+    confere('accent muda o decay (a forma temporal do som)', 'razão com/sem accent ≥ 1,2 (tol. minha)', f(Ta / Tn, 2) + '×', Ta / Tn >= 1.2);
+    const pn = vpp(n.y), pa = vpp(a.y);
+    confere('amplitude normal / accent', '3 / 5 Vpp ±5 % (tabela p.14)', f(pn) + ' / ' + f(pa) + ' Vpp', perto(pn, 3, 0.15) && perto(pa, 5, 0.25));
+    const q = ma({}, true, 0.5, { acLevel: 0 }); confere('accent com ACCENT LEVEL no mínimo = normal', f(pn) + ' Vpp ±5 %', f(vpp(q.y)) + ' Vpp', perto(vpp(q.y), pn, pn * 0.05));
+    const i0 = Math.round(n.t0 * FS), fim = rms(ma({}, false, 1.5).y, Math.round(1 * FS), Math.round(1.5 * FS));
+    confere('silêncio exato antes do disparo e decai a zero', '0 e < −80 dB', f(pico(n.y, 0, i0 - 1), 12) + ' e ' + f(dB(fim / pico(n.y)), 1) + ' dB', pico(n.y, 0, i0 - 1) === 0 && dB(fim / pico(n.y)) < -80);
+    confere('LEVEL no mínimo: mudo', '0 V', f(pico(ma({ level: 0 }).y), 9), pico(ma({ level: 0 }).y) === 0);
+    const T512 = 512 / FS, ref = renderVoz(novo(Motor, FS, { acLevel: 1, cp: { level: 1, modo: 1 } }), 'ma', 1, [{ t: T512, ac: false }]);
+    const d2 = render(novo(Motor, FS, { master: 1, acLevel: 1, cp: { level: 1, modo: 1 } }), 1, [{ t: T512, v: 'cp', ac: false }]), e = vpp(ref.y) * D.GANHO_MIX.cp * D.V_POR_UNIDADE;
+    confere('mix: MA com ganho 1,0 (Parte C, seção 10), disparada pelo canal CP/MA', f(e, 3) + ' Vpp digital ±3 %', f(vpp(d2), 3), perto(vpp(d2), e, e * 0.03)); }
+  // chave MA/CP: um circuito só; o disparo vai para a voz escolhida e a outra fica muda
+  { const m1 = novo(Motor, FS, { acLevel: 1, cp: { level: 1, modo: 1 } }), r1 = render(m1, 0.5, [{ t: 0.01, v: 'cp', ac: false }]);
+    const m0 = novo(Motor, FS, { acLevel: 1, cp: { level: 1, modo: 0 } }), r0 = render(m0, 0.5, [{ t: 0.01, v: 'cp', ac: false }]);
+    const hf = x => dB(Math.sqrt(energiaBanda(espectro(x, 512, 8192), FS, 10000, 20000))), lo = x => dB(Math.sqrt(energiaBanda(espectro(x, 512, 8192), FS, 300, 3000)));
+    confere('chave em MA: o disparo toca as maracas (energia acima de 10 kHz domina)', 'HF − BF > 0 dB', f(hf(r1) - lo(r1), 1) + ' dB', hf(r1) - lo(r1) > 0);
+    confere('chave em CP: o mesmo disparo toca o clap (energia de 300 Hz a 3 kHz domina)', 'HF − BF < −10 dB', f(hf(r0) - lo(r0), 1) + ' dB', hf(r0) - lo(r0) < -10);
+    // troca a chave com o aparelho já ligado: dispara em MA, troca para CP, dispara de novo
+    const mt = new Motor(FS); mt.msg({ t: 'p', p: { acLevel: 1, cp: { level: 1, modo: 1 } } });
+    const proc = n => { const L = new Float32Array(n), R = new Float32Array(n); for (let i = 0; i < n; i += 128) { mt.process(L.subarray(i, i + 128), R.subarray(i, i + 128), 128); } return L; };
+    mt.msg({ t: 'trig', v: 'cp', ac: false }); const a1 = proc(24064); mt.msg({ t: 'p', p: { cp: { modo: 0 } } }); mt.msg({ t: 'trig', v: 'cp', ac: false }); const a2 = proc(24064);
+    const d1 = hf(a1) - lo(a1), d2 = hf(a2) - lo(a2);
+    confere('trocar a chave de MA para CP com o aparelho ligado: 1º disparo maracas, 2º disparo clap', 'HF − BF > 0 dB e < −10 dB', f(d1, 1) + ' dB e ' + f(d2, 1) + ' dB', d1 > 0 && d2 < -10); }
+}
+
 // ===== relatório =====
 const larg = [0, 1, 2].map(k => Math.min(70, Math.max(...linhas.map(l => (l[k + 1] || '').length))));
 for (const l of linhas) console.log(l[0] === '' ? '\n' + l[1] : `${l[0]}  ${l[1].padEnd(larg[0])}  esperado: ${l[2].padEnd(larg[1])}  medido: ${l[3]}`);
-const total = linhas.filter(l => l[0]).length;
+const total = linhas.filter(l => l[0] === 'ok  ' || l[0] === 'FORA').length;
 console.log(`\n${total} medições, ${total - fora} ok, ${fora} fora`);
 process.exit(fora ? 1 : 0);
