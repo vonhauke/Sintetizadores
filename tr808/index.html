@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Clone do TR-808 (em construção: bumbo, caixa, toms e congas)</title>
+<title>Clone do TR-808 (em construção: bumbo, caixa, toms, congas e metais)</title>
 <link rel="stylesheet" href="../fonts/fonts.css">
 <style>
 :root{--pagina:#16181b;--tinta:#e8e6df;--apagado:#9a9890;--painel:#2b2f36;--sulco:#14161a;--acento:#e0662a;--foco:#1f7ae0;
@@ -30,7 +30,7 @@ button.liga[aria-pressed=true]{background:var(--acento);color:#111;border-color:
 <body>
 <div class="wrap">
 <h1>Rhythm Composer, em construção</h1>
-<p class="aviso">Etapa 3 de 10: bumbo, caixa, toms e congas. Controles e sequenciador completos vêm depois das vozes. Página provisória, ainda fora do menu.</p>
+<p class="aviso">Etapa 4 de 10: bumbo, caixa, toms, congas, prato e hi-hats. Controles e sequenciador completos vêm depois das vozes. Página provisória, ainda fora do menu.</p>
 <div class="painel" id="painel"></div>
 <p id="barra" role="status"></p>
 </div>
@@ -42,7 +42,7 @@ button.liga[aria-pressed=true]{background:var(--acento);color:#111;border-color:
 const T_TRIG = 0.001;                    // (a) COMMON TRIG alargado para ~1 ms (p.4)
 const V_NORMAL = 4, V_ACC_MAX = 14;      // (a) trigger ~4 V sem accent; até 14 V com accent no máximo (p.4)
 const V_POR_UNIDADE = 0.1;               // (c) 1,0 digital = 10 V de pico no mix; só dá folga de cabeça
-const GANHO_MIX = { bd: 1.5, sd: 1.0, lt: 1.0, mt: 1.0, ht: 1.0 };           // (c, sobre a) R75 33k / R5 22k (Parte C, seção 10)
+const GANHO_MIX = { bd: 1.5, sd: 1.0, lt: 1.0, mt: 1.0, ht: 1.0, oh: 0.59, ch: 0.70, cy: 0.70 };   // (c, sobre a) R75 33k / R de mistura: BD 22k, OH 56k, CH/CB/CY 47k, demais 33k (Parte C, seção 10)           // (c, sobre a) R75 33k / R5 22k (Parte C, seção 10)
 /* Bumbo. f0: decisão do usuário (Werner/amostras). tDecay e Vpp: (a) tabela p.14, critério 1/10 do Vpp. */
 const BD = {
   f0: 49.5, tDecay: [0.050, 0.300, 0.800], vppNormal: 3.5, vppAccent: 10,
@@ -163,27 +163,136 @@ class Tom {
   }
 }
 
+/* ===== Metais: seis quadradas, passa-bandas do IC3, prato, hi-hats ===== */
+const METAL = {
+  osc: [205.4, 304.4, 369.6, 522.7, 800, 540],   // (a/c) Parte C, seção 2. Os dois últimos são os do cowbell nos ajustes de fábrica (TM2 = 800 Hz, TM1 = 540 Hz)
+  duty: 0.4798,                                  // (b) Werner: 47,98 % a 5 V
+  bpAlto: { f: 7117, q: 6.05, hp: 7234 },        // (c sobre a) IC3 pino 7; acoplamento C11 1 nF + R55 22k = 7,23 kHz
+  bpBaixo: { f: 3454, q: 6.05, hp: 1462 },       // (c sobre a) IC3 pino 1; C10 3,3 nF + R52 33k = 1,46 kHz
+  tAtaque: 102.44e-6,                            // (b) Werner: "attack smoother" de 1 polo
+  sigAlto: 0.0205, sigBaixo: 0.039                // (c) "swing-type VCA": saturação suave tanh; sat em desvios-padrão do sinal. sig*: rms do sinal na entrada dos VCAs (medido)
+};
+const MET_TRIG = v => 7 + (v - V_NORMAL) * (14 - 7) / (V_ACC_MAX - V_NORMAL);   // (a) IC2 estreita o trigger dos metais para 7 a 14 V; (c) mapa linear
+/* Seções de 1ª e 2ª ordem por transformada bilinear. mkBP/mkHP: biquads RBJ (passa-banda de ganho 0 dB no pico; passa-altas de ganho 1 em HF, igual ao Sallen-Key). */
+const mkBiq = (b0, b1, b2, a1, a2) => ({ b0, b1, b2, a1, a2, z1: 0, z2: 0, process(x) { const y = this.b0 * x + this.z1; this.z1 = this.b1 * x - this.a1 * y + this.z2; this.z2 = this.b2 * x - this.a2 * y; return y; } });
+/** Passa-banda: o Q é compensado para que a largura a −3 dB digital seja a analógica f0/Q (a bilinear comprime a banda perto de Nyquist). */
+const mkBP = (f0, q, fs) => {
+  const tw = Math.tan(Math.PI * f0 / fs), bw = qd => { const r = Math.sqrt(1 / (qd * qd) + 4), f = o => fs / Math.PI * Math.atan(o * tw); return f((1 / qd + r) / 2) - f((-1 / qd + r) / 2); };
+  let lo = q * 0.4, hi = q * 4; for (let i = 0; i < 50; i++) { const m = Math.sqrt(lo * hi); if (bw(m) > f0 / q) lo = m; else hi = m; }
+  const qd = Math.sqrt(lo * hi), w = 2 * Math.PI * f0 / fs, al = Math.sin(w) / (2 * qd), a0 = 1 + al; return mkBiq(al / a0, 0, -al / a0, -2 * Math.cos(w) / a0, (1 - al) / a0);
+};
+const mkHP = (f0, q, fs, k = 1) => { const w = 2 * Math.PI * f0 / fs, al = Math.sin(w) / (2 * q), a0 = 1 + al, c = Math.cos(w); return mkBiq(k * (1 + c) / 2 / a0, -k * (1 + c) / a0, k * (1 + c) / 2 / a0, -2 * c / a0, (1 - al) / a0); };
+/** Seção de 1ª ordem H(s) = (n1·s + n0)/(d1·s + 1) por bilinear. */
+class Sec1 {
+  constructor(fs) { this.fs = fs; this.x1 = 0; this.y1 = 0; this.b0 = 0; this.b1 = 0; this.a1 = 0; }
+  /** fp: frequência (Hz) em que a bilinear é pré-distorcida (a do polo ou do corte). */
+  set(n0, n1, d1, fp) { const f = Math.min(fp, 0.45 * this.fs), a = 2 * Math.PI * f / Math.tan(Math.PI * f / this.fs), den = 1 + a * d1; this.b0 = (n0 + a * n1) / den; this.b1 = (n0 - a * n1) / den; this.a1 = (1 - a * d1) / den; return this; }
+  process(x) { const y = this.b0 * x + this.b1 * this.x1 - this.a1 * this.y1; this.x1 = x; this.y1 = y; return y; }
+}
+class Hp1 extends Sec1 { constructor(fc, fs) { super(fs); const t = 1 / (2 * Math.PI * fc); this.set(0, t, t, fc); } }
+const RF = th => { const rv = 100e3 * th * th, par = rv * 470e3 / (rv + 470e3 || 1); return th <= 0 ? 0 : par; };   // (a) realimentação do estágio de nível: 470k ∥ VR (100k A, taper (c) = θ²); no máximo 82,5k
+const vca = (u, S, b) => { const t = Math.tanh(b); return S * (Math.tanh(u / S + b) - t) / (1 - t * t); };   // (c) VCA "swing" de transistor: curva tanh polarizada (assimétrica, ganho de pequeno sinal 1): gera harmônicos pares e ímpares que crescem com o nível de controle (accent)
+
+/** Fonte metálica compartilhada: 6 quadradas livres (PolyBLEP), soma com pesos iguais (120k em R53 1k), dois passa-bandas do IC3. */
+class Metal {
+  constructor(fs) {
+    this.fs = fs; this.ph = METAL.osc.map(() => 0); this.sq = new Array(6).fill(0); this.bus = 0; this.hi = 0; this.lo = 0;
+    this.hpA = new Hp1(METAL.bpAlto.hp, fs); this.bpA = mkBP(METAL.bpAlto.f, METAL.bpAlto.q, fs);
+    this.hpB = new Hp1(METAL.bpBaixo.hp, fs); this.bpB = mkBP(METAL.bpBaixo.f, METAL.bpBaixo.q, fs);
+  }
+  tick() {
+    const fs = this.fs, d = METAL.duty; let s = 0;
+    for (let k = 0; k < 6; k++) {
+      const dt = METAL.osc[k] / fs; let p = this.ph[k] + dt; if (p >= 1) p -= 1; this.ph[k] = p;
+      const blep = (t) => t < dt ? (t /= dt, t + t - t * t - 1) : t > 1 - dt ? (t = (t - 1) / dt, t * t + t + t + 1) : 0;
+      let y = p < d ? 1 : -1; y += blep(p); let q = p - d; if (q < 0) q += 1; y -= blep(q);
+      this.sq[k] = y; s += y;
+    }
+    this.bus = s / 6; this.hi = this.bpA.process(this.hpA.process(this.bus)); this.lo = this.bpB.process(this.hpB.process(this.bus));
+  }
+}
+/** Envelope de capacitor: carrega até o trigger e descarrega com τ; "attack smoother" de 1 polo na saída. */
+class EnvCap {
+  constructor(fs) { this.fs = fs; this.e = 0; this.s = 0; this.g = 1 - Math.exp(-1 / (fs * METAL.tAtaque)); }
+  trig(v) { if (v > this.e) this.e = v; }
+  passo(tau) { this.e *= Math.exp(-1 / (this.fs * tau)); this.s += this.g * (this.e - this.s); return this.s; }
+}
+/* DECAY (mínimo, 12 h, máximo). OH: tabela p.14 (a), critério 1/10 do Vpp. Prato: a tabela (350 / 800 / 1200 ms) é o decay do SOM INTEIRO nesse critério;
+   as bandas Q16 e Q18 (curtas) elevam o pico inicial, então o T20 do Q17 sozinho precisa ser maior: valores achados por inversão numérica (c), não lidos do circuito. */
+const T_DECAY = { cy: [0.4797, 1.1655, 1.8037], oh: [0.090, 0.450, 0.600] };
+const CY = {
+  t16: 0.111, t18: 0.111,   // (c) SEM FONTE para o decay do Q16 ("curto") e do Q18: estimativa grosseira do RC visível (R87 22k × C37 2,2 µF → T20 = ln10·τ ≈ 111 ms)
+  ic5a: { f: 8842, q: 4.4, k: 2.77, pre: 7092 }, ic5b: { f: 8842, q: 1.0, k: 2.0 }, q25: { f: 2498, q: 0.97 },   // (c sobre a) Parte C, 3.2
+  vr4: 20e3, r112: 22e3, r120: 10e3, r125: 2.2e3, r119: 22e3, r129: 15e3, c90: 0.01e-6, c77: 220e-12,
+  sat: 4, bias: 0.6,         // (c) VCA do prato (em desvios-padrão do sinal; polarização): escolhidos para razão accent/normal ≈ 2,0 e timbre que muda
+  k: 9.1013                  // calibrado contra a tabela p.14 (3,5 / 7 Vpp)
+};
+class Prato {
+  constructor(fs, metal) {
+    this.fs = fs; this.m = metal; this.e16 = new EnvCap(fs); this.e17 = new EnvCap(fs); this.e18 = new EnvCap(fs);
+    this.q25 = mkHP(CY.q25.f, CY.q25.q, fs); this.preA = new Hp1(CY.ic5a.pre, fs); this.a = mkHP(CY.ic5a.f, CY.ic5a.q, fs, CY.ic5a.k); this.b = mkHP(CY.ic5b.f, CY.ic5b.q, fs, CY.ic5b.k);
+    this.dif = new Sec1(fs); this.lv = -1;
+  }
+  trig(V) { const v = MET_TRIG(V) / 7; this.e16.trig(v); this.e17.trig(v); this.e18.trig(v); }
+  /** p = { level, tone, decay } de 0 a 1. */
+  amostra(p) {
+    const S1 = CY.sat * METAL.sigAlto, S2 = CY.sat * METAL.sigBaixo, T17 = T20(T_DECAY.cy, p.decay);
+    const g16 = this.e16.passo(CY.t16 / Math.LN10), g17 = this.e17.passo(T17 / Math.LN10), g18 = this.e18.passo(CY.t18 / Math.LN10);
+    const x16 = vca(g16 * this.m.hi, S1, CY.bias), x17 = vca(g17 * this.m.hi, S1, CY.bias), x18 = vca(g18 * this.m.lo, S2, CY.bias);
+    const A = this.a.process(this.preA.process(x17 + this.q25.process(x18))), B = this.b.process(x16);
+    // TONE (VR4 20k B entre os nós A e B; c: sentido horário = mais do estágio A, o ressonante de 8,9 kHz, logo mais agudo): divisores em derivação, somados por R119 e R129
+    const rA = CY.vr4 * p.tone, rB = CY.vr4 * (1 - p.tone), gA = rA / (CY.r112 + rA), gB = (rB + CY.r125) / (CY.r120 + rB + CY.r125);
+    const u = gA * A / CY.r119 + gB * B / CY.r129;
+    if (p.level !== this.lv) { this.lv = p.level; const rf = RF(p.level); this.dif.set(0, CY.c90 * rf, rf * CY.c77, 1 / (2 * Math.PI * Math.max(rf * CY.c77, 1e-12))); }   // estágio de nível: diferenciador (+6 dB/oitava) com polo em Rf·C77 (Parte C, 3.2)
+    return CY.k * this.dif.process(u) * 1e3;
+  }
+}
+const HAT = {
+  oh: { f: 7831, q: 2.51, hp: 1 / (2 * Math.PI * 39e3 * 470e-12), sat: 4, bias: 0.8, k: 152.45 },   // (c sobre a) Parte C, 3.3: Q26 Sallen-Key; C80 470 pF + R160 39k = 8,68 kHz
+  ch: { f: 11746, q: 2.51, hp: 1 / (2 * Math.PI * 33e3 * 470e-12), sat: 4, bias: 0.5, k: 471.04 },  // Q31; C74 470 pF + R162 33k = 10,26 kHz
+  tChoke: 0.050,   // (c) SEM FONTE: o choke descarrega o envelope do OH com o decay do CH (50 ms)
+  c79: 220e-12, rIn: { oh: 39e3, ch: 33e3 }
+};
+class Hat {
+  constructor(fs, metal, qual) {
+    this.fs = fs; this.m = metal; this.q = qual; this.env = new EnvCap(fs); this.choked = false;
+    const h = HAT[qual]; this.hp2 = mkHP(h.f, h.q, fs); this.hp1 = new Hp1(h.hp, fs); this.lp = new Sec1(fs); this.lv = -1;
+  }
+  trig(V) { this.choked = false; this.env.trig(MET_TRIG(V) / 7); }
+  choke() { this.choked = true; }
+  /** p = { level, decay } (OH) ou { level } (CH). */
+  amostra(p) {
+    const h = HAT[this.q], T = this.q === 'ch' ? 0.050 : this.choked ? HAT.tChoke : T20(T_DECAY.oh, p.decay);
+    const g = this.env.passo(T / Math.LN10), x = vca(g * this.m.hi, h.sat * METAL.sigAlto, h.bias);
+    if (p.level !== this.lv) { this.lv = p.level; const rf = RF(p.level); this.lp.set(rf / HAT.rIn[this.q], 0, rf * HAT.c79, 1 / (2 * Math.PI * Math.max(rf * HAT.c79, 1e-12))); }   // IC7: inversor com ganho Rf/R e polo em Rf·C79 (Parte C, 3.3)
+    return h.k * this.lp.process(this.hp1.process(this.hp2.process(x))) * 1e-1;
+  }
+}
+
 class Motor {
   constructor(fs) {
     this.fs = fs; this.p = { acLevel: 1, master: 1, bd: { level: 1, tone: 0.5, decay: 0.5 }, sd: { level: 1, tone: 0.5, snappy: 0.5 },
-      lt: { level: 1, tuning: 0.5, modo: 0 }, mt: { level: 1, tuning: 0.5, modo: 0 }, ht: { level: 1, tuning: 0.5, modo: 0 } };
+      lt: { level: 1, tuning: 0.5, modo: 0 }, mt: { level: 1, tuning: 0.5, modo: 0 }, ht: { level: 1, tuning: 0.5, modo: 0 },
+      cy: { level: 1, tone: 0.5, decay: 0.5 }, oh: { level: 1, decay: 0.5 }, ch: { level: 1 } };
     this.fonte = new Ruido(fs); this.bd = new Bumbo(fs); this.sd = new Caixa(fs, this.fonte);
-    for (const c of ['lt', 'mt', 'ht']) this[c] = new Tom(fs, this.fonte, c); this.saida = null;
+    for (const c of ['lt', 'mt', 'ht']) this[c] = new Tom(fs, this.fonte, c);
+    this.metal = new Metal(fs); this.cy = new Prato(fs, this.metal); this.oh = new Hat(fs, this.metal, 'oh'); this.ch = new Hat(fs, this.metal, 'ch'); this.saida = null;
   }
   msg(m) {
-    if (m.t === 'p') { const q = m.p; for (const v of ['bd', 'sd', 'lt', 'mt', 'ht']) if (q[v]) Object.assign(this.p[v], q[v]); for (const k of ['acLevel', 'master']) if (k in q) this.p[k] = q[k]; }
-    else if (m.t === 'trig' && this[m.v] && this[m.v].trig) this[m.v].trig(m.ac ? V_NORMAL + (V_ACC_MAX - V_NORMAL) * this.p.acLevel : V_NORMAL);
+    if (m.t === 'p') { const q = m.p; for (const v of ['bd', 'sd', 'lt', 'mt', 'ht', 'cy', 'oh', 'ch']) if (q[v]) Object.assign(this.p[v], q[v]); for (const k of ['acLevel', 'master']) if (k in q) this.p[k] = q[k]; }
+    else if (m.t === 'trig' && this[m.v] && this[m.v].trig) { if (m.v === 'ch') this.oh.choke(); this[m.v].trig(m.ac ? V_NORMAL + (V_ACC_MAX - V_NORMAL) * this.p.acLevel : V_NORMAL); }
   }
   /** Soma das vozes em volts, já com o ganho do resistor de mistura. */
-  tick() { this.fonte.tick(); }
+  tick() { this.fonte.tick(); this.metal.tick(); }
   mixVolts() { return this.bd.amostra(this.p.bd) * GANHO_MIX.bd + this.sd.amostra(this.p.sd) * GANHO_MIX.sd
-    + this.lt.amostra(this.p.lt) * GANHO_MIX.lt + this.mt.amostra(this.p.mt) * GANHO_MIX.mt + this.ht.amostra(this.p.ht) * GANHO_MIX.ht; }
+    + this.lt.amostra(this.p.lt) * GANHO_MIX.lt + this.mt.amostra(this.p.mt) * GANHO_MIX.mt + this.ht.amostra(this.p.ht) * GANHO_MIX.ht
+    + this.cy.amostra(this.p.cy) * GANHO_MIX.cy + this.oh.amostra(this.p.oh) * GANHO_MIX.oh + this.ch.amostra(this.p.ch) * GANHO_MIX.ch; }
   process(L, R, n) {
     const g = this.p.master * this.p.master * V_POR_UNIDADE;
     for (let i = 0; i < n; i++) { this.tick(); const v = this.mixVolts() * g; L[i] = v; R[i] = v; }
   }
 }
-Motor.dados = { T_TRIG, V_NORMAL, V_ACC_MAX, V_POR_UNIDADE, BD, GANHO_MIX, T20, fcTone, pulsoBd, RC_TONE, Bumbo, SD, Caixa, Ruido, TOM, TOM_RUIDO_DECAY, TOM_QUEDA, Tom, fTom, TOM_PULSO, TOM_RUIDO_EXP };
+Motor.dados = { T_TRIG, V_NORMAL, V_ACC_MAX, V_POR_UNIDADE, BD, GANHO_MIX, T20, fcTone, pulsoBd, RC_TONE, Bumbo, SD, Caixa, Ruido, TOM, TOM_RUIDO_DECAY, TOM_QUEDA, Tom, fTom, TOM_PULSO, TOM_RUIDO_EXP, METAL, Metal, CY, HAT, Prato, Hat, mkBP, mkHP, Hp1, MET_TRIG, T_DECAY };
 
 if (typeof AudioWorkletProcessor !== 'undefined' && typeof registerProcessor === 'function') {
   registerProcessor('motor-tr808', class extends AudioWorkletProcessor {
@@ -199,9 +308,9 @@ if (typeof AudioWorkletProcessor !== 'undefined' && typeof registerProcessor ===
 const $ = id => document.getElementById(id);
 const FONTE_DSP = $('dsp').textContent;
 const Motor = new Function(FONTE_DSP + '\nreturn Motor;')();
-const estado = { acLevel: 1, master: 0.8, bd: { level: 0.85, tone: 0.5, decay: 0.5 }, sd: { level: 0.85, tone: 0.5, snappy: 0.5 }, lt: { level: 0.85, tuning: 0.5, modo: 0 }, mt: { level: 0.85, tuning: 0.5, modo: 0 }, ht: { level: 0.85, tuning: 0.5, modo: 0 }, acc: false };
+const estado = { acLevel: 1, master: 0.8, bd: { level: 0.85, tone: 0.5, decay: 0.5 }, sd: { level: 0.85, tone: 0.5, snappy: 0.5 }, lt: { level: 0.85, tuning: 0.5, modo: 0 }, mt: { level: 0.85, tuning: 0.5, modo: 0 }, ht: { level: 0.85, tuning: 0.5, modo: 0 }, cy: { level: 0.85, tone: 0.5, decay: 0.5 }, oh: { level: 0.85, decay: 0.5 }, ch: { level: 0.85 }, acc: false };
 const CHAVE = 'sint-tr808-v1:estado';
-try { const s = JSON.parse(localStorage.getItem(CHAVE) || 'null'); if (s) { Object.assign(estado, s); estado.bd = Object.assign({ level: 0.85, tone: 0.5, decay: 0.5 }, s.bd); estado.sd = Object.assign({ level: 0.85, tone: 0.5, snappy: 0.5 }, s.sd); for (const c of ['lt', 'mt', 'ht']) estado[c] = Object.assign({ level: 0.85, tuning: 0.5, modo: 0 }, s[c]); } } catch (e) {}
+try { const s = JSON.parse(localStorage.getItem(CHAVE) || 'null'); if (s) { Object.assign(estado, s); estado.bd = Object.assign({ level: 0.85, tone: 0.5, decay: 0.5 }, s.bd); estado.sd = Object.assign({ level: 0.85, tone: 0.5, snappy: 0.5 }, s.sd); for (const c of ['lt', 'mt', 'ht']) estado[c] = Object.assign({ level: 0.85, tuning: 0.5, modo: 0 }, s[c]); estado.cy = Object.assign({ level: 0.85, tone: 0.5, decay: 0.5 }, s.cy); estado.oh = Object.assign({ level: 0.85, decay: 0.5 }, s.oh); estado.ch = Object.assign({ level: 0.85 }, s.ch); } } catch (e) {}
 const salva = () => { try { localStorage.setItem(CHAVE, JSON.stringify(estado)); } catch (e) {} };
 let ctx = null, no = null, reserva = null, pronto = false; const pend = [];
 const manda = m => { if (!pronto) { pend.push(m); return; } if (no) no.port.postMessage(m); else if (reserva) reserva.motor.msg(m); };
@@ -247,20 +356,26 @@ for (const [c, nome] of [['lt', 'LT/LC'], ['mt', 'MT/MC'], ['ht', 'HT/HC']]) {
   const b = ch.querySelector('button'), pinta = () => { b.textContent = estado[c].modo ? 'Conga' : 'Tom'; b.setAttribute('aria-pressed', String(!!estado[c].modo)); };
   pinta(); b.addEventListener('click', () => { estado[c].modo = estado[c].modo ? 0 : 1; pinta(); manda({ t: 'p', p: { [c]: { modo: estado[c].modo } } }); salva(); }); P.appendChild(ch);
 }
+knob('CY level', () => estado.cy.level, v => { estado.cy.level = v; manda({ t: 'p', p: { cy: { level: v } } }); });
+knob('CY tone', () => estado.cy.tone, v => { estado.cy.tone = v; manda({ t: 'p', p: { cy: { tone: v } } }); });
+knob('CY decay', () => estado.cy.decay, v => { estado.cy.decay = v; manda({ t: 'p', p: { cy: { decay: v } } }); });
+knob('OH level', () => estado.oh.level, v => { estado.oh.level = v; manda({ t: 'p', p: { oh: { level: v } } }); });
+knob('OH decay', () => estado.oh.decay, v => { estado.oh.decay = v; manda({ t: 'p', p: { oh: { decay: v } } }); });
+knob('CH level', () => estado.ch.level, v => { estado.ch.level = v; manda({ t: 'p', p: { ch: { level: v } } }); });
 knob('Accent level', () => estado.acLevel, v => { estado.acLevel = v; manda({ t: 'p', p: { acLevel: v } }); });
 knob('Master volume', () => estado.master, v => { estado.master = v; manda({ t: 'p', p: { master: v } }); });
 const pad = document.createElement('div'); pad.className = 'pad';
-pad.innerHTML = '<button class="bd" id="bd" type="button">BASS DRUM</button><button class="bd" id="sd" type="button">SNARE DRUM</button><button class="bd" id="lt" type="button">LOW TOM/CONGA</button><button class="bd" id="mt" type="button">MID TOM/CONGA</button><button class="bd" id="ht" type="button">HI TOM/CONGA</button><button class="liga" id="acc" type="button" aria-pressed="false">Accent</button>';
+pad.innerHTML = '<button class="bd" id="bd" type="button">BASS DRUM</button><button class="bd" id="sd" type="button">SNARE DRUM</button><button class="bd" id="lt" type="button">LOW TOM/CONGA</button><button class="bd" id="mt" type="button">MID TOM/CONGA</button><button class="bd" id="ht" type="button">HI TOM/CONGA</button><button class="bd" id="cy" type="button">CYMBAL</button><button class="bd" id="oh" type="button">OPEN HI-HAT</button><button class="bd" id="ch" type="button">CLOSED HI-HAT</button><button class="liga" id="acc" type="button" aria-pressed="false">Accent</button>';
 P.appendChild(pad);
 const acc = $('acc'); acc.setAttribute('aria-pressed', String(!!estado.acc));
 acc.addEventListener('click', () => { estado.acc = !estado.acc; acc.setAttribute('aria-pressed', String(estado.acc)); salva(); });
 const dispara = v => { liga(); manda({ t: 'trig', v, ac: estado.acc }); };
-for (const [id, tecla] of [['bd', 'b'], ['sd', 's'], ['lt', 'l'], ['mt', 'm'], ['ht', 'h']]) {
+for (const [id, tecla] of [['bd', 'b'], ['sd', 's'], ['lt', 'l'], ['mt', 'm'], ['ht', 'h'], ['cy', 'y'], ['oh', 'o'], ['ch', 'c']]) {
   $(id).addEventListener('pointerdown', e => { e.preventDefault(); dispara(id); });
   $(id).addEventListener('keydown', e => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); dispara(id); } });
   document.addEventListener('keydown', e => { if (e.target.tagName === 'INPUT' || e.repeat) return; if (e.key === tecla) dispara(id); });
 }
-diz('Teclas: B bumbo, S caixa, L/M/H toms e congas (a chave de cada par escolhe tom ou conga). O som liga no primeiro toque.');
+diz('Teclas: B bumbo, S caixa, L/M/H toms e congas (a chave de cada par escolhe tom ou conga), Y prato, O hi-hat aberto, C hi-hat fechado (corta o aberto). O som liga no primeiro toque.');
 })();
 </script>
 <script src="../voltar.js"></script>

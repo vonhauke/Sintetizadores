@@ -22,9 +22,9 @@ export const novo = (Motor, fs = FS, p = {}) => { const m = new Motor(fs); if (O
 /** Renderiza uma voz na saída MULTI OUT (em volts, antes do resistor de mistura).
     disparos: [{ t: segundos, ac: bool }]. Chama m[voz].amostra(m.p[voz]) como o motor faz. */
 export function renderVoz(m, voz, seg, disparos = [{ t: 0.01, ac: false }]) {
-  const n = Math.round(seg * m.fs), y = new Float64Array(n), ds = disparos.map(d => ({ i: Math.round(d.t * m.fs), ac: d.ac }));
+  const n = Math.round(seg * m.fs), y = new Float64Array(n), ds = disparos.map(d => ({ i: Math.round(d.t * m.fs), ac: d.ac, v: d.v || voz }));   // d.v: dispara outra voz (choke)
   for (let i = 0; i < n; i++) {
-    for (const d of ds) if (d.i === i) m.msg({ t: 'trig', v: voz, ac: d.ac });
+    for (const d of ds) if (d.i === i) m.msg({ t: 'trig', v: d.v, ac: d.ac });
     if (m.tick) m.tick();   // fonte de ruído compartilhada, uma amostra por passo
     y[i] = m[voz].amostra(m.p[voz]);
   }
@@ -96,4 +96,15 @@ export function tempoAteRms(x, fs, t0, fracao = 0.1, jan = 0.004) {
   let k = 0; for (let i = 1; i < n; i++) if (e[i] > e[k]) k = i; const alvo = e[k] * fracao;
   for (let i = k; i < n; i++) if (e[i] <= alvo) return (i + w / 2) / fs;   // desde o disparo (t0 = início da janela 0)
   return Infinity;
+}
+/** Resposta em frequência de um filtro que tem process(x): FFT da resposta ao impulso. Devolve { mag(f) em dB, pico: [Hz, dB], bw3 } */
+export function resposta(filtro, fs, n = 1 << 17) {
+  const h = new Float64Array(n); for (let i = 0; i < n; i++) h[i] = filtro.process(i === 0 ? 1 : 0);
+  const re = new Float64Array(n), im = new Float64Array(n); re.set(h);
+  for (let i = 1, j = 0; i < n; i++) { let bit = n >> 1; for (; j & bit; bit >>= 1) j ^= bit; j ^= bit; if (i < j) { const t = re[i]; re[i] = re[j]; re[j] = t; } }
+  for (let len = 2; len <= n; len <<= 1) { const ang = -2 * Math.PI / len; for (let i = 0; i < n; i += len) for (let k = 0; k < len / 2; k++) { const c = Math.cos(ang * k), s = Math.sin(ang * k), p = i + k, q = p + len / 2; const tr = re[q] * c - im[q] * s, ti = re[q] * s + im[q] * c; re[q] = re[p] - tr; im[q] = im[p] - ti; re[p] += tr; im[p] += ti; } }
+  const mg = i => Math.hypot(re[i], im[i]), bin = f => f * n / fs, db = f => { const b = bin(f), i = Math.floor(b), u = b - i; return 20 * Math.log10(mg(i) * (1 - u) + mg(i + 1) * u); };
+  let pk = 1; for (let i = 2; i < n / 2; i++) if (mg(i) > mg(pk)) pk = i;
+  const pkdb = 20 * Math.log10(mg(pk)); let lo = pk, hi = pk; while (lo > 1 && 20 * Math.log10(mg(lo)) > pkdb - 3.0103) lo--; while (hi < n / 2 - 1 && 20 * Math.log10(mg(hi)) > pkdb - 3.0103) hi++;
+  return { db, pico: [pk * fs / n, pkdb], bw3: (hi - lo) * fs / n };
 }

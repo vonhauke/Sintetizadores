@@ -115,4 +115,51 @@ ok    LT/LC: par exclusivo (um circuito só; 2º disparo não soma vozes)       
 ok    MT/MC: par exclusivo (um circuito só; 2º disparo não soma vozes)        esperado: Vpp ≤ 2× o de um disparo                                                medido: 1,00×
 ok    HT/HC: par exclusivo (um circuito só; 2º disparo não soma vozes)        esperado: Vpp ≤ 2× o de um disparo                                                medido: 1,00×
 
-96 medições, 96 ok, 0 fora
+— metais: seis osciladores quadrados (HD14584), soma e passa-bandas do IC3 —
+ok    oscilador #1 (R40, C1)                                                  esperado: 205,4 Hz ±0,3 (Parte C, seção 2)                                        medido: 205,40 Hz
+ok    oscilador #2 (R42, C3)                                                  esperado: 304,4 Hz ±0,3 (Parte C, seção 2)                                        medido: 304,40 Hz
+ok    oscilador #3 (R41, C2)                                                  esperado: 369,6 Hz ±0,3 (Parte C, seção 2)                                        medido: 369,60 Hz
+ok    oscilador #4 (R43, C4)                                                  esperado: 522,7 Hz ±0,3 (Parte C, seção 2)                                        medido: 522,70 Hz
+ok    oscilador #5 cowbell 2 (TM2)                                            esperado: 800,0 Hz ±0,3 (Parte C, seção 2)                                        medido: 800,00 Hz
+ok    oscilador #6 cowbell 1 (TM1)                                            esperado: 540,0 Hz ±0,3 (Parte C, seção 2)                                        medido: 540,00 Hz
+ok    ciclo de trabalho dos seis (a 5 V, independente de RC)                  esperado: 47,98 % ±0,3 (b: Werner)                                                medido: 47,99 / 47,99 / 47,99 / 47,99 / 47,98 / 47,98 %
+ok    amplitude dos osciladores                                               esperado: quadrada de ±1 (sem excesso nas bordas: PolyBLEP)                       medido: 1,000
+ok    IC3 pino 7 (banda alta): centro                                         esperado: 7117 Hz ±1,5 % (Parte C, 3.1)                                           medido: 7117 Hz
+ok    IC3 pino 7: Q pela largura a −3 dB                                      esperado: 6,05 ±8 %                                                               medido: 6,05
+ok    IC3 pino 1 (banda baixa): centro                                        esperado: 3454 Hz ±1,5 %                                                          medido: 3454 Hz
+ok    IC3 pino 1: Q pela largura a −3 dB                                      esperado: 6,05 ±8 %                                                               medido: 6,05
+ok    acoplamento de entrada do pino 7 (22 kΩ, 1 nF): −3 dB no corte          esperado: −3,0 dB em 7234 Hz ±0,3                                                 medido: -3,01 dB
+ok    IC5 (pinos 3/1), Sallen-Key passa-altas 8842 Hz, Q 4,4: pico            esperado: +12,9 dB ±0,5 perto de 8,96 kHz ±2 % (Parte C, 3.2)                     medido: 12,9 dB em 8934 Hz
+ok    IC5 (pinos 5/7), Q 1,0: ganho em f0                                     esperado: 0 dB ±0,3 (Q = 1)                                                       medido: -0,00 dB
+ok    Q25, Sallen-Key passa-altas 2498 Hz, Q 0,97: ganho em f0                esperado: −0,26 dB ±0,3 (Q = 0,97)                                                medido: -0,26 dB
+ok    passa-altas do OH (7831 Hz, Q 2,51): pico                               esperado: +8,2 dB ±0,4 perto de 8,16 kHz ±2 % (Parte C, 3.3)                      medido: 8,2 dB em 8104 Hz
+ok    passa-altas do CH (11746 Hz, Q 2,51): pico                              esperado: +8,2 dB ±0,4 perto de 12,2 kHz ±2 %                                     medido: 8,2 dB em 12062 Hz
+
+— prato (CY), hi-hat aberto (OH) e fechado (CH): decay, nível, accent, TONE, choke, mix —
+ok    prato: decay a −20 dB (DECAY mínimo)                                    esperado: 350 ms ±15 % (tabela p.14; tol. minha)                                  medido: 350 ms
+ok    prato: decay a −20 dB (DECAY 12 h)                                      esperado: 800 ms ±15 % (tabela p.14; tol. minha)                                  medido: 850 ms
+ok    prato: decay a −20 dB (DECAY máximo)                                    esperado: 1200 ms ±15 % (tabela p.14; tol. minha)                                 medido: 1259 ms
+ok    prato: amplitude normal / accent                                        esperado: 3.5 / 7 Vpp ±5 % (tabela p.14)                                          medido: 3,50 / 6,91 Vpp
+ok    prato: accent muda o timbre (energia 10 a 16 kHz contra 3 a 8 kHz)      esperado: |diferença| ≥ 0,5 dB (tol. minha)                                       medido: 0,92 dB
+ok    prato: silêncio exato antes do disparo e decai a zero                   esperado: 0 e < −60 dB                                                            medido: 0,000000000000 e -97,9 dB
+ok    prato: LEVEL no mínimo: mudo                                            esperado: 0 V                                                                     medido: 0,000000000
+ok    OH: decay a −20 dB (DECAY mínimo)                                       esperado: 90 ms ±15 % (tabela p.14; tol. minha)                                   medido: 94 ms
+ok    OH: decay a −20 dB (DECAY 12 h)                                         esperado: 450 ms ±15 % (tabela p.14; tol. minha)                                  medido: 441 ms
+ok    OH: decay a −20 dB (DECAY máximo)                                       esperado: 600 ms ±15 % (tabela p.14; tol. minha)                                  medido: 552 ms
+ok    OH: amplitude normal / accent                                           esperado: 3.5 / 7 Vpp ±5 % (tabela p.14)                                          medido: 3,50 / 6,84 Vpp
+ok    OH: accent muda o timbre (energia 10 a 16 kHz contra 3 a 8 kHz)         esperado: |diferença| ≥ 0,5 dB (tol. minha)                                       medido: 0,95 dB
+ok    OH: silêncio exato antes do disparo e decai a zero                      esperado: 0 e < −60 dB                                                            medido: 0,000000000000 e -240,0 dB
+ok    OH: LEVEL no mínimo: mudo                                               esperado: 0 V                                                                     medido: 0,000000000
+ok    CH: decay a −20 dB                                                      esperado: 50 ms ±15 % (tabela p.14; tol. minha)                                   medido: 53 ms
+ok    CH: amplitude normal / accent                                           esperado: 3 / 6 Vpp ±5 % (tabela p.14)                                            medido: 3,00 / 5,86 Vpp
+ok    CH: accent muda o timbre (energia 14 a 20 kHz contra 8 a 14 kHz)        esperado: |diferença| ≥ 0,5 dB (tol. minha)                                       medido: 0,81 dB
+ok    CH: silêncio exato antes do disparo e decai a zero                      esperado: 0 e < −60 dB                                                            medido: 0,000000000000 e -240,0 dB
+ok    CH: LEVEL no mínimo: mudo                                               esperado: 0 V                                                                     medido: 0,000000000
+ok    prato: TONE máximo contra mínimo (energia 9 a 16 kHz contra 2 a 8 kHz)  esperado: > +3 dB (tol. minha; sentido (c))                                       medido: 3,63 dB
+ok    choke: CH disparado em 100 ms; OH (DECAY máx.) entre 400 e 500 ms contra o OH livre  esperado: < −20 dB (a, p.6: "decay do OH termina")                                medido: -117,5 dB
+ok    choke: antes do CH o OH é igual ao livre                                esperado: diferença = 0                                                           medido: 0,000000000
+ok    mix: OH com ganho 0.59 (Parte C, seção 10)                              esperado: 0,207 Vpp digital ±3 %                                                  medido: 0,207
+ok    mix: CH com ganho 0.7 (Parte C, seção 10)                               esperado: 0,216 Vpp digital ±3 %                                                  medido: 0,216
+ok    mix: CY com ganho 0.7 (Parte C, seção 10)                               esperado: 0,247 Vpp digital ±3 %                                                  medido: 0,247
+
+139 medições, 139 ok, 0 fora

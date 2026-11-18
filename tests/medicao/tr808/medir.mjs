@@ -1,7 +1,7 @@
 // Mede o motor de tr808/index.html fora do navegador e compara com docs/pesquisa/tr808.md.
 // Uso: node tests/medicao/tr808/medir.mjs   (sai com código 1 se algo ficar fora da tolerância)
 // Tolerâncias: marcadas "(tol. minha)" quando a fonte não dá tolerância. Valores esperados vêm do tr808.md.
-import { carregaMotor, novo, renderVoz, render, vpp, dB, pico, rms, espectro, picoEsp, energiaBanda, cruzamentos, tempoAte, tempoAteRms, ampDecai, FS } from './motor.mjs';
+import { carregaMotor, novo, renderVoz, render, vpp, dB, pico, rms, espectro, picoEsp, energiaBanda, cruzamentos, tempoAte, tempoAteRms, ampDecai, resposta, FS } from './motor.mjs';
 
 const Motor = carregaMotor(), D = Motor.dados;
 let fora = 0; const linhas = [];
@@ -191,6 +191,62 @@ if (!D.TOM) { fora++; linhas.push(['FORA', 'toms e congas: motor ainda não tem 
   // exclusividade: cada par é um único circuito; um 2º disparo durante o som reexcita o mesmo ressonador, nunca soma duas vozes
   for (const c of ['lt', 'mt', 'ht']) { const um = vpp(tm(c, false).y), m = novo(Motor, FS, { acLevel: 1, [c]: { level: 1, tuning: 0.5, modo: 0 } }), r = renderVoz(m, c, 1.5, [{ t: 0.01, ac: false }, { t: 0.06, ac: false }]);
     confere(`${c.toUpperCase()}/${{ lt: 'LC', mt: 'MC', ht: 'HC' }[c]}: par exclusivo (um circuito só; 2º disparo não soma vozes)`, 'Vpp ≤ 2× o de um disparo', f(vpp(r.y) / um) + '×', vpp(r.y) <= 2 * um); }
+}
+
+// ===== 9. seis osciladores quadrados, filtros dos metais, prato, OH e CH =====
+titulo('metais: seis osciladores quadrados (HD14584), soma e passa-bandas do IC3');
+if (!D.METAL) { fora++; linhas.push(['FORA', 'metais: motor ainda não tem a fonte metálica nem CY, OH, CH', 'D.METAL', 'ausente']); } else {
+  const m = novo(Motor, FS), N = 1 << 18, bus = new Float64Array(N), sq = Array.from({ length: 6 }, () => new Float64Array(N));
+  for (let i = 0; i < N; i++) { m.tick(); bus[i] = m.metal.bus; for (let k = 0; k < 6; k++) sq[k][i] = m.metal.sq[k]; }
+  const mg = espectro(bus, 0, N), nomes = ['#1 (R40, C1)', '#2 (R42, C3)', '#3 (R41, C2)', '#4 (R43, C4)', '#5 cowbell 2 (TM2)', '#6 cowbell 1 (TM1)'];
+  D.METAL.osc.forEach((fq, k) => { const [fp] = picoEsp(mg, FS, fq - 3, fq + 3); confere(`oscilador ${nomes[k]}`, f(fq, 1) + ' Hz ±0,3 (Parte C, seção 2)', f(fp, 2) + ' Hz', perto(fp, fq, 0.3)); });
+  const alto = sq.map(x => (x.reduce((a, v) => a + v, 0) / N + 1) / 2);   // pela média de ±1 (contar amostras positivas erra com PolyBLEP: a borda cai entre amostras)
+  confere('ciclo de trabalho dos seis (a 5 V, independente de RC)', '47,98 % ±0,3 (b: Werner)', alto.map(v => f(v * 100, 2)).join(' / ') + ' %', alto.every(v => perto(v * 100, 47.98, 0.3)));
+  confere('amplitude dos osciladores', 'quadrada de ±1 (sem excesso nas bordas: PolyBLEP)', f(Math.max(...sq.map(x => pico(x))), 3), Math.max(...sq.map(x => pico(x))) < 1.1);
+  const mkBP = D.mkBP, mkHP = D.mkHP, Hp1 = D.Hp1;
+  const pbA = resposta(mkBP(7117, 6.05, FS), FS), pbB = resposta(mkBP(3454, 6.05, FS), FS);
+  confere('IC3 pino 7 (banda alta): centro', '7117 Hz ±1,5 % (Parte C, 3.1)', f(pbA.pico[0], 0) + ' Hz', perto(pbA.pico[0], 7117, 7117 * 0.015));
+  confere('IC3 pino 7: Q pela largura a −3 dB', '6,05 ±8 %', f(7117 / pbA.bw3, 2), perto(7117 / pbA.bw3, 6.05, 6.05 * 0.08));
+  confere('IC3 pino 1 (banda baixa): centro', '3454 Hz ±1,5 %', f(pbB.pico[0], 0) + ' Hz', perto(pbB.pico[0], 3454, 3454 * 0.015));
+  confere('IC3 pino 1: Q pela largura a −3 dB', '6,05 ±8 %', f(3454 / pbB.bw3, 2), perto(3454 / pbB.bw3, 6.05, 6.05 * 0.08));
+  const c1 = resposta(new Hp1(1 / (2 * Math.PI * 22e3 * 1e-9), FS), FS);
+  confere('acoplamento de entrada do pino 7 (22 kΩ, 1 nF): −3 dB no corte', '−3,0 dB em 7234 Hz ±0,3', f(c1.db(7234), 2) + ' dB', perto(c1.db(7234), -3.01, 0.3));
+  const ic5a = resposta(mkHP(8842, 4.4, FS), FS), ic5b = resposta(mkHP(8842, 1.0, FS), FS), q25 = resposta(mkHP(2498, 0.97, FS), FS), ho = resposta(mkHP(7831, 2.51, FS), FS), hc = resposta(mkHP(11746, 2.51, FS), FS);
+  confere('IC5 (pinos 3/1), Sallen-Key passa-altas 8842 Hz, Q 4,4: pico', '+12,9 dB ±0,5 perto de 8,96 kHz ±2 % (Parte C, 3.2)', f(ic5a.pico[1], 1) + ' dB em ' + f(ic5a.pico[0], 0) + ' Hz', perto(ic5a.pico[1], 12.9, 0.5) && perto(ic5a.pico[0], 8960, 8960 * 0.02));
+  confere('IC5 (pinos 5/7), Q 1,0: ganho em f0', '0 dB ±0,3 (Q = 1)', f(ic5b.db(8842), 2) + ' dB', perto(ic5b.db(8842), 0, 0.3));
+  confere('Q25, Sallen-Key passa-altas 2498 Hz, Q 0,97: ganho em f0', '−0,26 dB ±0,3 (Q = 0,97)', f(q25.db(2498), 2) + ' dB', perto(q25.db(2498), 20 * Math.log10(0.97), 0.3));
+  confere('passa-altas do OH (7831 Hz, Q 2,51): pico', '+8,2 dB ±0,4 perto de 8,16 kHz ±2 % (Parte C, 3.3)', f(ho.pico[1], 1) + ' dB em ' + f(ho.pico[0], 0) + ' Hz', perto(ho.pico[1], 8.2, 0.4) && perto(ho.pico[0], 8160, 8160 * 0.02));
+  confere('passa-altas do CH (11746 Hz, Q 2,51): pico', '+8,2 dB ±0,4 perto de 12,2 kHz ±2 %', f(hc.pico[1], 1) + ' dB em ' + f(hc.pico[0], 0) + ' Hz', perto(hc.pico[1], 8.2, 0.4) && perto(hc.pico[0], 12200, 12200 * 0.02));
+}
+titulo('prato (CY), hi-hat aberto (OH) e fechado (CH): decay, nível, accent, TONE, choke, mix');
+if (D.METAL) {
+  const mt = (c, p = {}, ac = false, seg = 3, extra = {}, disp) => { const m = novo(Motor, FS, Object.assign({ acLevel: 1, [c]: Object.assign({ level: 1, tone: 0.5, decay: 0.5 }, p) }, extra)); return renderVoz(m, c, seg, disp || [{ t: 0.01, ac }]); };
+  const TM = { cy: { T: [350, 800, 1200], v: [3.5, 7], nome: 'prato' }, oh: { T: [90, 450, 600], v: [3.5, 7], nome: 'OH' }, ch: { T: [50, 50, 50], v: [3, 6], nome: 'CH' } };
+  for (const c of ['cy', 'oh', 'ch']) {
+    const t = TM[c], pontos = c === 'ch' ? [[0.5, 50]] : [[0, t.T[0]], [0.5, t.T[1]], [1, t.T[2]]];
+    for (const [d, alvo] of pontos) { const r = mt(c, { decay: d }, false, 4), T = tempoAteRms(r.y, FS, r.t0, 0.1, 0.01) * 1000;   // janela RMS de 10 ms: com 2 ms a batida entre os osciladores derruba o RMS antes da hora
+      confere(`${t.nome}: decay a −20 dB${c === 'ch' ? '' : ' (DECAY ' + (d === 0 ? 'mínimo' : d === 1 ? 'máximo' : '12 h') + ')'}`, `${alvo} ms ±15 % (tabela p.14; tol. minha)`, f(T, 0) + ' ms', perto(T, alvo, alvo * 0.15)); }
+    const n = mt(c), a = mt(c, {}, true), pn = vpp(n.y), pa = vpp(a.y);
+    confere(`${t.nome}: amplitude normal / accent`, t.v.join(' / ') + ' Vpp ±5 % (tabela p.14)', f(pn) + ' / ' + f(pa) + ' Vpp', perto(pn, t.v[0], t.v[0] * 0.05) && perto(pa, t.v[1], t.v[1] * 0.05));
+    const bd2 = c === 'ch' ? [[14000, 20000], [8000, 14000]] : [[10000, 16000], [3000, 8000]], hf = r => bandaDb(r, ...bd2[0], 16384) - bandaDb(r, ...bd2[1], 16384), dif = hf(a) - hf(n);   // bandas onde está o som: o CH tem pouca energia abaixo de 8 kHz
+    confere(`${t.nome}: accent muda o timbre (energia ${bd2[0][0] / 1000} a ${bd2[0][1] / 1000} kHz contra ${bd2[1][0] / 1000} a ${bd2[1][1] / 1000} kHz)`, '|diferença| ≥ 0,5 dB (tol. minha)', f(dif) + ' dB', Math.abs(dif) >= 0.5);
+    const i0 = Math.round(n.t0 * FS), fim = rms(mt(c, { decay: 1 }, false, 8).y, Math.round(7 * FS), Math.round(8 * FS));
+    confere(`${t.nome}: silêncio exato antes do disparo e decai a zero`, '0 e < −60 dB', f(pico(n.y, 0, i0 - 1), 12) + ' e ' + f(dB(fim / pico(n.y)), 1) + ' dB', pico(n.y, 0, i0 - 1) === 0 && dB(fim / pico(n.y)) < -60);
+    confere(`${t.nome}: LEVEL no mínimo: mudo`, '0 V', f(pico(mt(c, { level: 0 }).y), 9), pico(mt(c, { level: 0 }).y) === 0);
+  }
+  // TONE do prato: proporção entre as duas saídas do IC5 (VR4 20k B, R125 2,2k, R112 22k, R120 10k; c: sentido horário = mais agudo)
+  const gr = th => { const r = tt => bandaDb(tt, 9000, 16000, 16384) - bandaDb(tt, 2000, 8000, 16384); return r(mt('cy', { tone: th }, false, 1)); };
+  confere('prato: TONE máximo contra mínimo (energia 9 a 16 kHz contra 2 a 8 kHz)', '> +3 dB (tol. minha; sentido (c))', f(gr(1) - gr(0)) + ' dB', gr(1) - gr(0) > 3);
+  // choke: disparar CH corta o decay do OH
+  { const sem = mt('oh', { decay: 1 }, false, 1.5), com = mt('oh', { decay: 1 }, false, 1.5, {}, [{ t: 0.01, v: 'oh', ac: false }, { t: 0.1, v: 'ch', ac: false }]);
+    const a = Math.round(0.4 * FS), b = Math.round(0.5 * FS), d = dB(rms(com.y, a, b) / rms(sem.y, a, b));
+    confere('choke: CH disparado em 100 ms; OH (DECAY máx.) entre 400 e 500 ms contra o OH livre', '< −20 dB (a, p.6: "decay do OH termina")', f(d, 1) + ' dB', d < -20);
+    const antes = Math.round(0.09 * FS); confere('choke: antes do CH o OH é igual ao livre', 'diferença = 0', f(pico(Float64Array.from(com.y.slice(0, antes), (v, i) => v - sem.y[i])), 9), pico(Float64Array.from(com.y.slice(0, antes), (v, i) => v - sem.y[i])) < 1e-9); }
+  // mix: OH 0,59; CH, CY 0,70 (Parte C, seção 10), disparo alinhado ao bloco de 128 amostras
+  for (const [c, g] of [['oh', 0.59], ['ch', 0.70], ['cy', 0.70]]) {
+    const T512 = 512 / FS, ref = renderVoz(novo(Motor, FS, { acLevel: 1, [c]: { level: 1, tone: 0.5, decay: 0.5 } }), c, 1, [{ t: T512, ac: false }]);
+    const d2 = render(novo(Motor, FS, { master: 1, acLevel: 1, [c]: { level: 1, tone: 0.5, decay: 0.5 } }), 1, [{ t: T512, v: c, ac: false }]), esp = vpp(ref.y) * g * D.V_POR_UNIDADE;
+    confere(`mix: ${c.toUpperCase()} com ganho ${g} (Parte C, seção 10)`, f(esp, 3) + ' Vpp digital ±3 %', f(vpp(d2), 3), perto(vpp(d2), esp, esp * 0.03)); }
 }
 
 // ===== relatório =====
