@@ -283,6 +283,47 @@ if (!D.CB) { fora++; linhas.push(['FORA', 'cowbell: motor ainda não tem a voz C
   confere('2 disparos a 30 ms: sem soma de vozes (um circuito só)', 'Vpp ≤ 2× o de um disparo', f(vpp(r2.y) / um) + '×', vpp(r2.y) <= 2 * um);
 }
 
+// ===== 11. clap (CP): ruído branco -> passa-banda de 1 kHz -> dois VCAs em paralelo (dente-de-serra de 3 picos + "reverb") =====
+titulo('clap: passa-banda, envelope de 3 picos, "reverb", nível pelo mix, accent, mix');
+if (!D.CP) { fora++; linhas.push(['FORA', 'clap: motor ainda não tem a voz CP', 'D.CP', 'ausente']); } else {
+  const cp = (p = {}, ac = false, seg = 1, extra = {}, disp) => { const m = novo(Motor, FS, Object.assign({ acLevel: 1, cp: Object.assign({ level: 1 }, p) }, extra)); return { m, ...renderVoz(m, 'cp', seg, disp || [{ t: 0.01, ac }]) }; };
+  // "tom puro": troca a fonte de ruído por uma senoide de 1 kHz (o centro do passa-banda), para o envelope sair sem a aleatoriedade do ruído
+  const puro = (mod, ac = false, seg = 0.4, extra = {}) => { const m = novo(Motor, FS, Object.assign({ acLevel: 1, cp: { level: 1 } }, extra)); let i = 0; m.fonte.tick = function () { this.wn = Math.SQRT2 * Math.sin(2 * Math.PI * 1000 * (i++) / FS); this.pn = 0; }; if (mod) mod(); return renderVoz(m, 'cp', seg, [{ t: 0.01, ac }]); };
+  const envP = (r, t, jan = 0.002) => rms(r.y, Math.round((r.t0 + t) * FS), Math.round((r.t0 + t + jan) * FS));
+  const H = resposta(D.mkBP(D.CP.bp.f, D.CP.bp.q, FS), FS);
+  confere('passa-banda do clap: centro', '1000 Hz ±1,5 % (diagrama de blocos, p.7)', f(H.pico[0], 0) + ' Hz', perto(H.pico[0], 1000, 15));
+  { const r = cp({}, false, 1), N = 16384, ref = 0, bd = (a, b) => dB(Math.sqrt(energiaBanda(espectro(r.y, Math.round(r.t0 * FS), N), FS, a, b) / (b - a)));
+    const modelo = fq => H.db(fq);   // o ruído branco de 7,23 kHz é plano abaixo de 3 kHz
+    for (const [a, b] of [[200, 300], [500, 700], [1400, 1800], [3000, 4000]]) { const c = Math.sqrt(a * b), med = bd(a, b) - bd(900, 1100), teo = modelo(c) - modelo(1000);
+      confere(`espectro do clap em ${a} a ${b} Hz, relativo a 0,9 a 1,1 kHz`, f(teo, 1) + ' dB ±3 (filtro do clap; Q é (c))', f(med, 1) + ' dB', perto(med, teo, 3)); } }
+  // envelope dente-de-serra de 3 picos: máximos locais do envelope RMS (tom puro, sem o "reverb")
+  { const w0 = D.CP.wR, r = puro(() => { D.CP.wR = 0; }); D.CP.wR = w0; const t = []; const E = []; for (let i = 0; i < 400; i++) E.push(envP(r, i / 10000, 0.001));   // passo de 0,1 ms, janela de 1 período
+    for (let i = 0; i < E.length; i++) { let ehMax = true; for (let k = Math.max(0, i - 30); k <= Math.min(E.length - 1, i + 30); k++) if (E[k] > E[i]) ehMax = false; const viz = Math.min(E[Math.max(0, i - 30)], E[Math.min(E.length - 1, i + 30)]); if (ehMax && E[i] > viz * 1.01 && (!t.length || i - t[t.length - 1] > 40)) t.push(i); }   // máximos locais numa janela de ±3 ms (o filtro atrasa todos os picos igualmente)
+    const tt = t.map(i => i / 10);
+    confere('dente-de-serra: número de picos', '3 (texto p.6; S10)', String(tt.length) + ' (em ' + tt.map(v => f(v, 1)).join(', ') + ' ms)', tt.length === 3);
+    confere('dente-de-serra: espaçamento entre picos', '≈ 10 ms ±1 (S10: 3 envelopes de ~10 ms; (c))', tt.length === 3 ? f(tt[1] - tt[0], 1) + ' e ' + f(tt[2] - tt[1], 1) + ' ms' : 'n/d', tt.length === 3 && perto(tt[1] - tt[0], 10, 1) && perto(tt[2] - tt[1], 10, 1));
+    const tau = -(0.06 - 0.04) * 1000 / Math.log(envP(r, 0.06) / envP(r, 0.04));
+    confere('dente-de-serra: descarga depois do 3º pico (τ)', '38,5 ms ±8 % (R365 82k × C144 0,47 µF; Parte B 3.5)', f(tau, 1) + ' ms', perto(tau, 38.5, 38.5 * 0.08)); }
+  { const w0 = D.CP.wS, r = puro(() => { D.CP.wS = 0; }); D.CP.wS = w0; const T = tempoAteRms(r.y, FS, r.t0, 0.1, 0.002) * 1000;
+    confere('"reverb" sozinho: decay a −20 dB', '100 ms ±10 % (S10: o envelope de reverb dura 100 ms; (b))', f(T, 0) + ' ms', perto(T, 100, 10)); }
+  { const r = cp({}, false, 1), T = tempoAteRms(r.y, FS, r.t0, 0.1, 0.01) * 1000;
+    confere('clap completo: decay a −20 dB (RMS de 10 ms)', '100 ms ±25 % (tabela p.14; tol. minha: com ruído e "typical and variable")', f(T, 0) + ' ms', perto(T, 100, 25)); }
+  // nível: o 6/2 Vpp da tabela é erro do manual (decisão do usuário); alvo (c) de 2,5 a 3,5 Vpp sem accent (a faixa das outras vozes)
+  { const n = cp(), a = cp({}, true), pn = vpp(n.y), pa = vpp(a.y);
+    confere('amplitude sem accent (nível pelo mix, não pela tabela)', '2,5 a 3,5 Vpp (faixa das outras vozes; (c), sugestão do tr808.md)', f(pn) + ' Vpp', pn >= 2.5 && pn <= 3.5);
+    confere('razão accent/normal no máximo', '2,86 a 3,67 (faixa das vozes não metálicas na tabela p.14; a do CP é inutilizável)', f(pa / pn, 2) + ' (' + f(pa) + ' Vpp)', pa / pn >= 2.85 && pa / pn <= 3.67);
+    const q = cp({}, true, 1, { acLevel: 0 }); confere('accent com ACCENT LEVEL no mínimo = normal', 'mesmo Vpp ±5 %', f(vpp(q.y)) + ' Vpp', perto(vpp(q.y), pn, pn * 0.05));
+    // timbre: o accent entra no dente-de-serra (D68, C143, R362) e não no "reverb" (Q70): muda o balanço estalos/cauda. Medida em tom puro: energia 0 a 30 ms contra 60 a 120 ms
+    const bal = ac => { const r = puro(null, ac, 0.4); const e = (a, b) => 10 * Math.log10(rms(r.y, Math.round((r.t0 + a) * FS), Math.round((r.t0 + b) * FS)) ** 2); return e(0, 0.03) - e(0.06, 0.12); }, dif = bal(true) - bal(false);
+    confere('accent muda o balanço entre os 3 estalos e a cauda de "reverb" (0 a 30 ms contra 60 a 120 ms)', '≥ 0,5 dB (tol. minha)', f(dif) + ' dB', dif >= 0.5);
+    const i0 = Math.round(n.t0 * FS), fim = rms(cp({}, false, 3).y, Math.round(2 * FS), Math.round(3 * FS));
+    confere('silêncio exato antes do disparo e decai a zero', '0 e < −80 dB', f(pico(n.y, 0, i0 - 1), 12) + ' e ' + f(dB(fim / pico(n.y)), 1) + ' dB', pico(n.y, 0, i0 - 1) === 0 && dB(fim / pico(n.y)) < -80);
+    confere('LEVEL no mínimo: mudo', '0 V', f(pico(cp({ level: 0 }).y), 9), pico(cp({ level: 0 }).y) === 0);
+    const T512 = 512 / FS, ref = renderVoz(novo(Motor, FS, { acLevel: 1, cp: { level: 1 } }), 'cp', 1, [{ t: T512, ac: false }]);
+    const d2 = render(novo(Motor, FS, { master: 1, acLevel: 1, cp: { level: 1 } }), 1, [{ t: T512, v: 'cp', ac: false }]), esp = vpp(ref.y) * D.GANHO_MIX.cp * D.V_POR_UNIDADE;
+    confere('mix: CP com ganho 1,0 (Parte C, seção 10)', f(esp, 3) + ' Vpp digital ±3 %', f(vpp(d2), 3), perto(vpp(d2), esp, esp * 0.03)); }
+}
+
 // ===== relatório =====
 const larg = [0, 1, 2].map(k => Math.min(70, Math.max(...linhas.map(l => (l[k + 1] || '').length))));
 for (const l of linhas) console.log(l[0] === '' ? '\n' + l[1] : `${l[0]}  ${l[1].padEnd(larg[0])}  esperado: ${l[2].padEnd(larg[1])}  medido: ${l[3]}`);
