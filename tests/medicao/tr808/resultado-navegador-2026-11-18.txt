@@ -14,7 +14,7 @@ ok   BASIC VARIATION A/AB/B, I/F VARIATION A/B, PRE-SCALE 1 a 4
 ok   16 botões de passo em 4 grupos de 4 (BASIC RHYTHM 1–12, INTRO/FILL IN 1–4)
 ok   START/STOP, TAP, CLEAR, LEDs de 1st/2nd PART e A/B
 ok   faixa de acessórios separada e identificada como não original
-ok   pad BD toca pelo AudioWorklet (file://) — rms 0.026 {"nos":1,"sp":0}
+ok   pad BD toca pelo AudioWorklet (file://) — rms 0.024 {"nos":1,"sp":0}
 ok   START: o sequenciador toca a batida do pattern 1 — rms 0.163 · compasso 2 · b1A
 ok   o passo corrente é destacado e o LED de 1st PART acende
 ok   STOP cala o sequenciador — rms 0.0000

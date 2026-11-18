@@ -82,5 +82,11 @@
     "name": "Yamaha DX7",
     "description": "Sintetizador digital FM de 6 operadores e 32 algoritmos, 16 vozes, memória de 32 vozes e MIDI learn",
     "path": "dx7/index.html"
+  },
+  {
+    "id": "tr808",
+    "name": "808 (novo)",
+    "description": "Caixa de ritmos analógica refeita pelo circuito: 16 vozes, sequenciador com patterns A/B, fill-in e rhythm track, e MIDI learn",
+    "path": "tr808/index.html"
   }
 ]

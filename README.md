@@ -1,6 +1,6 @@
 # Sintetizadores
 
-Drum machines (808, 909, 606, 707) e sintetizadores (TB-303, SH-101, Juno-106, Minimoog, ARP 2600, Korg MS-20, Casio CZ-101, Roland Jupiter-8, Yamaha DX7) e a bateria/sampler SP-1200 em Web Audio, reunidos num único aplicativo com menu. Tudo funciona offline.
+Drum machines (808, 909, 606, 707 e o 808 novo, refeito pelo circuito) e sintetizadores (TB-303, SH-101, Juno-106, Minimoog, ARP 2600, Korg MS-20, Casio CZ-101, Roland Jupiter-8, Yamaha DX7) e a bateria/sampler SP-1200 em Web Audio, reunidos num único aplicativo com menu. Tudo funciona offline.
 
 ## Como usar
 
@@ -25,5 +25,7 @@ npm run build:web   # monta dist-web/ (PWA)
 npm run pack        # empacota sem instalador
 npm run dist        # gera o instalador do seu sistema
 ```
+
+O 808 novo (`tr808/`) tem a pesquisa em `docs/pesquisa/tr808.md` e as medições em `tests/medicao/tr808/`: `node tests/medicao/tr808/medir.mjs` mede o motor fora do navegador e `node tests/medicao/tr808/navegador.mjs` confere a página num Chrome sem janela.
 
 A lista de instrumentos fica em `instruments.json`. Depois de editá-la, rode `node scripts/build-menu.mjs` para regenerar o menu.
