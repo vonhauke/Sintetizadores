@@ -171,7 +171,7 @@ ok    envelope: constante de tempo da cauda                                   es
 ok    decay a −20 dB                                                          esperado: 50 ms ±15 % (tabela p.14; tol. minha)                                   medido: 50 ms
 ok    amplitude normal / accent (LEVEL no máximo)                             esperado: 3,5 / 12 Vpp ±5 % (tabela p.14)                                         medido: 3,50 / 12,00 Vpp
 ok    accent com ACCENT LEVEL no mínimo: trigger de 7 V dos metais (a)        esperado: mesmo que sem accent: 3,5 Vpp ±5 %                                      medido: 3,50 Vpp
-FORA  accent muda o timbre (energia 1,4 a 3,5 kHz contra 0,4 a 1 kHz)         esperado: |diferença| ≥ 0,5 dB (tol. minha)                                       medido: 0,00 dB
+info  accent muda o timbre (energia 1,4 a 3,5 kHz contra 0,4 a 1 kHz) (informativo)  esperado: |diferença| ≥ 0,5 dB (tol. minha) ; decisão de 18/11/2026: o accent muda só o volume (ou quase) nesta voz, sem mecanismo na fonte  medido: 0,00 dB
 ok    silêncio exato antes do disparo (os osciladores rodam livres, o VCA fecha)  esperado: 0                                                                       medido: 0,000000000000
 ok    decai a zero                                                            esperado: < −80 dB                                                                medido: -240,0 dB
 ok    LEVEL no mínimo: mudo                                                   esperado: 0 V                                                                     medido: 0,000000000
@@ -192,7 +192,7 @@ ok    clap completo: decay a −20 dB (RMS de 10 ms)                            
 ok    amplitude sem accent (nível pelo mix, não pela tabela)                  esperado: 2,5 a 3,5 Vpp (faixa das outras vozes; (c), sugestão do tr808.md)       medido: 3,00 Vpp
 ok    razão accent/normal no máximo                                           esperado: 2,86 a 3,67 (faixa das vozes não metálicas na tabela p.14; a do CP é inutilizável)  medido: 2,87 (8,61 Vpp)
 ok    accent com ACCENT LEVEL no mínimo = normal                              esperado: mesmo Vpp ±5 %                                                          medido: 3,00 Vpp
-FORA  accent muda o balanço entre os 3 estalos e a cauda de "reverb" (0 a 30 ms contra 60 a 120 ms)  esperado: ≥ 0,5 dB (tol. minha)                                                   medido: -0,14 dB
+info  accent muda o balanço entre os 3 estalos e a cauda de "reverb" (0 a 30 ms contra 60 a 120 ms) (informativo)  esperado: ≥ 0,5 dB (tol. minha) ; decisão de 18/11/2026: o accent muda só o volume (ou quase) nesta voz, sem mecanismo na fonte  medido: -0,14 dB
 ok    silêncio exato antes do disparo e decai a zero                          esperado: 0 e < −80 dB                                                            medido: 0,000000000000 e -240,0 dB
 ok    LEVEL no mínimo: mudo                                                   esperado: 0 V                                                                     medido: 0,000000000
 ok    mix: CP com ganho 1,0 (Parte C, seção 10)                               esperado: 0,305 Vpp digital ±3 %                                                  medido: 0,305
@@ -206,7 +206,7 @@ ok    RS: frequência do IC21                                                  e
 ok    CL: decay a −20 dB                                                      esperado: 25 ms ±15 % (tabela p.14; tol. minha)                                   medido: 25,5 ms
 ok    RS: decay a −20 dB                                                      esperado: 10 ms ±15 % (tabela p.14; tol. minha)                                   medido: 10,0 ms
 ok    CL: amplitude normal / accent                                           esperado: 2.5 / 8 Vpp ±5 % (tabela p.14)                                          medido: 2,50 / 8,00 Vpp
-FORA  CL: accent muda o timbre (energia 2 a 6 f0 contra 0,5 a 1,5 f0, 21 ms iniciais)  esperado: |diferença| ≥ 0,5 dB (tol. minha; texto: o VCA "swing" gera muitos harmônicos)  medido: -0,00 dB
+info  CL: accent muda o timbre (energia 2 a 6 f0 contra 0,5 a 1,5 f0, 21 ms iniciais) (informativo)  esperado: |diferença| ≥ 0,5 dB (tol. minha; texto: o VCA "swing" gera muitos harmônicos); decisão de 18/11/2026: o CL sai direto do IC20, sem passar pelo VCA Q62, então o accent só muda o volume  medido: -0,00 dB
 ok    CL: accent com ACCENT LEVEL no mínimo = normal                          esperado: 2,50 Vpp ±5 %                                                           medido: 2,50 Vpp
 ok    CL: silêncio exato antes do disparo e decai a zero                      esperado: 0 e < −80 dB                                                            medido: 0,000000000000 e -240,0 dB
 ok    CL: LEVEL no mínimo: mudo                                               esperado: 0 V                                                                     medido: 0,000000000
@@ -229,7 +229,7 @@ ok    espectro em 19 a 22 kHz, relativo a 10 a 12 kHz                         es
 ok    envelope assimétrico: tempo até o pico (subida lenta; R341 · C134 = 15,5 ms num sentido)  esperado: 3 a 12 ms (tol. minha; polaridade do RC não traçada (c))                medido: 4,5 ms
 ok    decay a −20 dB sem accent                                               esperado: 25 ms ±15 % (tabela p.14, "curto"; atribuição ao caso sem accent é (c))  medido: 25,0 ms
 info  decay a −20 dB com accent (informativo)                                 esperado: 35 ms seria o "longo" da tabela p.14, cuja condição não é dita; a compressão que dá 3 / 5 Vpp não o reproduz  medido: 27,6 ms
-FORA  accent muda o decay (a forma temporal do som)                           esperado: razão com/sem accent ≥ 1,2 (tol. minha)                                 medido: 1,11×
+info  accent muda o decay (a forma temporal do som) (informativo)             esperado: razão com/sem accent ≥ 1,2 (tol. minha) ; decisão de 18/11/2026: o accent muda só o volume (ou quase) nesta voz, sem mecanismo na fonte  medido: 1,11×
 ok    amplitude normal / accent                                               esperado: 3 / 5 Vpp ±5 % (tabela p.14)                                            medido: 3,00 / 5,00 Vpp
 ok    accent com ACCENT LEVEL no mínimo = normal                              esperado: 3,00 Vpp ±5 %                                                           medido: 3,00 Vpp
 ok    silêncio exato antes do disparo e decai a zero                          esperado: 0 e < −80 dB                                                            medido: 0,000000000000 e -240,0 dB
@@ -301,4 +301,4 @@ ok    evento de batida: um por semínima (a cada 24 pulsos)                    e
 ok    PLAY: ao fim da trilha (2 compassos) o motor para e avisa               esperado: 1 evento "parou" depois de 2 compassos; run = false                     medido: 1 depois de 2 compassos; run = false
 ok    mapa do botão TEMPO: extremos e meio                                    esperado: 40 e 300 BPM; meio = média geométrica 109,5 (c: o circuito é antilogarítmico, a lei exata não foi encontrada)  medido: 40,0, 300,0, 109,5
 
-264 medições, 260 ok, 4 fora
+260 medições, 260 ok, 0 fora

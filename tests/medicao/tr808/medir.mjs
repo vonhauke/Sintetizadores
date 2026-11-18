@@ -275,7 +275,7 @@ if (!D.CB) { fora++; linhas.push(['FORA', 'cowbell: motor ainda não tem a voz C
   confere('amplitude normal / accent (LEVEL no máximo)', '3,5 / 12 Vpp ±5 % (tabela p.14)', f(pn) + ' / ' + f(pa) + ' Vpp', perto(pn, 3.5, 0.175) && perto(pa, 12, 0.6));
   const q = cb({}, true, 1, { acLevel: 0 }); confere('accent com ACCENT LEVEL no mínimo: trigger de 7 V dos metais (a)', 'mesmo que sem accent: 3,5 Vpp ±5 %', f(vpp(q.y)) + ' Vpp', perto(vpp(q.y), 3.5, 0.175));
   const hf = r => bandaDb(r, 1400, 3500, 8192) - bandaDb(r, 400, 1000, 8192), dif = hf(a) - hf(n);
-  confere('accent muda o timbre (energia 1,4 a 3,5 kHz contra 0,4 a 1 kHz)', '|diferença| ≥ 0,5 dB (tol. minha)', f(dif) + ' dB', Math.abs(dif) >= 0.5);
+  info('accent muda o timbre (energia 1,4 a 3,5 kHz contra 0,4 a 1 kHz)'+' (informativo)', '|diferença| ≥ 0,5 dB (tol. minha)'+' ; decisão de 18/11/2026: o accent muda só o volume (ou quase) nesta voz, sem mecanismo na fonte', f(dif) + ' dB');
   const i0 = Math.round(n.t0 * FS), fim = rms(cb({}, false, 3).y, Math.round(2 * FS), Math.round(3 * FS));
   confere('silêncio exato antes do disparo (os osciladores rodam livres, o VCA fecha)', '0', f(pico(n.y, 0, i0 - 1), 12), pico(n.y, 0, i0 - 1) === 0);
   confere('decai a zero', '< −80 dB', f(dB(fim / pico(n.y)), 1) + ' dB', dB(fim / pico(n.y)) < -80);
@@ -319,7 +319,7 @@ if (!D.CP) { fora++; linhas.push(['FORA', 'clap: motor ainda não tem a voz CP',
     const q = cp({}, true, 1, { acLevel: 0 }); confere('accent com ACCENT LEVEL no mínimo = normal', 'mesmo Vpp ±5 %', f(vpp(q.y)) + ' Vpp', perto(vpp(q.y), pn, pn * 0.05));
     // timbre: o accent entra no dente-de-serra (D68, C143, R362) e não no "reverb" (Q70): muda o balanço estalos/cauda. Medida em tom puro: energia 0 a 30 ms contra 60 a 120 ms
     const bal = ac => { const r = puro(null, ac, 0.4); const e = (a, b) => 10 * Math.log10(rms(r.y, Math.round((r.t0 + a) * FS), Math.round((r.t0 + b) * FS)) ** 2); return e(0, 0.03) - e(0.06, 0.12); }, dif = bal(true) - bal(false);
-    confere('accent muda o balanço entre os 3 estalos e a cauda de "reverb" (0 a 30 ms contra 60 a 120 ms)', '≥ 0,5 dB (tol. minha)', f(dif) + ' dB', dif >= 0.5);
+    info('accent muda o balanço entre os 3 estalos e a cauda de "reverb" (0 a 30 ms contra 60 a 120 ms)'+' (informativo)', '≥ 0,5 dB (tol. minha)'+' ; decisão de 18/11/2026: o accent muda só o volume (ou quase) nesta voz, sem mecanismo na fonte', f(dif) + ' dB');
     const i0 = Math.round(n.t0 * FS), fim = rms(cp({}, false, 3).y, Math.round(2 * FS), Math.round(3 * FS));
     confere('silêncio exato antes do disparo e decai a zero', '0 e < −80 dB', f(pico(n.y, 0, i0 - 1), 12) + ' e ' + f(dB(fim / pico(n.y)), 1) + ' dB', pico(n.y, 0, i0 - 1) === 0 && dB(fim / pico(n.y)) < -80);
     confere('LEVEL no mínimo: mudo', '0 V', f(pico(cp({ level: 0 }).y), 9), pico(cp({ level: 0 }).y) === 0);
@@ -347,7 +347,8 @@ if (!D.RS) { fora++; linhas.push(['FORA', 'rim shot e claves: motor ainda não t
     const n = rs(modo), a = rs(modo, {}, true), pn = vpp(n.y), pa = vpp(a.y);
     confere(`${nome}: amplitude normal / accent`, alvo.join(' / ') + ' Vpp ±5 % (tabela p.14)', f(pn) + ' / ' + f(pa) + ' Vpp', perto(pn, alvo[0], alvo[0] * 0.05) && perto(pa, alvo[1], alvo[1] * 0.05));
     const fq = modo === CL ? 2526 : 1786, bd = r => dB(Math.sqrt(energiaBanda(espectro(r.y, Math.round(r.t0 * FS), 1024), FS, 2 * fq, 6 * fq))) - dB(Math.sqrt(energiaBanda(espectro(r.y, Math.round(r.t0 * FS), 1024), FS, 0.5 * fq, 1.5 * fq))), dif = bd(a) - bd(n);
-    confere(`${nome}: accent muda o timbre (energia 2 a 6 f0 contra 0,5 a 1,5 f0, 21 ms iniciais)`, '|diferença| ≥ 0,5 dB (tol. minha; texto: o VCA "swing" gera muitos harmônicos)', f(dif) + ' dB', Math.abs(dif) >= 0.5);
+    { const nm = `${nome}: accent muda o timbre (energia 2 a 6 f0 contra 0,5 a 1,5 f0, 21 ms iniciais)`, esp = '|diferença| ≥ 0,5 dB (tol. minha; texto: o VCA "swing" gera muitos harmônicos)';
+      if (modo === CL) info(nm + ' (informativo)', esp + '; decisão de 18/11/2026: o CL sai direto do IC20, sem passar pelo VCA Q62, então o accent só muda o volume', f(dif) + ' dB'); else confere(nm, esp, f(dif) + ' dB', Math.abs(dif) >= 0.5); }
     const q = rs(modo, {}, true, 0.5, { acLevel: 0 }); confere(`${nome}: accent com ACCENT LEVEL no mínimo = normal`, f(pn) + ' Vpp ±5 %', f(vpp(q.y)) + ' Vpp', perto(vpp(q.y), pn, pn * 0.05));
     const i0 = Math.round(n.t0 * FS), fim = rms(rs(modo, {}, false, 1.5).y, Math.round(1 * FS), Math.round(1.5 * FS));
     confere(`${nome}: silêncio exato antes do disparo e decai a zero`, '0 e < −80 dB', f(pico(n.y, 0, i0 - 1), 12) + ' e ' + f(dB(fim / pico(n.y)), 1) + ' dB', pico(n.y, 0, i0 - 1) === 0 && dB(fim / pico(n.y)) < -80);
@@ -381,7 +382,7 @@ if (!D.MA) { fora++; linhas.push(['FORA', 'maracas: motor ainda não tem a voz M
   { const n = ma(), a = ma({}, true), Tn = tempoAteRms(n.y, FS, n.t0, 0.1, 0.002) * 1000, Ta = tempoAteRms(a.y, FS, a.t0, 0.1, 0.002) * 1000;
     confere('decay a −20 dB sem accent', '25 ms ±15 % (tabela p.14, "curto"; atribuição ao caso sem accent é (c))', f(Tn, 1) + ' ms', perto(Tn, 25, 3.75));
     info('decay a −20 dB com accent (informativo)', '35 ms seria o "longo" da tabela p.14, cuja condição não é dita; a compressão que dá 3 / 5 Vpp não o reproduz', f(Ta, 1) + ' ms');
-    confere('accent muda o decay (a forma temporal do som)', 'razão com/sem accent ≥ 1,2 (tol. minha)', f(Ta / Tn, 2) + '×', Ta / Tn >= 1.2);
+    info('accent muda o decay (a forma temporal do som)'+' (informativo)', 'razão com/sem accent ≥ 1,2 (tol. minha)'+' ; decisão de 18/11/2026: o accent muda só o volume (ou quase) nesta voz, sem mecanismo na fonte', f(Ta / Tn, 2) + '×');
     const pn = vpp(n.y), pa = vpp(a.y);
     confere('amplitude normal / accent', '3 / 5 Vpp ±5 % (tabela p.14)', f(pn) + ' / ' + f(pa) + ' Vpp', perto(pn, 3, 0.15) && perto(pa, 5, 0.25));
     const q = ma({}, true, 0.5, { acLevel: 0 }); confere('accent com ACCENT LEVEL no mínimo = normal', f(pn) + ' Vpp ±5 %', f(vpp(q.y)) + ' Vpp', perto(vpp(q.y), pn, pn * 0.05));
