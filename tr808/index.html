@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Clone do TR-808 (em construção: só o bumbo)</title>
+<link rel="stylesheet" href="../fonts/fonts.css">
+<style>
+:root{--pagina:#16181b;--tinta:#e8e6df;--apagado:#9a9890;--painel:#2b2f36;--sulco:#14161a;--acento:#e0662a;--foco:#1f7ae0;
+  --f-rot:"Barlow Condensed","Arial Narrow",Arial,sans-serif;--f-texto:"Barlow","Helvetica Neue",Arial,sans-serif;color-scheme:dark;box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*,*::before,*::after{box-sizing:inherit}
+html{touch-action:manipulation;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--pagina);color:var(--tinta);font-family:var(--f-texto);line-height:1.4}
+.wrap{max-width:720px;margin:0 auto;padding:20px 12px 80px}
+h1{font-family:var(--f-rot);font-weight:600;letter-spacing:.04em;margin:0 0 4px}
+.aviso{color:var(--apagado);font-size:.9rem;margin:0 0 16px}
+.painel{background:var(--painel);border-radius:10px;padding:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px}
+label{display:block;font-family:var(--f-rot);letter-spacing:.06em;text-transform:uppercase;font-size:.95rem}
+output{display:block;color:var(--apagado);font-size:.8rem;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;min-height:44px}
+button{min-height:44px;min-width:44px;padding:0 18px;border-radius:8px;border:1px solid #555;background:#3a3f48;color:var(--tinta);font:inherit;cursor:pointer}
+button.liga[aria-pressed=true]{background:var(--acento);color:#111;border-color:var(--acento)}
+.pad{grid-column:1/-1;display:flex;gap:12px;align-items:center}
+.pad .bd{flex:1;min-height:88px;font-family:var(--f-rot);font-size:1.6rem;letter-spacing:.08em}
+:focus-visible{outline:2px solid var(--foco);outline-offset:2px}
+#barra{margin:12px 0 0;color:var(--apagado);font-size:.85rem;min-height:1.2em}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Rhythm Composer, em construção</h1>
+<p class="aviso">Etapa 1 de 10: só o bumbo. Controles e sequenciador completos vêm depois das vozes. Página provisória, ainda fora do menu.</p>
+<div class="painel" id="painel"></div>
+<p id="barra" role="status"></p>
+</div>
+
+<script type="text/plain" id="dsp">
+/* Motor de som do clone do TR-808. Roda igual em três lugares: AudioWorklet (página), ScriptProcessor (reserva)
+   e Node (tests/medicao/tr808). Por isso não usa nada do navegador. Marcas (a) (b) (c): ver docs/pesquisa/tr808.md.
+   VERSÃO 1: bumbo com subida de pitch no ataque, "pitch sigh", TONE, pulso saturado e accent. */
+const T_TRIG = 0.001;                    // (a) COMMON TRIG alargado para ~1 ms (p.4)
+const V_NORMAL = 4, V_ACC_MAX = 14;      // (a) trigger ~4 V sem accent; até 14 V com accent no máximo (p.4)
+const V_POR_UNIDADE = 0.1;               // (c) 1,0 digital = 10 V de pico no mix; só dá folga de cabeça
+const GANHO_MIX = { bd: 1.5 };           // (c, sobre a) R75 33k / R5 22k (Parte C, seção 10)
+/* Bumbo. f0: decisão do usuário (Werner/amostras). tDecay e Vpp: (a) tabela p.14, critério 1/10 do Vpp. */
+const BD = {
+  f0: 49.5, tDecay: [0.050, 0.300, 0.800], vppNormal: 3.5, vppAccent: 10,
+  riseRatio: 2.81,       // (c sobre a) sqrt((R166+R165)/R166) = sqrt(53,8k/6,8k) com Q43 saturado (Parte B 3.1); o texto da Roland diz "twice", Werner ">1 oitava"
+  tRise: 0.004,          // (a) Q43 conduz ~4 ms (p.5)
+  tauRise: 0.0015,       // (c) volta do ratio a 1 em ~2 ms depois dos 4 ms (S4: ~6 ms no total); forma sem fonte
+  sighSt: 1, tauSigh: 0.1,  // (b) S11: varredura mediana ≈ 1 semitom; (c) τ = 0,1 s: forma sem fonte (S4 dá 48 a 58 Hz em 0,3 s)
+  tauClick: 70e-6,       // (c sobre a) R162·C40 = 4,7k × 15 nF
+  vk: 15.722, k: 0.47976,   // calibrados contra a tabela p.14 (3,5 e 10 Vpp com TONE e DECAY a 12 h): VK ajusta a razão accent/normal, k o nível
+  kClick: 0.07196         // (c) SEM FONTE: o click vale 15 % de k por volt de trigger. Existe só para o accent mudar o timbre (decisão); ajustar de ouvido
+};
+const RC_TONE = { r171: 220, r172: 10e3, vr5: 10e3, c45: 0.1e-6 };   // (a) Parte B 3.1; S4 Tab. 1: R_eq = R171 + (R172 ∥ VR5)
+/** TONE 0 a 1 (horário = mais claro, (c)) -> corte (Hz) do passa-baixas de 1 polo. Lei do potenciômetro C: (c). */
+const fcTone = th => { const r = (Math.pow(10, 2 * (1 - th)) - 1) / 99, vr = RC_TONE.vr5 * r, par = vr * RC_TONE.r172 / (vr + RC_TONE.r172 || 1), req = RC_TONE.r171 + par; return 1 / (2 * Math.PI * req * RC_TONE.c45); };
+const T20 = (tab, p) => p <= 0.5 ? tab[0] * Math.pow(tab[1] / tab[0], p / 0.5) : tab[1] * Math.pow(tab[2] / tab[1], (p - 0.5) / 0.5);   // (c) interpolação log entre os 3 pontos
+/** Amplitude do pulso depois do modelador (D53): saturação suave. (c) forma; VK calibrado contra a tabela. */
+const pulsoBd = V => BD.vk * Math.tanh(V / BD.vk);
+
+class Bumbo {
+  constructor(fs) { this.fs = fs; this.x = 0; this.y = 0; this.t = 1e9; this.V = V_NORMAL; this.lp = 0; this.ck = 0; this.sinal = 0; }
+  trig(V) { this.t = 0; this.V = V; this.A = pulsoBd(V); this.bordaIni = true; this.bordaFim = true; }
+  /** p = { level, tone, decay } de 0 a 1. Devolve volts no MULTI OUT. */
+  amostra(p) {
+    const fs = this.fs, t = this.t, dt = 1 / fs;
+    // frequência: f0 com "sigh" × subida do Q43 nos primeiros ms
+    const sigh = 1 + (Math.pow(2, BD.sighSt / 12) - 1) * Math.exp(-t / BD.tauSigh);
+    const sobe = t < BD.tRise ? BD.riseRatio : 1 + (BD.riseRatio - 1) * Math.exp(-(t - BD.tRise) / BD.tauRise);
+    const w = 2 * Math.PI * BD.f0 * sigh * sobe / fs, a = Math.exp(-Math.LN10 / T20(BD.tDecay, p.decay) / fs);
+    const c = Math.cos(w), s = Math.sin(w), x = this.x, y = this.y;
+    this.x = a * (x * c - y * s); this.y = a * (x * s + y * c);
+    if (t < T_TRIG) this.x += BD.k * this.A / (T_TRIG * fs);
+    // "click" do pulso: bordas de subida e descida passam pelo TONE (S7); amplitude proporcional ao trigger, sem saturar
+    this.ck *= Math.exp(-dt / BD.tauClick);
+    if (this.bordaIni) { this.ck += BD.kClick * this.V; this.bordaIni = false; }
+    if (this.bordaFim && t >= T_TRIG) { this.ck -= BD.kClick * this.V; this.bordaFim = false; }
+    this.t += dt;
+    const fc = fcTone(p.tone), g = 1 - Math.exp(-2 * Math.PI * fc / fs);
+    this.lp += g * (this.x + this.ck - this.lp);
+    return this.lp * p.level * p.level;
+  }
+}
+
+class Motor {
+  constructor(fs) {
+    this.fs = fs; this.p = { acLevel: 1, master: 1, bd: { level: 1, tone: 0.5, decay: 0.5 } };
+    this.bd = new Bumbo(fs); this.saida = null;
+  }
+  msg(m) {
+    if (m.t === 'p') { const q = m.p; if (q.bd) Object.assign(this.p.bd, q.bd); for (const k of ['acLevel', 'master']) if (k in q) this.p[k] = q[k]; }
+    else if (m.t === 'trig' && m.v === 'bd') this.bd.trig(m.ac ? V_NORMAL + (V_ACC_MAX - V_NORMAL) * this.p.acLevel : V_NORMAL);
+  }
+  /** Soma das vozes em volts, já com o ganho do resistor de mistura. */
+  mixVolts() { return this.bd.amostra(this.p.bd) * GANHO_MIX.bd; }
+  process(L, R, n) {
+    const g = this.p.master * this.p.master * V_POR_UNIDADE;
+    for (let i = 0; i < n; i++) { const v = this.mixVolts() * g; L[i] = v; R[i] = v; }
+  }
+}
+Motor.dados = { T_TRIG, V_NORMAL, V_ACC_MAX, V_POR_UNIDADE, BD, GANHO_MIX, T20, fcTone, pulsoBd, RC_TONE, Bumbo };
+
+if (typeof AudioWorkletProcessor !== 'undefined' && typeof registerProcessor === 'function') {
+  registerProcessor('motor-tr808', class extends AudioWorkletProcessor {
+    constructor() { super(); this.m = new Motor(sampleRate); this.port.onmessage = e => this.m.msg(e.data); }
+    process(_, saidas) { const o = saidas[0]; if (!o || !o[0]) return true; this.m.process(o[0], o[1] || o[0], o[0].length); return true; }
+  });
+}
+</script>
+
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const FONTE_DSP = $('dsp').textContent;
+const Motor = new Function(FONTE_DSP + '\nreturn Motor;')();
+const estado = { acLevel: 1, master: 0.8, bd: { level: 0.85, tone: 0.5, decay: 0.5 }, acc: false };
+const CHAVE = 'sint-tr808-v1:estado';
+try { const s = JSON.parse(localStorage.getItem(CHAVE) || 'null'); if (s) { Object.assign(estado, s); estado.bd = Object.assign({ level: 0.85, tone: 0.5, decay: 0.5 }, s.bd); } } catch (e) {}
+const salva = () => { try { localStorage.setItem(CHAVE, JSON.stringify(estado)); } catch (e) {} };
+let ctx = null, no = null, reserva = null, pronto = false; const pend = [];
+const manda = m => { if (!pronto) { pend.push(m); return; } if (no) no.port.postMessage(m); else if (reserva) reserva.motor.msg(m); };
+const diz = t => { $('barra').textContent = t; };
+function liga() {
+  if (ctx) { if (ctx.state !== 'running') ctx.resume().catch(() => {}); return; }
+  const AC = window.AudioContext || window.webkitAudioContext; if (!AC) { diz('Este navegador não tem Web Audio.'); return; }
+  ctx = new AC({ latencyHint: 'interactive' });
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+  const fim = () => { pronto = true; manda({ t: 'p', p: estado }); for (const m of pend.splice(0)) manda(m); };
+  const usaReserva = () => { const sp = ctx.createScriptProcessor(1024, 0, 2); sp.motor = new Motor(ctx.sampleRate);
+    sp.onaudioprocess = e => { const o = e.outputBuffer; sp.motor.process(o.getChannelData(0), o.getChannelData(1), o.length); }; sp.connect(ctx.destination); reserva = sp; fim(); };
+  if (ctx.audioWorklet && window.AudioWorkletNode) {
+    const url = URL.createObjectURL(new Blob([FONTE_DSP], { type: 'application/javascript' }));
+    const dataUrl = () => 'data:application/javascript;base64,' + btoa(unescape(encodeURIComponent(FONTE_DSP)));
+    ctx.audioWorklet.addModule(url).catch(() => ctx.audioWorklet.addModule(dataUrl())).then(() => {
+      no = new AudioWorkletNode(ctx, 'motor-tr808', { numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [2] });
+      no.connect(ctx.destination); URL.revokeObjectURL(url); fim();
+    }).catch(usaReserva);
+  } else usaReserva();
+  ctx.resume().catch(() => {});
+}
+for (const ev of ['touchend', 'pointerup', 'click', 'keydown']) document.addEventListener(ev, () => { if (!ctx || ctx.state !== 'running') liga(); }, { capture: true, passive: true });
+
+const P = $('painel');
+function knob(nome, get, set) {
+  const d = document.createElement('div'), id = 'k' + Math.random().toString(36).slice(2, 7);
+  d.innerHTML = `<label for="${id}">${nome}</label><input id="${id}" type="range" min="0" max="1" step="0.001"><output></output>`;
+  const r = d.querySelector('input'), o = d.querySelector('output'); r.value = get(); o.textContent = Math.round(get() * 100) + ' %';
+  r.addEventListener('input', () => { set(+r.value); o.textContent = Math.round(+r.value * 100) + ' %'; salva(); });
+  P.appendChild(d);
+}
+knob('BD level', () => estado.bd.level, v => { estado.bd.level = v; manda({ t: 'p', p: { bd: { level: v } } }); });
+knob('BD tone', () => estado.bd.tone, v => { estado.bd.tone = v; manda({ t: 'p', p: { bd: { tone: v } } }); });
+knob('BD decay', () => estado.bd.decay, v => { estado.bd.decay = v; manda({ t: 'p', p: { bd: { decay: v } } }); });
+knob('Accent level', () => estado.acLevel, v => { estado.acLevel = v; manda({ t: 'p', p: { acLevel: v } }); });
+knob('Master volume', () => estado.master, v => { estado.master = v; manda({ t: 'p', p: { master: v } }); });
+const pad = document.createElement('div'); pad.className = 'pad';
+pad.innerHTML = '<button class="bd" id="bd" type="button">BASS DRUM</button><button class="liga" id="acc" type="button" aria-pressed="false">Accent</button>';
+P.appendChild(pad);
+const acc = $('acc'); acc.setAttribute('aria-pressed', String(!!estado.acc));
+acc.addEventListener('click', () => { estado.acc = !estado.acc; acc.setAttribute('aria-pressed', String(estado.acc)); salva(); });
+const dispara = () => { liga(); manda({ t: 'trig', v: 'bd', ac: estado.acc }); };
+$('bd').addEventListener('pointerdown', e => { e.preventDefault(); dispara(); });
+$('bd').addEventListener('keydown', e => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); dispara(); } });
+document.addEventListener('keydown', e => { if (e.target.tagName === 'INPUT' || e.repeat) return; if (e.key === 'b') dispara(); });
+diz('Toque em BASS DRUM (ou tecla B). O som liga no primeiro toque.');
+})();
+</script>
+<script src="../voltar.js"></script>
+</body>
+</html>

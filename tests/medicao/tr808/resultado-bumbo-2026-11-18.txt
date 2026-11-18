@@ -1,0 +1,34 @@
+
+— bumbo: frequência (DECAY no máximo) —
+ok    f0 com DECAY longo (0,6 a 1,6 s)                                        esperado: 49,5 Hz ±0,5 (decisão do usuário; tol. minha)                       medido: 49,50 Hz
+ok    f0 pelo pico do espectro (0,6 a 1,9 s)                                  esperado: 49,5 Hz ±0,5                                                        medido: 49,50 Hz
+ok    varredura: 20 a 120 ms contra o final                                   esperado: ≈ 1 semitom (0,5 a 1,5; tol. minha; S11, mediana)                   medido: 0,55 semitons (51,1 Hz)
+ok    frequência instantânea nos primeiros 0,4 s dentro de 48 a 58 Hz         esperado: 48 a 58 Hz (S4, Fig. 11)                                            medido: 49,6 a 51,1 Hz
+
+— bumbo: ataque (subida de >1 oitava em ~6 ms, em toda nota) —
+ok    sem accent: 1º semiciclo completo                                       esperado: ≤ metade do estável (10,1 ms): freq ≥ 2× (tol. minha)               medido: 4,16 ms (120 Hz)
+ok    com accent: 1º semiciclo completo                                       esperado: ≤ metade do estável (10,1 ms): freq ≥ 2× (tol. minha)               medido: 4,16 ms (120 Hz)
+
+— bumbo: decay a −20 dB (DECAY mínimo, 12 h, máximo) —
+ok    DECAY = mínimo                                                          esperado: 50 ms ±10 % (tol. minha; tabela p.14)                               medido: 54 ms
+ok    DECAY = 12 h                                                            esperado: 300 ms ±10 % (tol. minha; tabela p.14)                              medido: 304 ms
+ok    DECAY = máximo                                                          esperado: 800 ms ±10 % (tol. minha; tabela p.14)                              medido: 805 ms
+
+— bumbo: amplitude no MULTI OUT (LEVEL no máximo, TONE e DECAY a 12 h) —
+ok    normal                                                                  esperado: 3,5 Vpp ±5 % (tabela p.14)                                          medido: 3,50 Vpp
+ok    accent no máximo                                                        esperado: 10 Vpp ±5 %                                                         medido: 10,00 Vpp
+ok    razão accent/normal                                                     esperado: 2,86 (10/3,5)                                                       medido: 2,86
+ok    accent com ACCENT LEVEL no mínimo = normal (procedimento da p.14)       esperado: 3,5 Vpp ±5 %                                                        medido: 3,50 Vpp
+ok    accent muda o timbre (energia 1 a 6 kHz / total, 170 ms iniciais)       esperado: |diferença| ≥ 0,5 dB (tol. minha; texto da Roland e S4)             medido: 0,82 dB
+
+— bumbo: ressonador excitado por pulso, sem oscilador livre —
+ok    silêncio exato antes do disparo                                         esperado: 0                                                                   medido: 0,000000000000
+ok    decai a < −60 dB em 7 s (DECAY máximo)                                  esperado: < −60 dB                                                            medido: -185,2 dB
+ok    3 disparos a 90 ms: sem "machine gun" nem salto (S4, Fig. 12)           esperado: Vpp ≤ 2× o de um disparo (tol. minha)                               medido: 1,38×
+
+— bumbo: TONE (passa-baixas), LEVEL e mix —
+ok    TONE máximo contra mínimo em 2 kHz                                      esperado: 16,1 dB ±4 (filtro RC de 1 polo, valores lidos; lei do pot. é (c))  medido: 16,4 dB
+ok    LEVEL no mínimo: mudo                                                   esperado: 0 V                                                                 medido: 0,000000000
+ok    mix: BD com ganho 1,5 (Parte C, seção 10)                               esperado: 0,525 Vpp digital ±3 %                                              medido: 0,525
+
+20 medições, 20 ok, 0 fora
